@@ -25,7 +25,7 @@ public class User implements Person {
     private String adresse;
 
     // Caractéristiques Personne
-    private LocalDate dateNaissance;
+    private int age;
     @Enumerated(EnumType.STRING)
     private Level niveau;
     @Enumerated(EnumType.STRING)
@@ -36,29 +36,42 @@ public class User implements Person {
     private Set<Hike> createdHikes;
 
     public User() {}
-    public User(String nom, String prenom, String mail, String password, String adresse, LocalDate dateNaissance, Level niveau, Morphology morphologie) {
+    public User(String nom, String prenom, String mail, String password, String adresse, int age, Level niveau, Morphology morphologie) {
         this.nom = nom;
         this.prenom = prenom;
         this.mail = mail;
         this.password = password;
         this.adresse = adresse;
-        this.dateNaissance = dateNaissance;
+        this.age = age;
         this.niveau = niveau;
         this.morphologie = morphologie;
     }
 
     @Override
-    public LocalDate getDateNaissance() {
-        return null;
+    public int getAge() {
+        return this.age;
     }
-
     @Override
     public String getNiveau() {
-        return "";
+        return this.niveau != null ? this.niveau.toString() : null;
     }
-
     @Override
     public String getMorphologie() {
-        return "";
+        return this.morphologie != null ? this.morphologie.toString() : null;
+    }
+    public String getPassword() {
+        return this.password;
+    }
+    public String getMail() {
+        return this.mail;
+    }
+    public String getAdresse() {
+        return this.adresse;
+    }
+    public String getNom() {
+        return this.nom;
+    }
+    public String getPrenom() {
+        return this.prenom;
     }
 }

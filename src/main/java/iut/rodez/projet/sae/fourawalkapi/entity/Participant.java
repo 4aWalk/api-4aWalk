@@ -18,7 +18,7 @@ public class Participant implements Person {
     private String nomComplet; // Nom/surnom pour les non-utilisateurs
 
     // Caractéristiques Personne
-    private LocalDate dateNaissance;
+    private int age;
     @Enumerated(EnumType.STRING)
     private Level niveau;
     @Enumerated(EnumType.STRING)
@@ -37,9 +37,9 @@ public class Participant implements Person {
     private Backpack backpack;
 
     public Participant() {}
-    public Participant(String nomComplet, LocalDate dateNaissance, Level niveau, Morphology morphologie, double besoinKcal, double besoinEauLitre, double capaciteEmportMaxKg) {
+    public Participant(String nomComplet, int age, Level niveau, Morphology morphologie, double besoinKcal, double besoinEauLitre, double capaciteEmportMaxKg) {
         this.nomComplet = nomComplet;
-        this.dateNaissance = dateNaissance;
+        this.age = age;
         this.niveau = niveau;
         this.morphologie = morphologie;
         this.besoinKcal = besoinKcal;
@@ -48,8 +48,9 @@ public class Participant implements Person {
     }
 
     @Override
-    public LocalDate getDateNaissance() {
-        return null;
+    public int getAge() {
+        return this.age;
+
     }
 
     @Override

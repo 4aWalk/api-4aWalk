@@ -4,6 +4,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 // Indique à Spring que c'est un composant de service
 @Service
@@ -37,27 +38,48 @@ public class UserService {
         return Optional.empty(); // Échec de l'authentification
     }
 
-    /**
-     * Logique métier pour la création de compte (UC001).
-     * Gère la validation et l'enregistrement dans la base de données.
-     */
     public User registerNewUser(User newUser) {
-        // --- Exigences de la logique métier (UC001) ---
 
-        // 1. Vérification de l'existence (UC001 - Ne pas créer si mail existe déjà)
-        /*if (userRepository.findByMail(newUser.getMail()).isPresent()) {
-            // Dans un vrai projet, on lancerait ici une exception personnalisée
+        //Validation des champs obligatoires
+        if (newUser.getNom() == null || newUser.getNom().isBlank()) {
+            throw new IllegalArgumentException("Le nom est obligatoire.");
+        }
+        if (newUser.getPrenom() == null || newUser.getPrenom().isBlank()) {
+            throw new IllegalArgumentException("Le prénom est obligatoire.");
+        }
+        if (newUser.getAdresse() == null || newUser.getAdresse().isBlank()) {
+            throw new IllegalArgumentException("L'adresse est obligatoire.");
+        }
+        if (newUser.getMail() == null || newUser.getMail().isBlank()) {
+            throw new IllegalArgumentException("L'adresse email est obligatoire.");
+        }
+        if (newUser.getPassword() == null || newUser.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Le mots de passe est obligatoire.");
+        }
+        // TODO faire vérification Niveau et Morphologie
+
+        //Validation de l'âge (> 10 ans)
+        if (newUser.getAge() < 3) {
+            throw new IllegalArgumentException("La date de naissance doit être de plus de 3 ans.");
+        }
+
+        //Vérification si l'email existe déjà
+        if (userRepository.findByMail(newUser.getMail()).isPresent()) {
             throw new IllegalArgumentException("L'adresse email est déjà utilisée.");
-        }*/
+        }
 
-        // 2. Validation des données (Assurez-vous que les champs sont valides, ex: âge > 10)
-        // Ceci pourrait faire appel à un service de validation dédié ou à un Pattern Strategy
+        // Vérification taille mot de passe
+        if (newUser.getPassword() == null || newUser.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères.");
+        }
 
-        // 3. Hachage du mot de passe (CRITIQUE pour la sécurité!)
-        // Ici, vous devrez utiliser un outil comme BCrypt, PAS le password en clair.
-        // newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 
-        // 4. Sauvegarde dans la base de données (Utilise la méthode 'save' du JpaRepository)
+        // 4. Hash du mot de passe (sécurité)
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String hashedPassword = passwordEncoder.encode(newUser.getPassword());
+        //newUser.setPassword(hashedPassword);
+
+        // 5. Sauvegarde en base
         return userRepository.save(newUser);
     }
 }
