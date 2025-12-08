@@ -43,7 +43,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           
       - name: Build and Push Docker Image
-        uses: docker/build-and-push-action@v5
+        uses: docker/build-push-action@v5
         with:
           context: . # Emplacement du Dockerfile
           push: true
