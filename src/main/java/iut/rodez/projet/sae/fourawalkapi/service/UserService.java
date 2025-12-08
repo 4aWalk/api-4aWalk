@@ -32,10 +32,10 @@ public class UserService {
             /*if (user.getPassword().equals(password)) {
                 return Optional.of(user);
             }*/
-        } 
+        }
 
         return Optional.empty(); // Échec de l'authentification
-    }
+    } 
 
     /**
      * Logique métier pour la création de compte (UC001).
