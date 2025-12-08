@@ -34,7 +34,7 @@ jobs:
 
       # 3. Analyse Statique de Code (DEV005)
       - name: Run Static Code Analysis
-        # Intégrez ici l'exécution de votre outil (SonarCloud, Checkstyle, etc.)
+        # Intégrez ici l'exécution des outils (SonarCloud, Checkstyle, etc.)
 
       # --- ÉTAPE DE PUBLICATION DOCKER (DEV008) ---
       
