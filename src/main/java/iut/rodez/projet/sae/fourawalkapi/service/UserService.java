@@ -31,7 +31,7 @@ public class UserService {
             // 2. Vérification du mot de passe (DOIT être remplacé par un algorithme de hachage sécurisé!)
             /*if (user.getPassword().equals(password)) {
                 return Optional.of(user);
-            }*/ 
+            }*/
         }
 
         return Optional.empty(); // Échec de l'authentification
