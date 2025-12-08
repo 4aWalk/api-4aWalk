@@ -21,16 +21,14 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          # Utilisation de JDK 25 selon l'exigence
+          # Utilisation de JDK 25
           java-version: '25' 
-          cache: 'maven' # ou 'gradle' si vous utilisez Gradle
+          cache: 'maven'
 
       # 2. Compilation et Tests (DEV006)
       - name: Build with Maven and Run Tests
         # Si vous utilisez Maven
-        run: mvn clean install 
-        # Si vous utilisez Gradle
-        # run: ./gradlew clean build
+        run: mvn clean install
 
       # 3. Analyse Statique de Code (DEV005)
       - name: Run Static Code Analysis
@@ -49,4 +47,4 @@ jobs:
         with:
           context: . # Emplacement du Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/projet-iut-api:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/sae-5-01-iut-api:latest
