@@ -28,7 +28,7 @@ jobs:
       # 2. Compilation et Tests (DEV006)
       - name: Build with Maven and Run Tests
         # Si vous utilisez Maven
-        run: mvn clean install
+        run: mvn clean install -Dspring.profiles.active=test
 
       # 3. Analyse Statique de Code (DEV005)
       # - name: Run Static Code Analysis
