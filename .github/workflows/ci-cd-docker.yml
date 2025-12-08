@@ -47,4 +47,4 @@ jobs:
         with:
           context: . # Emplacement du Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/sae-5-01-iut-api:latest
+          tags: alexandrebrouzes/sae-5-01-iut-api:latest
