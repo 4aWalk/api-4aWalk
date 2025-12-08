@@ -31,7 +31,7 @@ jobs:
         run: mvn clean install
 
       # 3. Analyse Statique de Code (DEV005)
-      - name: Run Static Code Analysis
+      # - name: Run Static Code Analysis
         # Intégrez ici l'exécution des outils (SonarCloud, Checkstyle, etc.)
 
       # --- ÉTAPE DE PUBLICATION DOCKER (DEV008) ---
