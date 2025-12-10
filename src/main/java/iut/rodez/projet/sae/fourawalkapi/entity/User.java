@@ -71,7 +71,9 @@ public class User implements Person {
     public String getNom() {
         return this.nom;
     }
-    public String getPrenom() {
-        return this.prenom;
+    public String getPrenom() { return this.prenom;}
+
+    public void  setPassword(String password) {
+        this.password = password;
     }
 }

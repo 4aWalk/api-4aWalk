@@ -2,84 +2,119 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.util.regex.Pattern;
 
-// Indique à Spring que c'est un composant de service
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
+    // Regex pour un format d'email standard
+    private static final String EMAIL_REGEX = "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
-    // Injection de dépendance par constructeur (méthode recommandée)
-    public UserService(UserRepository userRepository) {
+    // Regex Mot de passe: 8+ chars, 1 Majuscule, 1 Caractère spécial
+    private static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*[!@#$%^&*()]).{8,}$";
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile(PASSWORD_REGEX);
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Constructeur pour l'injection des dépendances du Repository et du PasswordEncoder.
+     * @param userRepository Le repository pour l'accès aux données des utilisateurs.
+     * @param passwordEncoder L'encodeur BCrypt pour le hachage des mots de passe.
+     */
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * Logique métier pour l'authentification (UC002).
-     * Vérifie si l'utilisateur existe et si le mot de passe est correct.
+     * Enregistre un nouvel utilisateur (Inscription - UC001).
+     * Effectue la validation des données et le hachage du mot de passe.
+     * * @param newUser L'objet User (avec mot de passe en clair) à enregistrer.
+     * @return L'objet User sauvegardé avec le mot de passe haché.
+     * @throws IllegalArgumentException si les données sont invalides ou si l'email est déjà utilisé.
+     */
+    public User registerNewUser(User newUser) {
+
+        validateUserData(newUser);
+
+        if (userRepository.findByMail(newUser.getMail()).isPresent()) {
+            throw new IllegalArgumentException("L'adresse email est déjà utilisée.");
+        }
+
+        // Hachage du mot de passe avec salage automatique (BCrypt)
+        String hashedPassword = passwordEncoder.encode(newUser.getPassword());
+        newUser.setPassword(hashedPassword);
+
+        return userRepository.save(newUser);
+    }
+
+    /**
+     * Tente d'authentifier un utilisateur par email et mot de passe (UC002).
+     * * @param email L'email de l'utilisateur.
+     * @param password Le mot de passe en clair soumis.
+     * @return Un Optional contenant l'utilisateur s'il est authentifié, Optional.empty() sinon.
      */
     public Optional<User> authenticate(String email, String password) {
-        // 1. Trouver l'utilisateur par son email (requête générée par Spring Data)
-        // Vous devrez ajouter cette méthode 'findByMail' au UserRepository plus tard.
+
         Optional<User> userOptional = userRepository.findByMail(email);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
-            // 2. Vérification du mot de passe (DOIT être remplacé par un algorithme de hachage sécurisé!)
-            /*if (user.getPassword().equals(password)) {
+            // Vérification du mot de passe haché (gestion du salage incluse)
+            if (passwordEncoder.matches(password, user.getPassword())) {
                 return Optional.of(user);
-            }*/
+            }
         }
 
-        return Optional.empty(); // Échec de l'authentification
+        return Optional.empty();
     }
 
-    public User registerNewUser(User newUser) {
+    /**
+     * Récupère un utilisateur par son identifiant unique.
+     * * @param userId L'ID de l'utilisateur.
+     * @return Un Optional contenant l'utilisateur.
+     */
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
+    }
 
-        //Validation des champs obligatoires
-        if (newUser.getNom() == null || newUser.getNom().isBlank()) {
-            throw new IllegalArgumentException("Le nom est obligatoire.");
-        }
-        if (newUser.getPrenom() == null || newUser.getPrenom().isBlank()) {
-            throw new IllegalArgumentException("Le prénom est obligatoire.");
-        }
-        if (newUser.getAdresse() == null || newUser.getAdresse().isBlank()) {
-            throw new IllegalArgumentException("L'adresse est obligatoire.");
-        }
-        if (newUser.getMail() == null || newUser.getMail().isBlank()) {
-            throw new IllegalArgumentException("L'adresse email est obligatoire.");
-        }
-        if (newUser.getPassword() == null || newUser.getPassword().isBlank()) {
-            throw new IllegalArgumentException("Le mots de passe est obligatoire.");
-        }
-        // TODO faire vérification Niveau et Morphologie
+    /**
+     * Méthode interne pour la validation des contraintes métier.
+     */
+    private void validateUserData(User user) {
 
-        //Validation de l'âge (> 10 ans)
-        if (newUser.getAge() < 3) {
-            throw new IllegalArgumentException("La date de naissance doit être de plus de 3 ans.");
-        }
+        // Vérification des champs non nuls/vides (omission de la vérification du niveau et date de naissance ici
+        // car ces objets sont déjà vérifiés comme non-nulls après l'affectation des autres vérifications)
+        if (user.getMail() == null || user.getMail().trim().isEmpty() ||
+                user.getPassword() == null || user.getPassword().isEmpty() ||
+                user.getNom() == null || user.getNom().trim().isEmpty() ||
+                user.getPrenom() == null || user.getPrenom().trim().isEmpty() ||
+                user.getAdresse() == null || user.getAdresse().trim().isEmpty() ||
+                user.getNiveau() == null || user.getMorphologie() == null) {
 
-        //Vérification si l'email existe déjà
-        if (userRepository.findByMail(newUser.getMail()).isPresent()) {
-            throw new IllegalArgumentException("L'adresse email est déjà utilisée.");
+            throw new IllegalArgumentException("Tous les champs obligatoires doivent être renseignés.");
         }
 
-        // Vérification taille mot de passe
-        if (newUser.getPassword() == null || newUser.getPassword().length() < 6) {
-            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères.");
+        // Validation format email
+        if (!EMAIL_PATTERN.matcher(user.getMail()).matches()) {
+            throw new IllegalArgumentException("Le format de l'adresse email est invalide.");
         }
 
+        // Validation format mot de passe
+        if (!PASSWORD_PATTERN.matcher(user.getPassword()).matches()) {
+            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 8 caractères, une majuscule et un caractère spécial.");
+        }
 
-        // 4. Hash du mot de passe (sécurité)
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String hashedPassword = passwordEncoder.encode(newUser.getPassword());
-        //newUser.setPassword(hashedPassword);
-
-        // 5. Sauvegarde en base
-        return userRepository.save(newUser);
+        // Validation âge (3-99 ans)
+        int age = user.getAge();
+        if (age < 3 || age > 99) {
+            throw new IllegalArgumentException("L'âge de l'utilisateur doit être compris entre 3 et 99 ans.");
+        }
     }
 }
