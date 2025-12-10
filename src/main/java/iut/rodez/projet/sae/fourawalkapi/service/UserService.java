@@ -2,13 +2,16 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     // Regex pour un format d'email standard
     private static final String EMAIL_REGEX = "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
@@ -54,25 +57,21 @@ public class UserService {
     }
 
     /**
-     * Tente d'authentifier un utilisateur par email et mot de passe (UC002).
-     * * @param email L'email de l'utilisateur.
-     * @param password Le mot de passe en clair soumis.
-     * @return Un Optional contenant l'utilisateur s'il est authentifié, Optional.empty() sinon.
+     * Charge les données de l'utilisateur pour Spring Security (utilise l'email comme "username").
      */
-    public Optional<User> authenticate(String email, String password) {
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        Optional<User> userOptional = userRepository.findByMail(email);
+        User user = userRepository.findByMail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email));
 
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            // Vérification du mot de passe haché (gestion du salage incluse)
-            if (passwordEncoder.matches(password, user.getPassword())) {
-                return Optional.of(user);
-            }
-        }
-
-        return Optional.empty();
+        // Spring Security a besoin d'un objet UserDetails. Nous utilisons ici l'implémentation par défaut.
+        // Remplacez 'null' par la liste des Rôles (Authorities) si vous les utilisez (e.g., ROLE_USER).
+        return new org.springframework.security.core.userdetails.User(
+                user.getMail(),
+                user.getPassword(), // Mot de passe HACHÉ
+                null // Authorities/Rôles (laissez null ou mettez une liste vide pour l'instant)
+        );
     }
 
     /**
@@ -117,4 +116,6 @@ public class UserService {
             throw new IllegalArgumentException("L'âge de l'utilisateur doit être compris entre 3 et 99 ans.");
         }
     }
+
+
 }

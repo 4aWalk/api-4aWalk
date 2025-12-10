@@ -76,4 +76,20 @@ public class User implements Person {
     public void  setPassword(String password) {
         this.password = password;
     }
+
+    public void setMail(String mail) {
+    }
+
+    public void setNom(String nom) {
+    }
+
+    public void setPrenom(String prenom) {
+    }
+
+    public void setNiveau(Level niveau) {
+
+    }
+
+    public void setAge(int age) {
+    }
 }
