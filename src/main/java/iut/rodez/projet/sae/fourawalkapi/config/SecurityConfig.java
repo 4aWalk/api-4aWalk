@@ -13,7 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Configuration principale de Spring Security pour l'API REST.
@@ -58,31 +57,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Désactiver le CSRF (Cross-Site Request Forgery) pour les API stateless
+                // 1. Désactiver le CSRF
                 .csrf(csrf -> csrf.disable())
 
-                // 2. Définir la politique de session comme sans état (stateless)
+                // 2. Définir la politique de session comme stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 3. Définir les autorisations d'accès aux Endpoints
                 .authorizeHttpRequests(authorize -> authorize
 
                         // --- Endpoints Publics (Autorisés sans token) ---
-                        .requestMatchers(
-                                // Utilisateurs : Inscription et Connexion
-                                new AntPathRequestMatcher("/api/v1/users/register", HttpMethod.POST.toString()),
-                                new AntPathRequestMatcher("/api/v1/users/login", HttpMethod.POST.toString())
+                        // Correction ici : On utilise requestMatchers avec le pattern et le HttpMethod.
+                        // Spring Security le gère lui-même.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
+                        // Si vous avez d'autres endpoints publics (GET, etc.) :
+                        // .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
 
-                                // Ajout d'autres Endpoints publics futurs si nécessaire (ex: documentation API)
-                        ).permitAll()
 
-                        // --- Endpoints Privés (Nécessitent un token JWT valide) ---
-                        // Toutes les autres requêtes nécessitent une authentification
+                        // --- Endpoints Privés ---
                         .anyRequest().authenticated()
                 )
 
                 // 4. Intégrer notre filtre JWT
-                // Ce filtre s'exécute AVANT le filtre d'authentification par défaut de Spring.
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

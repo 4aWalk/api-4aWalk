@@ -28,6 +28,9 @@ public class UserRegistrationRequest {
     public int getAge() { return age; }
     public Level getNiveau() { return niveau; }
 
+    public String getAdresse() {return adresse;}
+
+    public Morphology getMorphologie() { return this.morphology; }
     // Setters
     public void setMail(String mail) { this.mail = mail; }
     public void setPassword(String password) { this.password = password; }
@@ -35,4 +38,6 @@ public class UserRegistrationRequest {
     public void setPrenom(String prenom) { this.prenom = prenom; }
     public void setAge(int age) { this.age = age; }
     public void setNiveau(Level niveau) { this.niveau = niveau; }
+    public void setAdresse(String adresse) { this.adresse = adresse; }
+    public void setMorphologie(Morphology morphology) { this.morphology = morphology; }
 }

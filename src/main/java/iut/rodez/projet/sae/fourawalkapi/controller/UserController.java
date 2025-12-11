@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
+import iut.rodez.projet.sae.fourawalkapi.controller.dto.JwtResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.controller.dto.UserLoginRequest;
 import iut.rodez.projet.sae.fourawalkapi.controller.dto.UserRegistrationRequest;
 import iut.rodez.projet.sae.fourawalkapi.controller.dto.UserResponseDto;
@@ -48,6 +49,8 @@ public class UserController {
         newUser.setPrenom(request.getPrenom());
         newUser.setAge(request.getAge());
         newUser.setNiveau(request.getNiveau());
+        newUser.setAdresse(request.getAdresse());
+        newUser.setMorphologie(request.getMorphologie());
         // Étape 2: Appel du service (la validation et le hachage se font ici)
         User registeredUser = userService.registerNewUser(newUser);
 
@@ -65,33 +68,15 @@ public class UserController {
      * Tente d'authentifier un utilisateur.
      */
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserLoginRequest request) {
-
-        // 1. Utiliser Spring Security pour authentifier
-        Authentication authentication = authenticationManager.authenticate(
-                )
-        );
-
-        // 2. Si l'authentification réussit, définir le contexte
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // 3. Générer le token JWT
-        String token = tokenProvider.generateToken(authentication);
-
-        // 4. Retourner le token au client (qui doit le stocker)
-        // NOTE: Il serait préférable de retourner un DTO contenant le token et les détails de l'utilisateur.
-        return ResponseEntity.ok(token);
-    }
-    @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> login(@RequestBody UserLoginRequest request) {
         // ...
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword());
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = tokenProvider.generateToken(authentication);
 
         // 1. Récupérer l'Entité User via l'email
-        User user = userService.findByMail(request.getMail()) // *Nécessite d'ajouter findByMail au UserService*
-                .orElseThrow(() -> new InternalServerError("User not found after successful authentication."));
+        User user = userService.findByMail(request.getMail())
+                .orElseThrow(() -> new RuntimeException("Erreur critique: Utilisateur non trouvé après une authentification réussie."));
 
         // 2. Créer les DTOs
         UserResponseDto userDto = new UserResponseDto(user);

@@ -1,9 +1,10 @@
 package iut.rodez.projet.sae.fourawalkapi.model;
 
-import java.time.LocalDate;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
 public interface Person {
     int getAge();
-    String getNiveau(); // Sportif, Entrainé, Débutant
-    String getMorphologie(); // Légère, Moyenne, Forte
+    Level getNiveau(); // Sportif, Entrainé, Débutant
+    Morphology getMorphologie(); // Légère, Moyenne, Forte
 }

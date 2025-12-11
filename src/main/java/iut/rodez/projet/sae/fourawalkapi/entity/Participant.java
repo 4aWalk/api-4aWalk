@@ -5,8 +5,6 @@ import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
-
 /** Participant (Personne dans le contexte d'une randonnée - Peut être un User ou un invité) */
 @Entity
 @Table(name = "participants")
@@ -15,7 +13,7 @@ public class Participant implements Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String nomComplet; // Nom/surnom pour les non-utilisateurs
+    private String nomComplet;
 
     // Caractéristiques Personne
     private int age;
@@ -50,16 +48,15 @@ public class Participant implements Person {
     @Override
     public int getAge() {
         return this.age;
-
     }
 
     @Override
-    public String getNiveau() {
-        return "";
+    public Level getNiveau() {
+        return this.niveau;
     }
 
     @Override
-    public String getMorphologie() {
-        return "";
+    public Morphology getMorphologie() {
+        return this.morphologie;
     }
 }

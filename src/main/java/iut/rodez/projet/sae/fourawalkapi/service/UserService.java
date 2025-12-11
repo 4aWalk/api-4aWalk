@@ -2,11 +2,14 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -29,7 +32,7 @@ public class UserService implements UserDetailsService {
      * @param userRepository Le repository pour l'accès aux données des utilisateurs.
      * @param passwordEncoder L'encodeur BCrypt pour le hachage des mots de passe.
      */
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) { // <-- AJOUT de @Lazy
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -70,7 +73,7 @@ public class UserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getMail(),
                 user.getPassword(), // Mot de passe HACHÉ
-                null // Authorities/Rôles (laissez null ou mettez une liste vide pour l'instant)
+                Collections.emptyList() // Authorities/Rôles (laissez null ou mettez une liste vide pour l'instant)
         );
     }
 
@@ -81,6 +84,15 @@ public class UserService implements UserDetailsService {
      */
     public Optional<User> findById(Long userId) {
         return userRepository.findById(userId);
+    }
+
+    /**
+     * **[NOUVELLE MÉTHODE]** Recherche un utilisateur par son adresse email.
+     * @param mail L'adresse email de l'utilisateur.
+     * @return Un Optional contenant l'utilisateur s'il est trouvé.
+     */
+    public Optional<User> findByMail(String mail) {
+        return userRepository.findByMail(mail);
     }
 
     /**
@@ -116,6 +128,5 @@ public class UserService implements UserDetailsService {
             throw new IllegalArgumentException("L'âge de l'utilisateur doit être compris entre 3 et 99 ans.");
         }
     }
-
 
 }

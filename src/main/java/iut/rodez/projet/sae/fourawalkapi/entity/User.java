@@ -2,11 +2,9 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
-import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.Person;
-import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import jakarta.persistence.*;
-import java.time.LocalDate;
+
 import java.util.Set;
 
 /** Utilisateur (Gère le compte et les données personnelles - UC001, UC002) */
@@ -52,12 +50,12 @@ public class User implements Person {
         return this.age;
     }
     @Override
-    public String getNiveau() {
-        return this.niveau != null ? this.niveau.toString() : null;
+    public Level getNiveau() {
+        return this.niveau;
     }
     @Override
-    public String getMorphologie() {
-        return this.morphologie != null ? this.morphologie.toString() : null;
+    public Morphology getMorphologie() {
+        return this.morphologie;
     }
     public String getPassword() {
         return this.password;
@@ -78,18 +76,30 @@ public class User implements Person {
     }
 
     public void setMail(String mail) {
+        this.mail = mail;
     }
 
     public void setNom(String nom) {
+        this.nom = nom;
     }
 
     public void setPrenom(String prenom) {
+        this.prenom = prenom;
     }
 
     public void setNiveau(Level niveau) {
-
+        this.niveau = niveau;
     }
 
     public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setMorphologie(Morphology morphologie) {
+        this.morphologie = morphologie;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
     }
 }

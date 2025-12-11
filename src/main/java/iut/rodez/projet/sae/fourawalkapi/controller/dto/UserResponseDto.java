@@ -16,8 +16,8 @@ public class UserResponseDto {
     private String prenom;
     private int age;
     private String adresse;
-    private String niveau;
-    private String morphologie;
+    private Level niveau;
+    private Morphology morphologie;
 
 
     // Constructeur pour mapper l'Entité User vers ce DTO
