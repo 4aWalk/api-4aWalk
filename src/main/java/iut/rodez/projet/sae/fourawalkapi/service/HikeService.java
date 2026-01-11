@@ -29,7 +29,7 @@ public class HikeService {
 
     // --- 2. Consultation des détails d'une randonnée ---
     public Optional<Hike> getHikeById(Long hikeId) {
-        return hikeRepository.findById(hikeId);
+        return null;
     }
 
     // --- 3. Création d'une randonnée ---
@@ -78,6 +78,9 @@ public class HikeService {
 
         hike.getParticipants().removeIf(p -> p.getId().equals(participantId));
         return hikeRepository.save(hike);
+    }
+
+    public void deleteHike(Long id) {
     }
 
     // [TODO : Logique de sécurité pour s'assurer que l'utilisateur modifie SES randonnées]

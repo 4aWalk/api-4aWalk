@@ -4,6 +4,9 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.repository.ParticipantRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class ParticipantService {
 
@@ -35,5 +38,19 @@ public class ParticipantService {
         if (details.getNomComplet() != null) existing.setNomComplet(details.getNomComplet());
 
         return participantRepository.save(existing);
+    }
+
+
+    public void delete(Long id) {
+        participantRepository.deleteById(id);
+    }
+
+    /**
+     * Récupère un participant par son identifiant unique.
+     * @param id L'ID du participant
+     * @return Un Optional contenant le participant s'il existe
+     */
+    public Optional<Participant> getById(Long id) {
+        return participantRepository.findById(id);
     }
 }

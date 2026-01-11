@@ -75,4 +75,7 @@ public class Participant implements Person {
         this.capaciteEmportMaxKg = capaciteEmportMaxKg;
     }
 
+    public Object getNom() {
+        return this.nomComplet;
+    }
 }
