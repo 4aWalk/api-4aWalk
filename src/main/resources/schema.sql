@@ -205,8 +205,8 @@ CREATE TABLE hike_food (
     hike_id BIGINT NOT NULL,
     food_id BIGINT NOT NULL,
     PRIMARY KEY (hike_id, food_id),
-    CONSTRAINT fk_hike_f FOREIGN KEY (hike_id) REFERENCES hike(id),
-    CONSTRAINT fk_food_h FOREIGN KEY (food_id) REFERENCES food_item(id)
+    CONSTRAINT fk_hike_f FOREIGN KEY (hike_id) REFERENCES hikes(id),
+    CONSTRAINT fk_food_h FOREIGN KEY (food_id) REFERENCES food_products(id)
 );
 
 -- Liaison Randonnée <-> Équipement
@@ -214,8 +214,8 @@ CREATE TABLE hike_equipment (
     hike_id BIGINT NOT NULL,
     equipment_id BIGINT NOT NULL,
     PRIMARY KEY (hike_id, equipment_id),
-    CONSTRAINT fk_hike_e FOREIGN KEY (hike_id) REFERENCES hike(id),
-    CONSTRAINT fk_equip_h FOREIGN KEY (equipment_id) REFERENCES equipment_item(id)
+    CONSTRAINT fk_hike_e FOREIGN KEY (hike_id) REFERENCES hikes(id),
+    CONSTRAINT fk_equip_h FOREIGN KEY (equipment_id) REFERENCES equipment_items(id)
 );
 -- Réactivation des vérifications
 SET SQL_SAFE_UPDATES = 1;
