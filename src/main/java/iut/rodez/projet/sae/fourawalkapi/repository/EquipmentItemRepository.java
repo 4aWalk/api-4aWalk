@@ -5,6 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EquipementItemRepository extends JpaRepository<EquipmentItem, Long> {
-    void deleteByBackpackId(Object id);
+public interface EquipmentItemRepository extends JpaRepository<EquipmentItem, Long> {
 }

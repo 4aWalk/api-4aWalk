@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface BackpackRepository extends JpaRepository<Backpack, Long> {
-    Optional<Backpack> findByParticipantId(Long idParticipant);
+        Optional<Backpack> findByOwnerId(Long ownerId);
 }

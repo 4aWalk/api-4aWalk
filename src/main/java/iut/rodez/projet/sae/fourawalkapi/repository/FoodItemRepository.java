@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FoodItemRepository extends JpaRepository<FoodProduct, Long> {
-    void deleteByBackpackId(Object id);
 }
