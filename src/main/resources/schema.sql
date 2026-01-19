@@ -10,8 +10,8 @@ USE fourawalkdb;
 SET SQL_SAFE_UPDATES = 0;
 
 -- Suppression des tables (ordre inverse des dépendances)
+DROP TABLE IF EXISTS hike_equipment;
 DROP TABLE IF EXISTS hike_food;
-DROP TABLE IF EXISTS hike_equipement;
 DROP TABLE IF EXISTS backpack_food_items;
 DROP TABLE IF EXISTS backpack_food_items;
 DROP TABLE IF EXISTS backpack_equipment;
