@@ -17,12 +17,12 @@ jobs:
         uses: actions/checkout@v4
       
       # 1. Configuration Java (JDK 25 - > 17 TECH003)
-      - name: Set up JDK 25
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          # Utilisation de JDK 25
-          java-version: '25' 
+          # Utilisation de JDK 21
+          java-version: '21' 
           cache: 'maven'
 
       # 2. Compilation et Tests (DEV006)
