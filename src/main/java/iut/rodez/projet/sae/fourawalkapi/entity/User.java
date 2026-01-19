@@ -2,11 +2,9 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
-import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.Person;
-import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import jakarta.persistence.*;
-import java.time.LocalDate;
+
 import java.util.Set;
 
 /** Utilisateur (Gère le compte et les données personnelles - UC001, UC002) */
@@ -25,7 +23,7 @@ public class User implements Person {
     private String adresse;
 
     // Caractéristiques Personne
-    private LocalDate dateNaissance;
+    private int age;
     @Enumerated(EnumType.STRING)
     private Level niveau;
     @Enumerated(EnumType.STRING)
@@ -36,29 +34,72 @@ public class User implements Person {
     private Set<Hike> createdHikes;
 
     public User() {}
-    public User(String nom, String prenom, String mail, String password, String adresse, LocalDate dateNaissance, Level niveau, Morphology morphologie) {
+    public User(String nom, String prenom, String mail, String password, String adresse, int age, Level niveau, Morphology morphologie) {
         this.nom = nom;
         this.prenom = prenom;
         this.mail = mail;
         this.password = password;
         this.adresse = adresse;
-        this.dateNaissance = dateNaissance;
+        this.age = age;
         this.niveau = niveau;
         this.morphologie = morphologie;
     }
 
     @Override
-    public LocalDate getDateNaissance() {
-        return null;
+    public int getAge() {
+        return this.age;
+    }
+    @Override
+    public Level getNiveau() {
+        return this.niveau;
+    }
+    @Override
+    public Morphology getMorphologie() {
+        return this.morphologie;
+    }
+    public String getPassword() {
+        return this.password;
+    }
+    public String getMail() {
+        return this.mail;
+    }
+    public String getAdresse() {
+        return this.adresse;
+    }
+    public String getNom() {
+        return this.nom;
+    }
+    public String getPrenom() { return this.prenom;}
+
+    public void  setPassword(String password) {
+        this.password = password;
     }
 
-    @Override
-    public String getNiveau() {
-        return "";
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 
-    @Override
-    public String getMorphologie() {
-        return "";
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
+
+    public void setNiveau(Level niveau) {
+        this.niveau = niveau;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setMorphologie(Morphology morphologie) {
+        this.morphologie = morphologie;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
     }
 }
