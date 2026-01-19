@@ -4,7 +4,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 
-import java.util.List;
+import java.util.Set;
 
 public class HikeResponseDto {
     private Long id;
@@ -13,7 +13,7 @@ public class HikeResponseDto {
     private String arrivee;
     private int dureeJours;
     private User creator;
-    private List<Participant> participants;
+    private Set<Participant> participants;
 
     public HikeResponseDto(Hike hike) {
         this.id = hike.getId();
