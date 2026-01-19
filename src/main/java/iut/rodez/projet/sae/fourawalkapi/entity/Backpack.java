@@ -39,4 +39,8 @@ public class Backpack {
     public Backpack(Participant owner) {
         this.owner = owner;
     }
+
+    public Object getId() {
+        return this.id;
+    }
 }
