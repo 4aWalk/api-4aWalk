@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  api-service:
+    build: .
+    container_name: fourawalk-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      mongo-db:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_sql_4awalk?createDatabaseIfNotExist=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=developeur_01
+      - SPRING_DATASOURCE_PASSWORD=R7@mQx4!Tb9$gL2p
+      - SPRING_DATA_MONGODB_URI=mongodb://developeur_01:SX6kqYJAg2eMG$YC@mongo-db:27017/db_mongo_4awalk?authSource=admin
+    networks:
+      - walk-network
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-walk
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: db_sql_4awalk
+      MYSQL_USER: developeur_01
+      MYSQL_PASSWORD: "R7@mQx4!Tb9$gL2p"
+      MYSQL_ROOT_PASSWORD: root_password_secure
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - walk-network
+
+  mongo-db:
+    image: mongo:latest
+    container_name: mongo-walk
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: db_mongo_4awalk
+      MONGO_INITDB_ROOT_USERNAME: developeur_01
+      MONGO_INITDB_ROOT_PASSWORD: "SX6kqYJAg2eMG$YC"
+    networks:
+      - walk-network
+
+networks:
+  walk-network:
+    driver: bridge

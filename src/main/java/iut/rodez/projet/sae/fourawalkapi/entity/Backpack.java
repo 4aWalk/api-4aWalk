@@ -2,10 +2,12 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import jakarta.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-/** * Représente le chargement du sac à dos d'un participant.
- * Cette classe est le cœur de l'optimisation.
+/**
+ * Représente le chargement du sac à dos d'un participant.
+ * C'est l'entité centrale pour le résultat de l'optimisation du chargement.
  */
 @Entity
 @Table(name = "backpacks")
@@ -15,17 +17,15 @@ public class Backpack {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Poids total réel porté (calculé lors de l'optimisation)
+    /** Poids total réel porté en Kg (Somme des équipements et de la nourriture) */
     private double totalMassKg;
 
-    // Le propriétaire du sac.
-    // On utilise 'owner' comme nom de variable Java.
+    /** Le propriétaire du sac (Lien One-to-One avec Participant) */
     @OneToOne
-    @JoinColumn(name = "participant_id")
+    @JoinColumn(name = "participant_id", nullable = false)
     private Participant owner;
 
-    // Contenu : Liste des produits alimentaires.
-    // Relation N-N car une référence de produit peut être dans plusieurs sacs.
+    /** Liste des produits alimentaires présents dans le sac */
     @ManyToMany
     @JoinTable(
             name = "backpack_food",
@@ -33,7 +33,7 @@ public class Backpack {
             inverseJoinColumns = @JoinColumn(name = "food_id"))
     private Set<FoodProduct> foodItems = new HashSet<>();
 
-    // Contenu : Liste de l'équipement.
+    /** Liste des équipements présents dans le sac */
     @ManyToMany
     @JoinTable(
             name = "backpack_equipment",
@@ -41,51 +41,84 @@ public class Backpack {
             inverseJoinColumns = @JoinColumn(name = "equipment_id"))
     private Set<EquipmentItem> equipmentItems = new HashSet<>();
 
-    // Constructeurs
-    public Backpack() {}
+    // --- Constructeurs ---
+
+    public Backpack() {
+        this.totalMassKg = 0.0;
+    }
 
     public Backpack(Participant owner) {
+        this();
         this.owner = owner;
     }
 
-    // Getters et Setters
-    public Long getId() {
-        return this.id;
+    // --- Logique métier de bas niveau (Entity Logic) ---
+
+    /**
+     * Recalcule le poids total du sac à partir des masses de chaque item.
+     * Cette méthode doit être appelée après chaque modification du contenu.
+     */
+    public void updateAndGetTotalMass() {
+        double mass = 0.0;
+
+        if (equipmentItems != null) {
+            mass += equipmentItems.stream()
+                    .mapToDouble(EquipmentItem::getWeightKg)
+                    .sum();
+        }
+
+        if (foodItems != null) {
+            mass += foodItems.stream()
+                    .mapToDouble(FoodProduct::getWeightKg)
+                    .sum();
+        }
+
+        this.totalMassKg = mass;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    /** Vide intégralement le contenu du sac */
+    public void clearContent() {
+        this.foodItems.clear();
+        this.equipmentItems.clear();
+        this.totalMassKg = 0.0;
     }
 
-    public double getTotalMassKg() {
-        return totalMassKg;
+    // --- Overrides Standards ---
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Backpack backpack = (Backpack) o;
+        // L'égalité est basée sur l'ID technique ou sur le propriétaire unique
+        return Objects.equals(id, backpack.id) || Objects.equals(owner, backpack.owner);
     }
 
-    public void setTotalMassKg(double totalMassKg) {
-        this.totalMassKg = totalMassKg;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, owner);
     }
 
-    public Participant getOwner() {
-        return owner;
+    @Override
+    public String toString() {
+        return String.format("Backpack[id=%d, owner=%s, totalWeight=%.2fkg]",
+                id, (owner != null ? owner.getNomComplet() : "null"), totalMassKg);
     }
 
-    public void setOwner(Participant owner) {
-        this.owner = owner;
-    }
+    // --- Getters et Setters ---
 
-    public Set<FoodProduct> getFoodItems() {
-        return foodItems;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setFoodItems(Set<FoodProduct> foodItems) {
-        this.foodItems = foodItems;
-    }
+    public double getTotalMassKg() { return totalMassKg; }
+    public void setTotalMassKg(double totalMassKg) { this.totalMassKg = totalMassKg; }
 
-    public Set<EquipmentItem> getEquipmentItems() {
-        return equipmentItems;
-    }
+    public Participant getOwner() { return owner; }
+    public void setOwner(Participant owner) { this.owner = owner; }
 
-    public void setEquipmentItems(Set<EquipmentItem> equipmentItems) {
-        this.equipmentItems = equipmentItems;
-    }
+    public Set<FoodProduct> getFoodItems() { return foodItems; }
+    public void setFoodItems(Set<FoodProduct> foodItems) { this.foodItems = foodItems; }
+
+    public Set<EquipmentItem> getEquipmentItems() { return equipmentItems; }
+    public void setEquipmentItems(Set<EquipmentItem> equipmentItems) { this.equipmentItems = equipmentItems; }
 }

@@ -3,8 +3,8 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
-import iut.rodez.projet.sae.fourawalkapi.repository.HikeRepository;
-import iut.rodez.projet.sae.fourawalkapi.repository.ParticipantRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

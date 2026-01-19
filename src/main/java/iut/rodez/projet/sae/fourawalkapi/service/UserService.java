@@ -1,7 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
-import iut.rodez.projet.sae.fourawalkapi.repository.UserRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

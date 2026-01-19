@@ -22,7 +22,7 @@ public class ParticipantResponseDto {
         this.age = participant.getAge();
         this.niveau = participant.getNiveau();
         this.morphologie = participant.getMorphologie();
-        this.besoinEau = participant.getBesoinEau();
-        this.capaciteEmportMaxKg = participant.getCapaciteMax();
+        this.besoinEau = participant.getBesoinEauLitre();
+        this.capaciteEmportMaxKg = participant.getCapaciteEmportMaxKg();
     }
 }

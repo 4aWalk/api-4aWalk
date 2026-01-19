@@ -1,6 +1,5 @@
-package iut.rodez.projet.sae.fourawalkapi.repository;
+package iut.rodez.projet.sae.fourawalkapi.repository.mysql;
 
-import iut.rodez.projet.sae.fourawalkapi.entity.BackpackFoodItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

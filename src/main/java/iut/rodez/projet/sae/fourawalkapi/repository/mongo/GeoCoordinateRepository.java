@@ -1,4 +1,4 @@
-package iut.rodez.projet.sae.fourawalkapi.repository;
+package iut.rodez.projet.sae.fourawalkapi.repository.mongo;
 
 import iut.rodez.projet.sae.fourawalkapi.document.GeoCoordinate;
 import org.springframework.data.mongodb.repository.MongoRepository;

@@ -1,10 +1,9 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
-import iut.rodez.projet.sae.fourawalkapi.repository.ParticipantRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,7 +30,7 @@ public class ParticipantService {
         // On met à jour uniquement si les nouvelles infos sont fournies
         if (details.getNiveau() != null) existing.setNiveau(details.getNiveau());
         if (details.getMorphologie() != null) existing.setMorphologie(details.getMorphologie());
-        if (details.getBesoinEau() > 0) existing.setBesoinEau(details.getBesoinEau());
+        if (details.getBesoinEauLitre() > 0) existing.setBesoinEauLitre(details.getBesoinEauLitre());
 
         // Permet aussi de modifier nom/prénom si besoin
         if (details.getNomComplet() != null) existing.setNomComplet(details.getNomComplet());

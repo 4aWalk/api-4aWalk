@@ -3,9 +3,9 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
-import iut.rodez.projet.sae.fourawalkapi.repository.FoodItemRepository;
-import iut.rodez.projet.sae.fourawalkapi.repository.EquipmentItemRepository;
-import iut.rodez.projet.sae.fourawalkapi.repository.BackpackRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.FoodItemRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BackpackRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
