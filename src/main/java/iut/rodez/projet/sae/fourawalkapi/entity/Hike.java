@@ -2,6 +2,8 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /** Randonnée (Planification de l'itinéraire et des participants - UC004) */
@@ -41,4 +43,24 @@ public class Hike {
         this.dureeJours = dureeJours;
         this.creator = creator;
     }
+    public Long getId() { return id; }
+    public String getLibelle() {return libelle;}
+    public String getDepart() {return depart;}
+    public String getArrivee() {return arrivee;}
+    public int getDureeJours() {return dureeJours;}
+    public User getCreator() {return creator;}
+
+    public void setLibelle(String libelle) {this.libelle = libelle;}
+    public void setDepart(String depart) {this.depart = depart;}
+    public void setArrivee(String arrivee) {this.arrivee = arrivee;}
+    public void setDureeJours(int dureeJours) {this.dureeJours = dureeJours;}
+    public void setCreator(User creator) {this.creator = creator;}
+
+
+    public List<Participant> getParticipants() {
+        if (participants == null) { return new ArrayList<>(); }
+        return (List<Participant>) this.participants;
+    }
+
+    public void setParticipants(Set<Participant> participants) {this.participants = participants;}
 }

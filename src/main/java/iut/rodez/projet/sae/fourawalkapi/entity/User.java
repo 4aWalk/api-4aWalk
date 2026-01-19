@@ -34,7 +34,8 @@ public class User implements Person {
     private Set<Hike> createdHikes;
 
     public User() {}
-    public User(String nom, String prenom, String mail, String password, String adresse, int age, Level niveau, Morphology morphologie) {
+    public User(Long id, String nom, String prenom, String mail, String password, String adresse, int age, Level niveau, Morphology morphologie) {
+        this.id = id;
         this.nom = nom;
         this.prenom = prenom;
         this.mail = mail;
@@ -57,6 +58,10 @@ public class User implements Person {
     public Morphology getMorphologie() {
         return this.morphologie;
     }
+
+    @Override
+    public Long getId() {return this.id;}
+
     public String getPassword() {
         return this.password;
     }

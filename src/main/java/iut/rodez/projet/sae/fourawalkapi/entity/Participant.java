@@ -23,8 +23,8 @@ public class Participant implements Person {
     private Morphology morphologie;
 
     // Besoins nutritionnels/eau (Saisie ou calculés - 2.1.4.3)
-    private double besoinKcal;
-    private double besoinEauLitre;
+    private int besoinKcal;
+    private int besoinEauLitre;
 
     // Capacité d'emport (Saisie ou calculée/vérifiée - 2.1.4.2)
     // Une capacité de 0 est équivalent à ne pas avoir de sac
@@ -35,7 +35,7 @@ public class Participant implements Person {
     private Backpack backpack;
 
     public Participant() {}
-    public Participant(String nomComplet, int age, Level niveau, Morphology morphologie, double besoinKcal, double besoinEauLitre, double capaciteEmportMaxKg) {
+    public Participant(String nomComplet, int age, Level niveau, Morphology morphologie, int besoinKcal, int besoinEauLitre, double capaciteEmportMaxKg) {
         this.nomComplet = nomComplet;
         this.age = age;
         this.niveau = niveau;
@@ -58,5 +58,24 @@ public class Participant implements Person {
     @Override
     public Morphology getMorphologie() {
         return this.morphologie;
+    }
+
+    public Long getId() {return this.id;}
+    public String getNomComplet() {return this.nomComplet;}
+    public int getBesoinEau() {return this.besoinEauLitre;}
+    public double getCapaciteMax() {return  this.capaciteEmportMaxKg;}
+
+    public void setNomComplet(String nomComplet) {this.nomComplet = nomComplet;}
+    public void setAge(int age) {this.age = age;}
+    public void setNiveau(Level niveau) {this.niveau = niveau;}
+    public void setMorphologie(Morphology morphologie){this.morphologie = morphologie;}
+    public void setBesoinKcal(int besoinKcal) {this.besoinKcal = besoinKcal;}
+    public void setBesoinEau(int eauCl) {this.besoinEauLitre = eauCl;}
+    public void setCapaciteEmportMaxKg(double capaciteEmportMaxKg) {
+        this.capaciteEmportMaxKg = capaciteEmportMaxKg;
+    }
+
+    public Object getNom() {
+        return this.nomComplet;
     }
 }

@@ -60,6 +60,7 @@ INSERT INTO backpack_food_items (id, backpack_id, food_product_id, quantity) VAL
 
 INSERT INTO backpack_equipment (backpack_id, equipment_id) VALUES
     (1, 1);
-
+INSERT INTO hike_food (hike_id, food_id) VALUES (1, 1);
+INSERT INTO hike_equipment (hike_id, equipment_id) VALUES (1, 1);
 -- Réactivation des vérifications
 SET SQL_SAFE_UPDATES = 1;

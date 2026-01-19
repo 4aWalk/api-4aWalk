@@ -1,4 +1,4 @@
-package iut.rodez.projet.sae.fourawalkapi.controller.dto;
+package iut.rodez.projet.sae.fourawalkapi.controller.request;
 
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;

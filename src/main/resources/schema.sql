@@ -10,6 +10,9 @@ USE fourawalkdb;
 SET SQL_SAFE_UPDATES = 0;
 
 -- Suppression des tables (ordre inverse des dépendances)
+DROP TABLE IF EXISTS hike_equipment;
+DROP TABLE IF EXISTS hike_food;
+DROP TABLE IF EXISTS backpack_food_items;
 DROP TABLE IF EXISTS backpack_food_items;
 DROP TABLE IF EXISTS backpack_equipment;
 DROP TABLE IF EXISTS hike_participants;
@@ -197,5 +200,22 @@ CREATE TABLE backpack_equipment (
     FOREIGN KEY (equipment_id) REFERENCES equipment_items(id) ON DELETE CASCADE
 );
 
+-- Liaison Randonnée <-> Nourriture
+CREATE TABLE hike_food (
+    hike_id BIGINT NOT NULL,
+    food_id BIGINT NOT NULL,
+    PRIMARY KEY (hike_id, food_id),
+    CONSTRAINT fk_hike_f FOREIGN KEY (hike_id) REFERENCES hikes(id),
+    CONSTRAINT fk_food_h FOREIGN KEY (food_id) REFERENCES food_products(id)
+);
+
+-- Liaison Randonnée <-> Équipement
+CREATE TABLE hike_equipment (
+    hike_id BIGINT NOT NULL,
+    equipment_id BIGINT NOT NULL,
+    PRIMARY KEY (hike_id, equipment_id),
+    CONSTRAINT fk_hike_e FOREIGN KEY (hike_id) REFERENCES hikes(id),
+    CONSTRAINT fk_equip_h FOREIGN KEY (equipment_id) REFERENCES equipment_items(id)
+);
 -- Réactivation des vérifications
 SET SQL_SAFE_UPDATES = 1;
