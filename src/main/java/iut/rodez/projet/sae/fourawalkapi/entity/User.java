@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 import iut.rodez.projet.sae.fourawalkapi.model.Person;
@@ -43,6 +44,7 @@ public class User implements Person {
     private Morphology morphologie;
 
     /** Liste des randonnées dont cet utilisateur est l'organisateur */
+    @JsonIgnore // Référence circulaire
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Hike> createdHikes = new HashSet<>();
 
