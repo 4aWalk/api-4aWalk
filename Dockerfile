@@ -1,23 +1,15 @@
-# Étape 1 : Phase de construction
-FROM eclipse-temurin:21-jdk-focal AS build
+# Utilisation d'une image JRE légère pour Java 21
+FROM eclipse-temurin:21-jre-jammy
 
-RUN apt-get update && apt-get install -y maven
+# Dossier de travail dans le container
 WORKDIR /app
 
-# Optimisation du cache Maven
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# On copie le JAR généré par Maven (dans le dossier target/) vers le container
+# Assure-toi d'avoir lancé .\mvnw clean package avant
+COPY target/*.jar app.jar
 
-COPY src ./src
-RUN mvn clean install -DskipTests
-
-# Étape 2 : Phase d'exécution
-FROM eclipse-temurin:21-jre-focal
-
-WORKDIR /app
+# Port exposé par l'API
 EXPOSE 8080
 
-# Utilisation d'un wildcard pour copier le JAR sans se soucier de la version exacte
-COPY --from=build /app/target/*.jar app.jar
-
+# Commande de lancement
 ENTRYPOINT ["java", "-jar", "app.jar"]
