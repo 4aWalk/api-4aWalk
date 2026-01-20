@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import iut.rodez.projet.sae.fourawalkapi.error.HikeException;
 import jakarta.persistence.*;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ public class Hike {
     /** Durée en jours (Contrainte : entre 1 et 3 jours) */
     private int dureeJours;
 
+    @JsonIgnore // Référence circulaire
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
     private User creator;
