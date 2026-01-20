@@ -26,8 +26,8 @@ jobs:
           cache: 'maven'
 
       # 2. Compilation et Tests (DEV006)
-      - name: Build with Maven and Run Tests
-        # Si vous utilisez Maven
+      - name: Build with Maven
+        #run: mvn clean package -DskipTests
         run: mvn clean install -Dspring.profiles.active=test
 
       # 3. Analyse Statique de Code (DEV005)
