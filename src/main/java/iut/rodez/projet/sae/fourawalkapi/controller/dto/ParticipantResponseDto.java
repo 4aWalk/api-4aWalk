@@ -25,4 +25,12 @@ public class ParticipantResponseDto {
         this.besoinEau = participant.getBesoinEauLitre();
         this.capaciteEmportMaxKg = participant.getCapaciteEmportMaxKg();
     }
+
+    public Long getId() { return id; }
+    public String getNomComplet() { return nomComplet; }
+    public int getAge() { return age; }
+    public Level getNiveau() { return niveau; }
+    public Morphology getMorphologie() { return morphologie; }
+    public int getBesoinEau() { return besoinEau; }
+    public double getCapaciteEmportMaxKg() { return capaciteEmportMaxKg; }
 }

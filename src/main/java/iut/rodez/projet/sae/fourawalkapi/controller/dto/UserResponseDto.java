@@ -30,4 +30,13 @@ public class UserResponseDto {
         this.niveau = user.getNiveau();
         this.morphologie = user.getMorphologie();
     }
+
+    public Long getId() { return id; }
+    public String getMail() { return mail; }
+    public String getNom() { return nom; }
+    public String getPrenom() { return prenom; }
+    public int getAge() { return age; }
+    public String getAdresse() { return adresse; }
+    public Level getNiveau() { return niveau; }
+    public Morphology getMorphologie() { return morphologie; }
 }
