@@ -34,3 +34,4 @@ jobs:
             cd ~/project
             docker compose pull api-4awalk
             docker compose up -d api-4awalk
+            
