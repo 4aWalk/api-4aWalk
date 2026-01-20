@@ -81,6 +81,7 @@ public class HikeService {
     }
 
     public void deleteHike(Long id) {
+
     }
 
     // [TODO : Logique de sécurité pour s'assurer que l'utilisateur modifie SES randonnées]
