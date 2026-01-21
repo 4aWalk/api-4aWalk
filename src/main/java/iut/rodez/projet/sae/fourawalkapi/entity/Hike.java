@@ -43,6 +43,22 @@ public class Hike {
     @OneToMany(mappedBy = "hike", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PointOfInterest> optionalPoints = new HashSet<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "hike_food_products",
+            joinColumns = @JoinColumn(name = "hike_id"),
+            inverseJoinColumns = @JoinColumn(name = "food_product_id")
+    )
+    private Set<FoodProduct> foodCatalogue = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "hike_equipment",
+            joinColumns = @JoinColumn(name = "hike_id"),
+            inverseJoinColumns = @JoinColumn(name = "equipment_id")
+    )
+    private Set<EquipmentItem> equipmentRequired = new HashSet<>();
+
     // --- Constructeurs ---
 
     public Hike() {}
@@ -141,4 +157,10 @@ public class Hike {
 
     public Set<PointOfInterest> getOptionalPoints() { return optionalPoints; }
     public void setOptionalPoints(Set<PointOfInterest> optionalPoints) { this.optionalPoints = optionalPoints; }
+
+    public Set<FoodProduct> getFoodCatalogue() { return foodCatalogue; }
+    public void setFoodCatalogue(Set<FoodProduct> foodCatalogue) { this.foodCatalogue = foodCatalogue; }
+
+    public Set<EquipmentItem> getEquipmentRequired() { return equipmentRequired; }
+    public void setEquipmentRequired(Set<EquipmentItem> equipmentRequired) { this.equipmentRequired = equipmentRequired; }
 }
