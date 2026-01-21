@@ -28,7 +28,6 @@ public class Hike {
     /** Durée en jours (Contrainte : entre 1 et 3 jours) */
     private int dureeJours;
 
-    @JsonIgnore // Référence circulaire
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
     private User creator;
