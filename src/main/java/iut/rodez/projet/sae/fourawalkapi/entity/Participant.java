@@ -70,11 +70,6 @@ public class Participant implements Person {
         return this.backpack.getTotalMassKg() > this.capaciteEmportMaxKg;
     }
 
-    /** Calcule le pourcentage de charge actuel par rapport au max */
-    public double getLoadPercentage() {
-        if (capaciteEmportMaxKg <= 0 || backpack == null) return 0.0;
-        return (backpack.getTotalMassKg() / capaciteEmportMaxKg) * 100;
-    }
 
     // --- Implémentation de l'interface Person ---
 

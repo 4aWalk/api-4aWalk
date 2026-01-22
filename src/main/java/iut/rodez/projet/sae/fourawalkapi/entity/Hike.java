@@ -22,8 +22,11 @@ public class Hike {
     @Column(nullable = false)
     private String libelle;
 
-    private String depart;
-    private String arrivee;
+    @ManyToOne(cascade = CascadeType.ALL)
+    private PointOfInterest depart;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    private PointOfInterest arrivee;
 
     /** Durée en jours (Contrainte : entre 1 et 3 jours) */
     private int dureeJours;
@@ -63,7 +66,7 @@ public class Hike {
 
     public Hike() {}
 
-    public Hike(String libelle, String depart, String arrivee, int dureeJours, User creator) {
+    public Hike(String libelle, PointOfInterest depart, PointOfInterest arrivee, int dureeJours, User creator) {
         this.libelle = libelle;
         this.depart = depart;
         this.arrivee = arrivee;
@@ -133,11 +136,11 @@ public class Hike {
     public String getLibelle() { return libelle; }
     public void setLibelle(String libelle) { this.libelle = libelle; }
 
-    public String getDepart() { return depart; }
-    public void setDepart(String depart) { this.depart = depart; }
+    public PointOfInterest getDepart() { return depart; }
+    public void setDepart(PointOfInterest depart) { this.depart = depart; }
 
-    public String getArrivee() { return arrivee; }
-    public void setArrivee(String arrivee) { this.arrivee = arrivee; }
+    public PointOfInterest getArrivee() { return arrivee; }
+    public void setArrivee(PointOfInterest arrivee) { this.arrivee = arrivee; }
 
     public int getDureeJours() { return dureeJours; }
 

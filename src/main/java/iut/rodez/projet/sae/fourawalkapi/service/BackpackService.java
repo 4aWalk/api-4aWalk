@@ -3,7 +3,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.FoodItemRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.FoodProductRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BackpackRepository;
 import org.springframework.stereotype.Service;
@@ -16,9 +16,9 @@ public class BackpackService {
 
     private final BackpackRepository backpackRepository;
     private final EquipmentItemRepository equipementRepository;
-    private final FoodItemRepository foodRepository;
+    private final FoodProductRepository foodRepository;
 
-    public BackpackService(BackpackRepository backpackRepository, EquipmentItemRepository equipementRepository, FoodItemRepository foodRepository) {
+    public BackpackService(BackpackRepository backpackRepository, EquipmentItemRepository equipementRepository, FoodProductRepository foodRepository) {
         this.backpackRepository = backpackRepository;
         this.equipementRepository = equipementRepository;
         this.foodRepository = foodRepository;

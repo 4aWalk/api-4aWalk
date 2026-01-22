@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -51,5 +52,29 @@ public class ParticipantService {
      */
     public Optional<Participant> getById(Long id) {
         return participantRepository.findById(id);
+    }
+
+    public void validateParticipant(Participant p) {
+        if (p == null) {
+            throw new IllegalArgumentException("Le participant ne peut pas être nul.");
+        }
+        if (p.getAge() < 1 || p.getAge() > 120) {
+            throw new IllegalArgumentException("L'âge du participant doit être cohérent (1-120).");
+        }
+        if (p.getNomComplet() == null || p.getNomComplet().isBlank()) {
+            throw new IllegalArgumentException("Le nom du participant est obligatoire.");
+        }
+        // Vérification des constantes métier (calculées par l'entité)
+        if (p.getCapaciteEmportMaxKg() <= 0) {
+            throw new IllegalArgumentException("La capacité d'emport doit être positive.");
+        }
+    }
+
+    @Transactional
+    public void deleteParticipant(Long id) {
+        if (!participantRepository.existsById(id)) {
+            throw new RuntimeException("Participant introuvable ID: " + id);
+        }
+        participantRepository.deleteById(id);
     }
 }

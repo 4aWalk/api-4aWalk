@@ -13,13 +13,18 @@ import java.util.Optional;
 @Service
 public class HikeService {
 
+    private final ParticipantService participantService;
+    private final FoodService foodService;
+    private final EquipmentService equipmentService;
     private final HikeRepository hikeRepository;
-
     private final ParticipantRepository participantRepository;
 
-    public HikeService(HikeRepository hikeRepository, ParticipantRepository participantRepository) {
-        this.hikeRepository = hikeRepository;
-        this.participantRepository = participantRepository;
+    public HikeService(ParticipantService ps, FoodService fs, EquipmentService es, HikeRepository hr, ParticipantRepository pr) {
+        this.participantService = ps;
+        this.foodService = fs;
+        this.equipmentService = es;
+        this.hikeRepository = hr;
+        this.participantRepository = pr;
     }
 
     // --- 1. Consultation des randonnées créées par l'utilisateur ---
@@ -29,18 +34,18 @@ public class HikeService {
 
     // --- 2. Consultation des détails d'une randonnée ---
     public Optional<Hike> getHikeById(Long hikeId) {
-        return null;
+        return hikeRepository.findById(hikeId);
     }
 
     // --- 3. Création d'une randonnée ---
     public Hike createHike(Hike newHike) {
-        // TODOValidation des données si nécessaire (distance > 0, date valide, etc.)
+        validateHike(newHike);
         return hikeRepository.save(newHike);
     }
 
     // --- 4. Mise à jour d'une randonnée ---
     public Optional<Hike> updateHike(Long hikeId, Hike updatedDetails) {
-
+        validateHike(updatedDetails);
         Optional<Hike> existingHike = hikeRepository.findById(hikeId);
 
         if (existingHike.isPresent()) {
@@ -81,8 +86,41 @@ public class HikeService {
     }
 
     public void deleteHike(Long id) {
-
+        if (!hikeRepository.existsById(id)) {
+            throw new RuntimeException("Impossible de supprimer : Randonnée introuvable avec l'ID " + id);
+        }
+        hikeRepository.deleteById(id);
     }
 
-    // [TODO : Logique de sécurité pour s'assurer que l'utilisateur modifie SES randonnées]
+    public void validateHike(Hike hike) {
+        // 1. Validation Durée
+        if (hike.getDureeJours() < 1 || hike.getDureeJours() > 3) {
+            throw new IllegalArgumentException("La durée doit être comprise entre 1 et 3 jours.");
+        }
+
+        // 2. Validation Départ != Arrivée
+        if (hike.getDepart() == null || hike.getArrivee() == null) {
+            throw new IllegalArgumentException("Le départ et l'arrivée doivent être renseignés.");
+        }
+        if (hike.getDepart().equals(hike.getArrivee())) {
+            throw new IllegalArgumentException("Le point de départ doit être différent du point d'arrivée.");
+        }
+
+        // 3. Validation Participants (Taille 1 à 3 + Validation individuelle)
+        if (hike.getParticipants() == null || hike.getParticipants().isEmpty()) {
+            throw new IllegalArgumentException("Il faut au moins 1 participant.");
+        }
+        if (hike.getParticipants().size() > 3) {
+            throw new IllegalArgumentException("Maximum 3 participants autorisés.");
+        }
+        hike.getParticipants().forEach(participantService::validateParticipant);
+
+        // 4. Validation Catalogue Food & Equipment
+        if (hike.getFoodCatalogue() != null) {
+            hike.getFoodCatalogue().forEach(foodService::validateFoodProduct);
+        }
+        if (hike.getEquipmentRequired() != null) {
+            hike.getEquipmentRequired().forEach(equipmentService::validateEquipment);
+        }
+    }
 }
