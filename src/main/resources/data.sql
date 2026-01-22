@@ -1,6 +1,6 @@
 -- 1. Utilisateur
 INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morphologie) VALUES
-    (1, 'Brouz', 'Admin', 'admin@4awalk.fr', '$2a$10$wTf7JzG3i8xG4oWw0oTf7eQ7xG4oWw0oTf7e', '12 Rue de la SAE', 30, 'SPORTIF', 'LEGERE');
+    (1, 'Brouz', 'Admin', 'admin@4awalk.fr', '$2a$10$3zR/oHj/k6z0G7RkO/v8oeX9y1Nn.TfXvTshF.XhYxV5O9K8L6m2.', '12 Rue de la SAE', 30, 'SPORTIF', 'LEGERE');
 
 -- 2. Produits et Équipements
 INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro) VALUES
