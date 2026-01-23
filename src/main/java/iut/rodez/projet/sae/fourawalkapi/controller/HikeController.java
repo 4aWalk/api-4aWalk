@@ -21,72 +21,116 @@ public class HikeController {
     private final JwtTokenProvider tokenProvider;
     private final UserService userService;
 
-    public HikeController(HikeService hikeService, FoodService foodService,
-                          EquipmentService equipmentService, ParticipantService participantService,
-                          JwtTokenProvider tokenProvider, UserService userService) {
-        this.hikeService = hikeService;
-        this.foodService = foodService;
-        this.equipmentService = equipmentService;
-        this.participantService = participantService;
-        this.tokenProvider = tokenProvider;
-        this.userService = userService;
+    public HikeController(HikeService hs, FoodService fs, EquipmentService es,
+                          ParticipantService ps, JwtTokenProvider tp, UserService us) {
+        this.hikeService = hs;
+        this.foodService = fs;
+        this.equipmentService = es;
+        this.participantService = ps;
+        this.tokenProvider = tp;
+        this.userService = us;
     }
-
-    // --- HELPER ---
-    private Long getCurrentUserId(String token) {
-        String jwt = token.substring(7);
-        String email = tokenProvider.getUsername(jwt);
-        return userService.findByMail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"))
-                .getId();
-    }
-
-    // --- HIKES ENDPOINTS ---
 
     @GetMapping("/my")
     public ResponseEntity<List<HikeResponseDto>> getMyHikes(@RequestHeader("Authorization") String token) {
-        Long userId = getCurrentUserId(token);
-        List<HikeResponseDto> dtos = hikeService.getHikesByCreator(userId).stream()
+        String jwt = token.substring(7);
+
+        Long userId = tokenProvider.getUserId(jwt);
+
+        return ResponseEntity.ok(hikeService.getHikesByCreator(userId).stream()
                 .map(HikeResponseDto::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<HikeResponseDto> getHikeById(@PathVariable Long id) {
-        return hikeService.getHikeById(id)
-                .map(hike -> ResponseEntity.ok(new HikeResponseDto(hike)))
+    public ResponseEntity<HikeResponseDto> getHike(@PathVariable Long id) {
+        return hikeService.getHikeById(id).map(h -> ResponseEntity.ok(new HikeResponseDto(h)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping
+    public ResponseEntity<HikeResponseDto> create(@RequestHeader("Authorization") String token,
+                                                  @RequestBody Hike hike) {
+        // On récupère l'ID directement via le tokenProvider
+        Long userId = getUserIdFromToken(token);
+
+        // On crée la rando en passant l'ID du créateur au service
+        Hike createdHike = hikeService.createHike(hike, userId);
+
+        return ResponseEntity.ok(new HikeResponseDto(createdHike));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<HikeResponseDto> updateHike(@RequestHeader("Authorization") String token,
+                                                      @PathVariable Long id,
+                                                      @RequestBody Hike hike) {
+        Long userId = getUserIdFromToken(token);
+        return ResponseEntity.ok(new HikeResponseDto(hikeService.updateHike(id, hike, userId)));
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHike(@PathVariable Long id) {
-        hikeService.deleteHike(id);
+    public ResponseEntity<Void> deleteHike(@RequestHeader("Authorization") String token,
+                                           @PathVariable Long id) {
+        Long userId = getUserIdFromToken(token);
+        hikeService.deleteHike(id, userId);
         return ResponseEntity.noContent().build();
     }
 
-    // --- CATALOGUE ENDPOINTS (Services manquants) ---
+    // --- Participants ---
+    @PostMapping("/{hikeId}/participants")
+    public ResponseEntity<HikeResponseDto> addParticipant(@PathVariable Long hikeId, @RequestBody Participant p) {
+        return ResponseEntity.ok(new HikeResponseDto(hikeService.addParticipantToHike(hikeId, p)));
+    }
 
-    /** GET /api/v1/hikes/catalog/food -> Liste tout le catalogue alimentaire */
+    @PutMapping("/participants/{pId}")
+    public ResponseEntity<Participant> updateParticipant(@PathVariable Long pId, @RequestBody Participant p) {
+        // Appelle le service participant (étape 2 de ton code)
+        return ResponseEntity.ok(participantService.updateParticipantDetails(pId, p));
+    }
+
+    @DeleteMapping("/{hikeId}/participants/{pId}")
+    public ResponseEntity<Void> removeParticipant(@PathVariable Long hikeId, @PathVariable Long pId) {
+        hikeService.removeParticipantFromHike(hikeId, pId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- Food & Equipment ---
+    @PostMapping("/{id}/food/{fId}")
+    public ResponseEntity<HikeResponseDto> addFood(@PathVariable Long id, @PathVariable Long fId) {
+        return ResponseEntity.ok(new HikeResponseDto(hikeService.addFoodToHike(id, fId)));
+    }
+
+    @DeleteMapping("/{id}/food/{fId}")
+    public ResponseEntity<HikeResponseDto> removeFood(@PathVariable Long id, @PathVariable Long fId) {
+        return ResponseEntity.ok(new HikeResponseDto(hikeService.removeFoodFromHike(id, fId)));
+    }
+
+    @PostMapping("/{id}/equipment/{eId}")
+    public ResponseEntity<HikeResponseDto> addEquip(@PathVariable Long id, @PathVariable Long eId) {
+        return ResponseEntity.ok(new HikeResponseDto(hikeService.addEquipmentToHike(id, eId)));
+    }
+
+    @DeleteMapping("/{id}/equipment/{eId}")
+    public ResponseEntity<HikeResponseDto> removeEquip(@PathVariable Long id, @PathVariable Long eId) {
+        return ResponseEntity.ok(new HikeResponseDto(hikeService.removeEquipmentFromHike(id, eId)));
+    }
+
+    // --- Catalogues ---
     @GetMapping("/catalog/food")
-    public ResponseEntity<List<FoodProductResponseDto>> getAllFood() {
-        return ResponseEntity.ok(foodService.findAll().stream()
-                .map(FoodProductResponseDto::new)
-                .collect(Collectors.toList()));
+    public ResponseEntity<List<FoodProduct>> getFoodCatalog() {
+        return ResponseEntity.ok(foodService.findAll());
     }
 
-    /** GET /api/v1/hikes/catalog/equipment -> Liste tout l'équipement disponible */
     @GetMapping("/catalog/equipment")
-    public ResponseEntity<List<EquipmentResponseDto>> getAllEquipment() {
-        return ResponseEntity.ok(equipmentService.findAll().stream()
-                .map(EquipmentResponseDto::new)
-                .collect(Collectors.toList()));
+    public ResponseEntity<List<EquipmentItem>> getEquipCatalog() {
+        return ResponseEntity.ok(equipmentService.findAll());
     }
 
-    /** DELETE /api/v1/hikes/participants/{id} -> Supprimer un participant spécifique */
-    @DeleteMapping("/participants/{id}")
-    public ResponseEntity<Void> deleteParticipant(@PathVariable Long id) {
-        participantService.deleteParticipant(id);
-        return ResponseEntity.noContent().build();
+    private Long getUserIdFromToken(String header) {
+        if (header != null && header.startsWith("Bearer ")) {
+            String jwt = header.substring(7); // On enlève "Bearer "
+            return tokenProvider.getUserId(jwt); // On appelle le provider
+        }
+        throw new RuntimeException("Header Authorization invalide");
     }
 }
