@@ -1,0 +1,134 @@
+@startuml
+left to right direction
+
+' ==== Interfaces & enums ====
+interface Person {
+  +String getNom()
+  +int getAge()
+  +Level getNiveau()
+  +Morphology getMorphologie()
+  +Long getId()
+}
+
+interface Item {
+  +String getNom()
+  +String getDescription()
+  +double getMasseGrammes()
+  +double getMasseKg()
+}
+
+enum Level {
+  SPORTIF
+  ENTRAINE
+  DEBUTANT
+}
+
+enum Morphology {
+  LEGERE
+  MOYENNE
+  FORTE
+}
+
+' ==== Entités JPA ====
+
+class User {
+  Long id
+  String nom
+  String prenom
+  String mail
+  String password
+  String adresse
+  int age
+  Level niveau
+  Morphology morphologie
+}
+
+class Hike {
+  Long id
+  String libelle
+  int dureeJours
+  Set~Participant~ participants
+  Set~PointOfInterest~ optionalPoints
+  Set~FoodProduct~ foodCatalogue
+  Set~EquipmentItem~ equipmentRequired
+}
+
+class Participant {
+  Long id
+  String nomComplet
+  int age
+  Level niveau
+  Morphology morphologie
+  int besoinKcal
+  int besoinEauLitre
+  double capaciteEmportMaxKg
+}
+
+class Backpack {
+  Long id
+  double totalMassKg
+}
+
+class FoodProduct {
+  Long id
+  String nom
+  String description
+  double masseGrammes
+  double apportNutritionnelKcal
+}
+
+class EquipmentItem {
+  Long id
+  String nom
+  String description
+  double masseGrammes
+  boolean permetRepos
+}
+
+class PointOfInterest {
+  Long id
+  String name
+  double latitude
+  double longitude
+}
+
+' ==== MongoDB ====
+
+class Course {
+  String id
+  Long hikeId
+  boolean isFinished
+  boolean isPaused
+  List~GeoCoordinate~ trajetsRealises
+}
+
+class GeoCoordinate {
+  double latitude
+  double longitude
+}
+
+' ==== Interfaces ====
+User ..|> Person
+Participant ..|> Person
+FoodProduct ..|> Item
+EquipmentItem ..|> Item
+
+Person --> Level
+Person --> Morphology
+
+' ==== Relations ====
+User "1" <-- "0..*" Hike : creator
+Hike "0..*" -- "0..*" Participant
+Participant "1" o-- "0..1" Backpack
+
+Hike "1" o-- "0..*" PointOfInterest : optional
+Hike "1" --> "1" PointOfInterest : depart
+Hike "1" --> "1" PointOfInterest : arrivee
+
+Hike "0..*" -- "0..*" FoodProduct
+Hike "0..*" -- "0..*" EquipmentItem
+
+Course "1" *-- "0..*" GeoCoordinate
+Course --> Hike : hikeId
+
+@enduml
