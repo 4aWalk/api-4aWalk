@@ -25,9 +25,7 @@ public class ParticipantController {
     // GET /api/v1/participants/{id} -> Infos d'un participant
     @GetMapping("/{id}")
     public ResponseEntity<Participant> getParticipant(@PathVariable Long id) {
-        return participantService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return new ResponseEntity<>(participantService.getById(id), HttpStatus.OK);
     }
 
     // POST /api/v1/participants -> Étape 1 : Création (Nom/Prénom)
@@ -46,7 +44,7 @@ public class ParticipantController {
     // DELETE /api/v1/participants/{id} -> Suppression
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteParticipant(@PathVariable Long id) {
-        participantService.delete(id);
+        participantService.deleteParticipant(id);
         return ResponseEntity.noContent().build();
     }
 

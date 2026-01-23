@@ -22,10 +22,11 @@ public class Hike {
     @Column(nullable = false)
     private String libelle;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    // Départ et Arrivée : On veut juste faire le lien, JAMAIS supprimer le point en BDD
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PointOfInterest depart;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PointOfInterest arrivee;
 
     /** Durée en jours (Contrainte : entre 1 et 3 jours) */
@@ -43,9 +44,9 @@ public class Hike {
     )
     private Set<Participant> participants = new HashSet<>();
 
-    @OneToMany(mappedBy = "hike", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "hike_id") // La colonne sera dans la table POI
     private Set<PointOfInterest> optionalPoints = new HashSet<>();
-
     @ManyToMany
     @JoinTable(
             name = "hike_food_products",
@@ -104,7 +105,6 @@ public class Hike {
      */
     public void addPointOfInterest(PointOfInterest poi) {
         this.optionalPoints.add(poi);
-        poi.setHike(this);
     }
 
     // --- Overrides Standards ---
@@ -137,18 +137,19 @@ public class Hike {
     public void setLibelle(String libelle) { this.libelle = libelle; }
 
     public PointOfInterest getDepart() { return depart; }
-    public void setDepart(PointOfInterest depart) { this.depart = depart; }
+    public void setDepart(PointOfInterest depart) {
+        this.depart = depart;
+    }
 
     public PointOfInterest getArrivee() { return arrivee; }
-    public void setArrivee(PointOfInterest arrivee) { this.arrivee = arrivee; }
+    public void setArrivee(PointOfInterest arrivee) {
+        this.arrivee = arrivee;
+    }
 
     public int getDureeJours() { return dureeJours; }
 
     /** Valide que la durée est comprise entre 1 et 3 jours */
     public void setDureeJours(int dureeJours) {
-        if (dureeJours < 1 || dureeJours > 3) {
-            throw new IllegalArgumentException("La durée doit être comprise entre 1 et 3 jours.");
-        }
         this.dureeJours = dureeJours;
     }
 

@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -37,23 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 2. Valider le token et charger l'utilisateur
         if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
 
-            // Récupérer l'email (username) depuis le token
-            String username = tokenProvider.getUsername(token);
+            // 1. Récupérer l'ID directement depuis le token
+            Long userId = tokenProvider.getUserId(token);
 
-            // Charger les détails de l'utilisateur (méthode loadUserByUsername du UserService)
-            UserDetails userDetails = userService.loadUserByUsername(username);
-
-            // Créer l'objet d'authentification pour Spring Security
+            // 2. Créer un objet d'authentification minimal sans charger la base de données
+            // On met l'ID comme "principal" (identifiant de l'utilisateur connecté)
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null, // Pas de mot de passe car c'est déjà validé par le token
-                    userDetails.getAuthorities()
+                    userId, // On stocke l'ID ici
+                    null,
+                    java.util.Collections.emptyList() // Liste d'autorités vide
             );
 
-            // Définir les détails de la requête
+            // 3. Définir les détails de la requête
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            // Définir l'authentification dans le SecurityContext (L'utilisateur est connecté)
+            // 4. Définir l'authentification dans le SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

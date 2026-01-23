@@ -16,7 +16,7 @@ public class PointOfInterest {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String nom;
 
     private double latitude;
 
@@ -25,21 +25,15 @@ public class PointOfInterest {
     @Column(length = 500)
     private String description;
 
-    /** La randonnée associée à ce point d'intérêt */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hike_id")
-    private Hike hike;
-
     // --- Constructeurs ---
 
     public PointOfInterest() {}
 
-    public PointOfInterest(String name, double latitude, double longitude, String description, Hike hike) {
-        this.name = name;
+    public PointOfInterest(String nom, double latitude, double longitude, String description, Hike hike) {
+        this.nom = nom;
         this.latitude = latitude;
         this.longitude = longitude;
         this.description = description;
-        this.hike = hike;
     }
 
     // --- Logique métier de bas niveau ---
@@ -70,17 +64,17 @@ public class PointOfInterest {
         return Objects.equals(id, that.id) ||
                 (Double.compare(that.latitude, latitude) == 0 &&
                         Double.compare(that.longitude, longitude) == 0 &&
-                        Objects.equals(name, that.name));
+                        Objects.equals(nom, that.nom));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, latitude, longitude);
+        return Objects.hash(id, nom, latitude, longitude);
     }
 
     @Override
     public String toString() {
-        return String.format("POI[name='%s', lat=%.4f, lon=%.4f]", name, latitude, longitude);
+        return String.format("POI[name='%s', lat=%.4f, lon=%.4f]", nom, latitude, longitude);
     }
 
     // --- Getters et Setters ---
@@ -88,8 +82,8 @@ public class PointOfInterest {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() { return nom; }
+    public void setName(String name) { this.nom = name; }
 
     public double getLatitude() { return latitude; }
     public void setLatitude(double latitude) { this.latitude = latitude; }
@@ -99,7 +93,4 @@ public class PointOfInterest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
-    public Hike getHike() { return hike; }
-    public void setHike(Hike hike) { this.hike = hike; }
 }

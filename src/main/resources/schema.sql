@@ -45,7 +45,7 @@ CREATE TABLE points_of_interest (
                                     description VARCHAR(500),
                                     latitude DOUBLE NOT NULL,
                                     longitude DOUBLE NOT NULL,
-                                    hike_id BIGINT -- Présent car vu dans tes logs Hibernate
+                                    hike_id BIGINT
 );
 
 -- 3. Table des Randonnées
