@@ -18,9 +18,6 @@ public class Participant implements Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String nomComplet;
-
     private int age;
 
     @Enumerated(EnumType.STRING)
@@ -28,6 +25,8 @@ public class Participant implements Person {
 
     @Enumerated(EnumType.STRING)
     private Morphology morphologie;
+
+    private boolean creator = false;
 
     /** Besoins énergétiques quotidiens en Kcal */
     private int besoinKcal;
@@ -48,12 +47,12 @@ public class Participant implements Person {
 
     public Participant() {}
 
-    public Participant(String nomComplet, int age, Level niveau, Morphology morphologie,
+    public Participant(int age, Level niveau, Morphology morphologie, boolean creator,
                        int besoinKcal, int besoinEauLitre, double capaciteEmportMaxKg) {
-        this.nomComplet = nomComplet;
         this.age = age;
         this.niveau = niveau;
         this.morphologie = morphologie;
+        this.creator = creator;
         this.besoinKcal = besoinKcal;
         this.besoinEauLitre = besoinEauLitre;
         this.capaciteEmportMaxKg = capaciteEmportMaxKg;
@@ -74,11 +73,6 @@ public class Participant implements Person {
     // --- Implémentation de l'interface Person ---
 
     @Override
-    public String getNom() {
-        return this.nomComplet;
-    }
-
-    @Override
     public int getAge() {
         return this.age;
     }
@@ -95,38 +89,22 @@ public class Participant implements Person {
 
     // --- Overrides Standards ---
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Participant that = (Participant) o;
-        // L'égalité repose sur l'ID technique s'il existe, sinon sur le nom complet
-        return Objects.equals(id, that.id) || (id == null && Objects.equals(nomComplet, that.nomComplet));
-    }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, nomComplet);
-    }
 
-    @Override
-    public String toString() {
-        return String.format("%s (%d ans, %s, %s)", nomComplet, age, niveau, morphologie);
-    }
 
     // --- Getters et Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getNomComplet() { return nomComplet; }
-    public void setNomComplet(String nomComplet) { this.nomComplet = nomComplet; }
-
     public void setAge(int age) { this.age = age; }
 
     public void setNiveau(Level niveau) { this.niveau = niveau; }
 
     public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
+
+    public boolean getCreator() { return creator; }
+    public void setCreator(boolean isCreator) { this.creator = isCreator; }
 
     public int getBesoinKcal() { return besoinKcal; }
     public void setBesoinKcal(int besoinKcal) { this.besoinKcal = besoinKcal; }

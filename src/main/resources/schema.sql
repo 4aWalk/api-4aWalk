@@ -29,10 +29,10 @@ CREATE TABLE users (
 
 CREATE TABLE participants (
                               id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                              nom_complet VARCHAR(255),
                               age INT,
                               niveau VARCHAR(50),
                               morphologie VARCHAR(50),
+                              estCreateur BOOLEAN,
                               besoin_kcal INTEGER NOT NULL,
                               besoin_eau_litre INTEGER NOT NULL,
                               capacite_emport_max_kg DOUBLE NOT NULL

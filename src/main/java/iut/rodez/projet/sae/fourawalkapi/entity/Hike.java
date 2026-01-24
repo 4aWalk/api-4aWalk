@@ -1,7 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import iut.rodez.projet.sae.fourawalkapi.error.HikeException;
+import iut.rodez.projet.sae.fourawalkapi.advice.HikeException;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;

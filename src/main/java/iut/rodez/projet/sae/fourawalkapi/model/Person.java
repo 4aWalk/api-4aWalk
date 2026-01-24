@@ -4,11 +4,12 @@ import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
 public interface Person {
-    String getNom();
-
     int getAge();
+    void setAge(int age);
     Level getNiveau(); // Sportif, Entrainé, Débutant
+    void setNiveau(Level niveau);
     Morphology getMorphologie(); // Légère, Moyenne, Forte
-
+    void setMorphologie(Morphology morphologi);
     Long getId();
+    void setId(Long id);
 }

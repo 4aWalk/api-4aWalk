@@ -31,7 +31,7 @@ public class ParticipantController {
     // POST /api/v1/participants -> Étape 1 : Création (Nom/Prénom)
     @PostMapping
     public ResponseEntity<Participant> createParticipant(@RequestBody Participant p) {
-        Participant created = participantService.createBasicParticipant(p.getNomComplet());
+        Participant created = participantService.createBasicParticipant();
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 

@@ -99,12 +99,6 @@ public class Backpack {
         return Objects.hash(id, owner);
     }
 
-    @Override
-    public String toString() {
-        return String.format("Backpack[id=%d, owner=%s, totalWeight=%.2fkg]",
-                id, (owner != null ? owner.getNomComplet() : "null"), totalMassKg);
-    }
-
     // --- Getters et Setters ---
 
     public Long getId() { return id; }

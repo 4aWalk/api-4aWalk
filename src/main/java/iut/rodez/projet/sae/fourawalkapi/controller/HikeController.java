@@ -82,10 +82,19 @@ public class HikeController {
         return ResponseEntity.ok(new HikeResponseDto(hikeService.addParticipantToHike(hikeId, p)));
     }
 
-    @PutMapping("/participants/{pId}")
-    public ResponseEntity<Participant> updateParticipant(@PathVariable Long pId, @RequestBody Participant p) {
-        // Appelle le service participant (étape 2 de ton code)
-        return ResponseEntity.ok(participantService.updateParticipantDetails(pId, p));
+    @PutMapping("/{hikeId}/participants/{pId}")
+    public ResponseEntity<Participant> updateParticipant(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long hikeId,
+            @PathVariable Long pId,
+            @RequestBody Participant p) {
+
+        Long userId = getUserIdFromToken(token);
+
+        // On passe par le HikeService pour vérifier que l'utilisateur possède bien la rando
+        Participant updated = hikeService.updateParticipantInHike(hikeId, pId, p, userId);
+
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{hikeId}/participants/{pId}")

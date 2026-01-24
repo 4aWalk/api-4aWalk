@@ -43,10 +43,6 @@ public class User implements Person {
     @Enumerated(EnumType.STRING)
     private Morphology morphologie;
 
-    /** Liste des randonnées dont cet utilisateur est l'organisateur */
-    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Hike> createdHikes = new HashSet<>();
-
     // --- Constructeurs ---
 
     public User() {}
@@ -71,18 +67,7 @@ public class User implements Person {
         return prenom + " " + nom.toUpperCase();
     }
 
-    /** Ajoute une randonnée créée et assure la cohérence du lien */
-    public void addCreatedHike(Hike hike) {
-        this.createdHikes.add(hike);
-        hike.setCreator(this);
-    }
-
     // --- Implémentation de l'interface Person ---
-
-    @Override
-    public String getNom() {
-        return this.nom;
-    }
 
     @Override
     public int getAge() {
@@ -128,6 +113,7 @@ public class User implements Person {
     public String getPrenom() { return prenom; }
     public void setPrenom(String prenom) { this.prenom = prenom; }
 
+    public String getNom() {return this.nom;}
     public void setNom(String nom) { this.nom = nom; }
 
     public String getMail() { return mail; }
@@ -144,7 +130,4 @@ public class User implements Person {
     public void setNiveau(Level niveau) { this.niveau = niveau; }
 
     public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
-
-    public Set<Hike> getCreatedHikes() { return createdHikes; }
-    public void setCreatedHikes(Set<Hike> createdHikes) { this.createdHikes = createdHikes; }
 }

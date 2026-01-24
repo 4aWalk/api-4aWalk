@@ -16,9 +16,8 @@ public class ParticipantService {
         this.participantRepository = participantRepository;
     }
 
-    public Participant createBasicParticipant(String nomComplet) {
+    public Participant createBasicParticipant() {
         Participant p = new Participant();
-        p.setNomComplet(nomComplet);
         return participantRepository.save(p);
     }
 
@@ -28,7 +27,6 @@ public class ParticipantService {
                 .orElseThrow(() -> new RuntimeException("Participant non trouvé"));
 
         // Mise à jour sélective
-        if (details.getNomComplet() != null) existing.setNomComplet(details.getNomComplet());
         if (details.getAge() > 0) existing.setAge(details.getAge());
         if (details.getNiveau() != null) existing.setNiveau(details.getNiveau());
         if (details.getMorphologie() != null) existing.setMorphologie(details.getMorphologie());
@@ -42,7 +40,6 @@ public class ParticipantService {
 
     public void validateParticipant(Participant p) {
         if (p.getAge() < 1 || p.getAge() > 120) throw new IllegalArgumentException("Âge invalide.");
-        if (p.getNomComplet() == null || p.getNomComplet().isBlank()) throw new IllegalArgumentException("Nom obligatoire.");
     }
 
     @Transactional
