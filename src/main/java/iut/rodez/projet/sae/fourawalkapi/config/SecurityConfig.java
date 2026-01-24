@@ -65,18 +65,9 @@ public class SecurityConfig {
 
                 // 3. Définir les autorisations d'accès aux Endpoints
                 .authorizeHttpRequests(authorize -> authorize
-
-                        // --- Endpoints Publics (Autorisés sans token) ---
-                        // Correction ici : On utilise requestMatchers avec le pattern et le HttpMethod.
-                        // Spring Security le gère lui-même.
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
-                        // Si vous avez d'autres endpoints publics (GET, etc.) :
-                        // .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
-
-
-                        // --- Endpoints Privés ---
-                        .anyRequest().authenticated()
+                .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
+                .anyRequest().authenticated()
                 )
 
                 // 4. Intégrer notre filtre JWT
