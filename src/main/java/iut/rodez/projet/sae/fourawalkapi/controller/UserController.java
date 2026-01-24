@@ -1,88 +1,66 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.JwtResponseDto;
-import iut.rodez.projet.sae.fourawalkapi.controller.request.UserLoginRequest;
-import iut.rodez.projet.sae.fourawalkapi.controller.request.UserRegistrationRequest;
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.UserResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.security.JwtTokenProvider;
 import iut.rodez.projet.sae.fourawalkapi.service.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-// Indique que c'est une API REST
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
-// Chemin de base pour les requêtes
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
-    private final JwtTokenProvider tokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
 
-    // Injection du UserService
-    public UserController(UserService userService, JwtTokenProvider tokenProvider, AuthenticationManager authenticationManager) {
+    public UserController(UserService userService, AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
         this.userService = userService;
-        this.tokenProvider = tokenProvider;
         this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
     }
 
-    // --- Endpoint 1: Inscription (UC001) ---
-
-    /**
-     * Requête : POST /api/v1/users/register
-     * Crée un nouvel utilisateur.
-     */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<?> register(@RequestBody User user) {
+        User savedUser = userService.registerNewUser(user);
+        Authentication authForToken = new UsernamePasswordAuthenticationToken(savedUser.getMail(), null);
 
-        // Étape 1: Création de l'Entité User à partir du DTO
-        User newUser = new User(); // Utilisez le constructeur de l'Entité ou MapStruct ici
-        newUser.setMail(request.getMail());
-        newUser.setPassword(request.getPassword()); // Le service va hacher ce mot de passe
-        newUser.setNom(request.getNom());
-        newUser.setPrenom(request.getPrenom());
-        newUser.setAge(request.getAge());
-        newUser.setNiveau(request.getNiveau());
-        newUser.setAdresse(request.getAdresse());
-        newUser.setMorphologie(request.getMorphologie());
-        // Étape 2: Appel du service (la validation et le hachage se font ici)
-        User registeredUser = userService.registerNewUser(newUser);
+        String token = tokenProvider.generateToken(authForToken);
 
-        UserResponseDto responseDto = new UserResponseDto(registeredUser);
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", savedUser);
 
-        // Étape 3: Retourne la réponse (HTTP 201 Created)
-        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
-
+        return ResponseEntity.ok(response);
     }
 
-    // --- Endpoint 2: Connexion (UC002) ---
-
-    /**
-     * Requête : POST /api/v1/users/login
-     * Tente d'authentifier un utilisateur.
-     */
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDto> login(@RequestBody UserLoginRequest request) {
-        // ...
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+        String email = loginRequest.get("mail");
+        String password = loginRequest.get("password");
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+        );
+
         String token = tokenProvider.generateToken(authentication);
 
-        // 1. Récupérer l'Entité User via l'email
-        User user = userService.findByMail(request.getMail())
-                .orElseThrow(() -> new RuntimeException("Erreur critique: Utilisateur non trouvé après une authentification réussie."));
+        User userFromDb = userService.findByMail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
 
-        // 2. Créer les DTOs
-        UserResponseDto userDto = new UserResponseDto(user);
-        JwtResponseDto response = new JwtResponseDto(token, userDto);
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", userFromDb);
 
-        // 3. Retourner le DTO combiné
         return ResponseEntity.ok(response);
     }
 }
