@@ -1,6 +1,11 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Objects;
 
 /**
@@ -15,12 +20,19 @@ public class PointOfInterest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Le nom du POI est obligatoire")
     @Column(nullable = false)
     private String nom;
 
-    private double latitude;
+    @NotNull(message = "La latitude est requise")
+    @Min(value = -90, message = "La latitude doit être entre -90 et 90")
+    @Max(value = 90, message = "La latitude doit être entre -90 et 90")
+    private Double latitude;
 
-    private double longitude;
+    @NotNull(message = "La longitude est requise")
+    @Min(value = -180, message = "La longitude doit être entre -180 et 180")
+    @Max(value = 180, message = "La longitude doit être entre -180 et 180")
+    private Double longitude;
 
     @Column(length = 500)
     private String description;

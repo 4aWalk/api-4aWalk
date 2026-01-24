@@ -32,7 +32,7 @@ CREATE TABLE participants (
                               age INT,
                               niveau VARCHAR(50),
                               morphologie VARCHAR(50),
-                              estCreateur BOOLEAN,
+                              creator BOOLEAN,
                               besoin_kcal INTEGER NOT NULL,
                               besoin_eau_litre INTEGER NOT NULL,
                               capacite_emport_max_kg DOUBLE NOT NULL

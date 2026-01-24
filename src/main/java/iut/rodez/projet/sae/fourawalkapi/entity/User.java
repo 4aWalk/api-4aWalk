@@ -1,6 +1,8 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 import iut.rodez.projet.sae.fourawalkapi.model.Person;
@@ -15,6 +17,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User implements Person {
 
     @Id
@@ -31,6 +34,7 @@ public class User implements Person {
     private String mail;
 
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // Stocké sous forme de hash (BCrypt par exemple)
 
     private String adresse;

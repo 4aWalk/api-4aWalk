@@ -1,7 +1,12 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import iut.rodez.projet.sae.fourawalkapi.advice.HikeException;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -12,23 +17,25 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "hikes")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Hike {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Le libellé de la randonnée est obligatoire")
     @Column(nullable = false)
     private String libelle;
 
-    // Départ et Arrivée : On veut juste faire le lien, JAMAIS supprimer le point en BDD
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PointOfInterest depart;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PointOfInterest arrivee;
 
-    /** Durée en jours (Contrainte : entre 1 et 3 jours) */
+    @Min(value = 1, message = "La durée minimale est de 1 jour")
+    @Max(value = 3, message = "La durée maximale est de 3 jours")
     private int dureeJours;
 
     @ManyToOne(fetch = FetchType.LAZY)

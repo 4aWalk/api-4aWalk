@@ -15,7 +15,7 @@ INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_
                                                                                          (2, 'Laguiole Village', 'Arrivée prévue', 44.6844, 2.8472, NULL);
 
 -- 4. Participants
-INSERT INTO participants (id, age, niveau, morphologie, estCreateur, besoin_kcal, besoin_eau_litre, capacite_emport_max_kg) VALUES
+INSERT INTO participants (id, age, niveau, morphologie, creator, besoin_kcal, besoin_eau_litre, capacite_emport_max_kg) VALUES
     (1,  25, 'ENTRAINE', 'MOYENNE', TRUE, 2500, 3, 15.0);
 
 -- 5. Randonnée

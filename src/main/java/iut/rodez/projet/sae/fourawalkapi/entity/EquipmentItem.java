@@ -2,6 +2,10 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.util.Objects;
 
 /**
@@ -16,13 +20,15 @@ public class EquipmentItem implements Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Le nom de l'équipement est obligatoire")
     @Column(nullable = false)
     private String nom;
 
     private String description;
 
-    /** Masse en grammes (stockage précis) */
-    private double masseGrammes;
+    @NotNull(message = "Le poids est requis")
+    @Positive(message = "Le poids doit être strictement positif")
+    private Double masseGrammes;
 
     /** * Critère spécifique (UC 2.1.4.1) :
      * Définit si cet équipement permet au participant de se reposer (ex: tente, sac de couchage).

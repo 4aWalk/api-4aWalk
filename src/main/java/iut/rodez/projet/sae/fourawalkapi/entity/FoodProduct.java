@@ -2,6 +2,11 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+
 import java.util.Objects;
 
 /**
@@ -17,23 +22,24 @@ public class FoodProduct implements Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Le nom de l'aliment est obligatoire")
     @Column(nullable = false)
-    private String nom; // Dénomination précise (ex: Gratin dauphinois Voyager)
+    private String nom;
 
     private String description;
 
-    private double masseGrammes;
+    @NotNull(message = "Le poids est requis")
+    @Positive(message = "Le poids doit être strictement positif")
+    private Double masseGrammes;
 
-    /** Nom commun de l'aliment (ex: Riz, Pâtes, Chocolat) */
     private String appellationCourante;
-
-    /** Type de contenant (ex: Sachet lyophilisé, Boîte de conserve) */
     private String conditionnement;
 
-    /** Énergie totale fournie par une unité du produit */
-    private double apportNutritionnelKcal;
+    @PositiveOrZero(message = "Les calories ne peuvent pas être négatives")
+    private Double apportNutritionnelKcal;
 
-    private double prixEuro;
+    @PositiveOrZero
+    private Double prixEuro;
 
     // --- Constructeurs ---
 

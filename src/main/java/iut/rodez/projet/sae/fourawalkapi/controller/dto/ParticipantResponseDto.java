@@ -6,7 +6,6 @@ import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
 public class ParticipantResponseDto {
     private Long id;
-    private String nomComplet;
     private int age;
     private Level niveau;
     private Morphology morphologie;
@@ -41,7 +40,6 @@ public class ParticipantResponseDto {
 
     // --- GETTERS (Cruciaux pour Jackson) ---
     public Long getId() { return id; }
-    public String getNomComplet() { return nomComplet; }
     public int getAge() { return age; }
     public Level getNiveau() { return niveau; }
     public Morphology getMorphologie() { return morphologie; }

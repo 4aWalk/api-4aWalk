@@ -4,6 +4,11 @@ import iut.rodez.projet.sae.fourawalkapi.model.Person;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
 import java.util.Objects;
 
 /**
@@ -18,26 +23,29 @@ public class Participant implements Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int age;
+    @NotNull(message = "L'âge est obligatoire")
+    @Min(value = 5, message = "L'âge minimum est de 5 ans")
+    @Max(value = 100, message = "L'âge maximum est de 100 ans")
+    private Integer age;
 
+    @NotNull(message = "Le niveau est obligatoire")
     @Enumerated(EnumType.STRING)
     private Level niveau;
 
+    @NotNull(message = "La morphologie est obligatoire")
     @Enumerated(EnumType.STRING)
     private Morphology morphologie;
 
     private boolean creator = false;
 
-    /** Besoins énergétiques quotidiens en Kcal */
-    private int besoinKcal;
+    @PositiveOrZero(message = "Le besoin calorique ne peut pas être négatif")
+    private Integer besoinKcal = 0;
 
-    /** Besoins en eau en Litres */
-    private int besoinEauLitre;
+    @PositiveOrZero(message = "Le besoin en eau ne peut pas être négatif")
+    private Integer besoinEauLitre = 0;
 
-    /** * Capacité de charge maximale en Kg.
-     * Si 0, le participant ne peut pas porter de sac.
-     */
-    private double capaciteEmportMaxKg;
+    @PositiveOrZero(message = "La capacité d'emport doit être positive")
+    private Double capaciteEmportMaxKg = 0.0;
 
     /** Le sac à dos attribué au participant */
     @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
