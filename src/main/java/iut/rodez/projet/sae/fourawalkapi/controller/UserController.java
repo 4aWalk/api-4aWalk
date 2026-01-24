@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 // Indique que c'est une API REST
 @RestController
 // Chemin de base pour les requêtes
-@RequestMapping("/api/v1/users")
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
