@@ -115,5 +115,9 @@ public class HikeService {
         }
     }
 
+    public void optimizeBackpackParticipant(Hike hike) {
+        MetierTools.validateHikeForOptimize(hike);
 
+        // WIP optimiser les sac à dos
+    }
 }
