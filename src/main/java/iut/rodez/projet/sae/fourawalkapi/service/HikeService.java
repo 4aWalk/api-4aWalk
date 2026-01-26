@@ -5,6 +5,7 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -116,8 +117,8 @@ public class HikeService {
     }
 
     public void optimizeBackpackParticipant(Hike hike) {
-        MetierTools.validateHikeForOptimize(hike);
+        MetierToolsService.validateHikeForOptimize(hike);
 
-        // WIP optimiser les sac à dos
+
     }
 }

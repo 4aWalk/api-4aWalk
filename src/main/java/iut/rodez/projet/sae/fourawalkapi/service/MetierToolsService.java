@@ -1,13 +1,17 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
+import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
-class MetierTools {
+class MetierToolsService {
 
     public static void validateHikeForOptimize(Hike hike) {
         PointOfInterest pDepart = hike.getDepart();
@@ -18,14 +22,24 @@ class MetierTools {
         validateDistanceHike(distanceRando, hike.getDureeJours(), getParticipantWithBadStat(hike));
 
         // Validation des informations participants
+        int besoinCalorieTotalParticipant = 0;
         for (Participant p : hike.getParticipants()) {
             validateKcalParticipant(p, distanceRando);
             validateEauParticipant(p, distanceRando);
             validatePoidsParticipant(p);
+            besoinCalorieTotalParticipant =+ p.getBesoinKcal();
         }
 
-    }
+        // Validation de la nourriture
+        validateHikeFood(hike, besoinCalorieTotalParticipant);
 
+        // Validation de l'équipement
+        validateHikeEquipment(hike);
+
+
+        // Validation équipement
+
+    }
 
 
     private static Participant getParticipantWithBadStat(Hike hike) {
@@ -124,5 +138,24 @@ class MetierTools {
                 participant.getCapaciteEmportMaxKg() < besoinInitial + besoinInitial * 0.1) {
             throw new RuntimeException("La capacité du sac à dos " + participant.getBesoinEauLitre() + "kg est aberrant");
         }
+    }
+
+    private static void validateHikeFood(Hike hike, int besoinCalorieTotal) {
+        List<String> foodAlreadyUsed = new ArrayList<>();
+        int maxCalorieForHike = hike.getCaloriesForAllParticipants() / 4;
+        for(FoodProduct foodProduct : hike.getFoodCatalogue()) {
+            if (foodAlreadyUsed.contains(foodProduct.getAppellationCourante())) {
+                throw new RuntimeException("Une randonné ne peut pas contenir plusieur fois un même type de nourriture");
+            }
+            if (foodProduct.getApportNutritionnelKcal() > maxCalorieForHike) {
+                throw new RuntimeException("Une nourriture ne peux pas excéder le quart des besoins caloriques des participants");
+            }
+        }
+        if (besoinCalorieTotal > hike.getCalorieRandonne()) {
+            throw new RuntimeException("La nourriture de la randonné ne permet pas de couvrir l'ensemble des besoin caloriques des participants");
+        }
+    }
+
+    private static void validateHikeEquipment(Hike hike) {
     }
 }

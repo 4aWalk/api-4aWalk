@@ -12,15 +12,13 @@ public interface Item {
      */
     String getNom();
 
-    /**
-     * @return Une description détaillée de l'objet.
-     */
-    String getDescription();
 
     /**
      * @return La masse de l'objet exprimée en grammes.
      */
     double getMasseGrammes();
+
+    int getNbItem();
 
     /**
      * Méthode par défaut pour obtenir le poids en kilogrammes.
