@@ -1,15 +1,11 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
-import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
-import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
-import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
-import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
+import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 class MetierToolsService {
 
@@ -157,5 +153,38 @@ class MetierToolsService {
     }
 
     private static void validateHikeEquipment(Hike hike) {
+
+        int nbParticipant = hike.getParticipants().size();
+
+        // TypeEquipment -> nombre de personnes restant à couvrir
+        Map<TypeEquipment, Integer> couvertureParType = new EnumMap<>(TypeEquipment.class);
+
+        // Initialisation : chaque type doit couvrir nbParticipant personnes
+        for (TypeEquipment type : TypeEquipment.values()) {
+            if (type != TypeEquipment.AUTRE) {
+                couvertureParType.put(type, nbParticipant);
+            }
+        }
+
+        // Déduction selon les équipements fournis
+        for (EquipmentItem equipment : hike.getEquipmentRequired()) {
+            TypeEquipment type = equipment.getType();
+
+            if (couvertureParType.containsKey(type)) {
+                int restant = couvertureParType.get(type);
+                restant -= equipment.getNbItem();
+                couvertureParType.put(type, restant);
+            }
+        }
+
+        // Vérification finale
+        for (Map.Entry<TypeEquipment, Integer> entry : couvertureParType.entrySet()) {
+            if (entry.getValue() > 0) {
+                throw new IllegalStateException(
+                        "La couverture des participants pour le type " + entry.getKey() + "est insufisant"
+                );
+            }
+        }
     }
+
 }
