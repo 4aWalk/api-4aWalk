@@ -109,10 +109,11 @@ public class HikeService {
     }
 
     private void validateHike(Hike hike) {
-        if (hike.getDepart() != null && hike.getArrivee() != null) {
-            if (hike.getDepart().getId().equals(hike.getArrivee().getId())) {
-                throw new RuntimeException("Départ et Arrivée ne peuvent pas être identiques");
-            }
+        if (hike.getDepart().getLatitude() == hike.getArrivee().getLatitude() &&
+            hike.getDepart().getLongitude() == hike.getArrivee().getLongitude()) {
+            throw new RuntimeException("Le départ et l'arrivée ne peuvent pas être confondu");
         }
     }
+
+
 }

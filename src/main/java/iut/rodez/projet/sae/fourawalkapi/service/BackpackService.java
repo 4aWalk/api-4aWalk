@@ -31,16 +31,9 @@ public class BackpackService {
     @Transactional
     public void clearBackpack(Long idParticipant) {
         backpackRepository.findByOwnerId(idParticipant).ifPresent(backpack -> {
-            // 1. Pour l'équipement (ManyToMany) : on vide juste la liste
-            // Cela va supprimer les lignes dans la table de jointure 'backpack_equipment'
             backpack.getEquipmentItems().clear();
 
-            // 2. Pour la nourriture (OneToMany vers BackpackFoodItem) :
-            // Si tu as mis cascade = CascadeType.ALL + orphanRemoval = true,
-            // vider la liste supprimera les items de la base.
             backpack.getFoodItems().clear();
-
-            // 3. On sauvegarde le sac vidé
             backpackRepository.save(backpack);
         });
     }
