@@ -78,6 +78,41 @@ public class UserService implements UserDetailsService {
     }
 
     /**
+     * Update d'un utilisateur déjà existant.
+     * @param user L'objet User avec les nouvelles informations (et l'ID renseigné).
+     * @return L'objet User mis à jour et sauvegardé.
+     * @throws IllegalArgumentException si les données sont invalides ou si l'email est déjà pris par un tiers.
+     */
+    public User updateUser(User user) {
+
+        // 1. Vérification basique : l'ID doit exister pour un update
+        if (user.getId() == null) {
+            throw new IllegalArgumentException("Impossible de mettre à jour un utilisateur sans ID.");
+        }
+
+        // 2. Validation des contraintes métier (Regex email, format mdp, age, etc.)
+        // On le fait AVANT le hachage car la regex attend un mot de passe en clair.
+        validateUserData(user);
+
+        // 3. Vérification de l'unicité de l'email (Subtilité pour l'update)
+        Optional<User> existingUserWithEmail = userRepository.findByMail(user.getMail());
+
+        // Si un utilisateur avec cet email existe DEJA, et que son ID est DIFFÉRENT du nôtre
+        // alors c'est qu'on essaie de voler l'email de quelqu'un d'autre.
+        if (existingUserWithEmail.isPresent() && !existingUserWithEmail.get().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("L'adresse email est déjà utilisée par un autre utilisateur.");
+        }
+
+        // 4. Hachage du mot de passe
+        // On suppose que le front-end envoie le mot de passe en clair (nouveau ou confirmé)
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
+
+        // 5. Sauvegarde
+        return userRepository.save(user);
+    }
+
+    /**
      * Récupère un utilisateur par son identifiant unique.
      * * @param userId L'ID de l'utilisateur.
      * @return Un Optional contenant l'utilisateur.

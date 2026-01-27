@@ -7,10 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,6 +57,22 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("user", userFromDb);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
+        user.setId(id);
+
+        User updatedUser = userService.updateUser(user);
+
+        Authentication authForToken = new UsernamePasswordAuthenticationToken(updatedUser.getMail(), null);
+        String newToken = tokenProvider.generateToken(authForToken);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", newToken);
+        response.put("user", updatedUser);
 
         return ResponseEntity.ok(response);
     }
