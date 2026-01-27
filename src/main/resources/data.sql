@@ -3,11 +3,11 @@ INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morpho
     (1, 'Brouz', 'Admin', 'admin@4awalk.fr', '$2a$10$wTf7JzG3i8xG4oWw0oTf7eQ7xG4oWw0oTf7e', '12 Rue de la SAE', 30, 'SPORTIF', 'LEGERE');
 
 -- 2. Produits et Équipements
-INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro) VALUES
-    (1, 'Ration Normale', 'Ration énergétique', 150.00, 'Ration', 'Sachet', 600.00, 5.00);
+INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro, nb_item) VALUES
+    (1, 'Ration Normale', 'Ration énergétique', 150.00, 'Ration', 'Sachet', 600.00, 5.00, 3);
 
-INSERT INTO equipment_items (id, nom, description, masse_grammes, permet_repos) VALUES
-    (1, 'Sac de Couchage', 'Sac standard', 1500.00, TRUE, FALSE, TRUE);
+INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type) VALUES
+    (1, 'Sac de Couchage', 'Sac standard', 1500.00, 3, 'REPOS');
 
 -- 3. Points d'Intérêt (Correction : ajout de hike_id à NULL car Hibernate l'a créé)
 INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_id) VALUES

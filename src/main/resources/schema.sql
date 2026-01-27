@@ -71,7 +71,7 @@ CREATE TABLE food_products (
                                conditionnement VARCHAR(255),
                                apport_nutritionnel_kcal DOUBLE NOT NULL,
                                prix_euro DOUBLE NOT NULL,
-                               nb_Items INT
+                               nb_item INT
 );
 
 CREATE TABLE equipment_items (
@@ -79,7 +79,7 @@ CREATE TABLE equipment_items (
                                  nom VARCHAR(255),
                                  description VARCHAR(255),
                                  masse_grammes DOUBLE NOT NULL,
-                                 nb_Item INT,
+                                 nb_item INT,
                                  type varchar(50)
 
 );
