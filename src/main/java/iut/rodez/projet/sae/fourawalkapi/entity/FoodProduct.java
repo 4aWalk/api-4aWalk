@@ -62,7 +62,7 @@ public class FoodProduct implements Item {
 
     @Override
     public double getMasseGrammes() {
-        return masseGrammes;
+        return masseGrammes * this.nbItem;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class FoodProduct implements Item {
 
     /** Retourne la masse en Kg pour le calcul global du sac */
     public double getWeightKg() {
-        return this.masseGrammes / 1000.0;
+        return this.masseGrammes * this.getNbItem()/ 1000.0;
     }
 
     /** * Calcule le ratio Kcal/Gramme.

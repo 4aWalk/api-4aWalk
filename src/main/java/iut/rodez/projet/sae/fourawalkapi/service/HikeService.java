@@ -116,9 +116,11 @@ public class HikeService {
         }
     }
 
-    public void optimizeBackpackParticipant(Hike hike) {
+    public void optimizeBackpack(Long hikeId, Long userId) {
+        Hike hike = getHikeById(hikeId, userId);
         MetierToolsService.validateHikeForOptimize(hike);
-
-
+        OptimizerService.optimizeFoodV1(hike);
+        OptimizerService.optimizeEquipmentV1(hike);
+        hikeRepository.save(hike);
     }
 }
