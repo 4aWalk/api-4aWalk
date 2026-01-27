@@ -115,4 +115,14 @@ public class Backpack {
 
     public Set<EquipmentItem> getEquipmentItems() { return equipmentItems; }
     public void setEquipmentItems(Set<EquipmentItem> equipmentItems) { this.equipmentItems = equipmentItems; }
+
+    public void addFoodItems(FoodProduct foodItem) {
+        this.foodItems.add(foodItem);
+        this.totalMassKg += foodItem.getWeightKg();
+    }
+
+    public void addEquipmentItems(EquipmentItem equipmentItem) {
+        this.equipmentItems.add(equipmentItem);
+        this.totalMassKg += equipmentItem.getWeightKg();
+    }
 }

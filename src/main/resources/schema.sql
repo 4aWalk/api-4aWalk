@@ -70,7 +70,8 @@ CREATE TABLE food_products (
                                appellation_courante VARCHAR(255),
                                conditionnement VARCHAR(255),
                                apport_nutritionnel_kcal DOUBLE NOT NULL,
-                               prix_euro DOUBLE NOT NULL
+                               prix_euro DOUBLE NOT NULL,
+                               nb_Items INT
 );
 
 CREATE TABLE equipment_items (
@@ -78,7 +79,9 @@ CREATE TABLE equipment_items (
                                  nom VARCHAR(255),
                                  description VARCHAR(255),
                                  masse_grammes DOUBLE NOT NULL,
-                                 permet_repos BOOLEAN
+                                 nb_Item INT,
+                                 type varchar(50)
+
 );
 
 -- 5. Sac à dos et Contenu
@@ -87,15 +90,6 @@ CREATE TABLE backpacks (
                            total_mass_kg DOUBLE NOT NULL,
                            participant_id BIGINT UNIQUE,
                            FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE
-);
-
-CREATE TABLE backpack_food_items (
-                                     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                     quantity INTEGER NOT NULL,
-                                     backpack_id BIGINT NOT NULL,
-                                     food_product_id BIGINT NOT NULL,
-                                     FOREIGN KEY (backpack_id) REFERENCES backpacks(id) ON DELETE CASCADE,
-                                     FOREIGN KEY (food_product_id) REFERENCES food_products(id)
 );
 
 CREATE TABLE backpack_equipment (

@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,20 +31,20 @@ public class EquipmentItem implements Item {
     @Positive(message = "Le poids doit être strictement positif")
     private Double masseGrammes;
 
-    /** * Critère spécifique (UC 2.1.4.1) :
-     * Définit si cet équipement permet au participant de se reposer (ex: tente, sac de couchage).
-     */
-    private boolean permetRepos;
+    private int nbItem;
+
+    private TypeEquipment type;
 
     // --- Constructeurs ---
 
     public EquipmentItem() {}
 
-    public EquipmentItem(String nom, String description, double masseGrammes, boolean permetRepos) {
+    public EquipmentItem(String nom, String description, double masseGrammes, boolean permetRepos, boolean tousLesParticipant, int nbItem, TypeEquipment type) {
         this.nom = nom;
         this.description = description;
         this.masseGrammes = masseGrammes;
-        this.permetRepos = permetRepos;
+        this.nbItem = nbItem;
+        this.type = type;
     }
 
     // --- Méthodes de l'interface Item & Logique métier ---
@@ -53,20 +54,16 @@ public class EquipmentItem implements Item {
         return nom;
     }
 
-    @Override
-    public String getDescription() {
-        return description;
-    }
 
     @Override
     public double getMasseGrammes() {
-        return masseGrammes;
+        return masseGrammes * this.nbItem;
     }
 
     /** * Retourne la masse convertie en Kilogrammes pour le calcul du sac à dos.
      */
     public double getWeightKg() {
-        return this.masseGrammes / 1000.0;
+        return this.masseGrammes * this.nbItem / 1000.0;
     }
 
     // --- Overrides Standards ---
@@ -85,10 +82,6 @@ public class EquipmentItem implements Item {
         return Objects.hash(id, nom);
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s (%.1fg) [%s]", nom, masseGrammes, permetRepos ? "Repos" : "Utilitaire");
-    }
 
     // --- Getters et Setters ---
 
@@ -101,6 +94,9 @@ public class EquipmentItem implements Item {
 
     public void setMasseGrammes(double masseGrammes) { this.masseGrammes = masseGrammes; }
 
-    public boolean isPermetRepos() { return permetRepos; }
-    public void setPermetRepos(boolean permetRepos) { this.permetRepos = permetRepos; }
+    public int getNbItem() { return nbItem; }
+    public void setNbItem(int nbItem) { this.nbItem = nbItem; }
+
+    public TypeEquipment getType() { return type; }
+    public void setType(TypeEquipment type){ this.type = type;}
 }

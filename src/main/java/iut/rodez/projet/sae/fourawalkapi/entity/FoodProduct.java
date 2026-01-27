@@ -2,10 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 
 import java.util.Objects;
 
@@ -26,8 +23,6 @@ public class FoodProduct implements Item {
     @Column(nullable = false)
     private String nom;
 
-    private String description;
-
     @NotNull(message = "Le poids est requis")
     @Positive(message = "Le poids doit être strictement positif")
     private Double masseGrammes;
@@ -41,19 +36,21 @@ public class FoodProduct implements Item {
     @PositiveOrZero
     private Double prixEuro;
 
+    @Min(1) @Max(3)
+    private int nbItem;
     // --- Constructeurs ---
 
     public FoodProduct() {}
 
-    public FoodProduct(String nom, String description, double masseGrammes, String appellationCourante,
-                       String conditionnement, double apportNutritionnelKcal, double prixEuro) {
+    public FoodProduct(String nom, double masseGrammes, String appellationCourante,
+                       String conditionnement, double apportNutritionnelKcal, double prixEuro, int nbItem) {
         this.nom = nom;
-        this.description = description;
         this.masseGrammes = masseGrammes;
         this.appellationCourante = appellationCourante;
         this.conditionnement = conditionnement;
         this.apportNutritionnelKcal = apportNutritionnelKcal;
         this.prixEuro = prixEuro;
+        this.nbItem = nbItem;
     }
 
     // --- Méthodes de l'interface Item & Logique métier ---
@@ -64,18 +61,16 @@ public class FoodProduct implements Item {
     }
 
     @Override
-    public String getDescription() {
-        return description;
+    public double getMasseGrammes() {
+        return masseGrammes * this.nbItem;
     }
 
     @Override
-    public double getMasseGrammes() {
-        return masseGrammes;
-    }
+    public int getNbItem() {return nbItem;}
 
     /** Retourne la masse en Kg pour le calcul global du sac */
     public double getWeightKg() {
-        return this.masseGrammes / 1000.0;
+        return this.masseGrammes * this.getNbItem()/ 1000.0;
     }
 
     /** * Calcule le ratio Kcal/Gramme.
@@ -113,8 +108,6 @@ public class FoodProduct implements Item {
     public void setId(Long id) { this.id = id; }
 
     public void setNom(String nom) { this.nom = nom; }
-
-    public void setDescription(String description) { this.description = description; }
 
     public void setMasseGrammes(double masseGrammes) { this.masseGrammes = masseGrammes; }
 

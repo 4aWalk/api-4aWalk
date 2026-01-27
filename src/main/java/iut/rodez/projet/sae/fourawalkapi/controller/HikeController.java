@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/hikes")
@@ -127,5 +129,14 @@ public class HikeController {
     public ResponseEntity<Void> removeEquipmentFromHike(@PathVariable Long hikeId, @PathVariable Long equipId, Authentication auth) {
         equipmentService.removeEquipmentFromHike(hikeId, equipId, getUserId(auth));
         return ResponseEntity.noContent().build();
+    }
+
+    // --- SCOPE OPTIMISATION ---
+
+    @PostMapping("/{hikeId}/optimize")
+    public ResponseEntity<?> optimizeBackpacks(@PathVariable Long hikeId, Authentication auth) {
+        hikeService.optimizeBackpack(hikeId, getUserId(auth));
+
+        return ResponseEntity.ok(hikeService.getHikeById(hikeId, getUserId(auth)));
     }
 }

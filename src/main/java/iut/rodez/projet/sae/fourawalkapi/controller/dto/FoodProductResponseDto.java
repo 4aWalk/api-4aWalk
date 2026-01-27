@@ -9,6 +9,7 @@ public class FoodProductResponseDto {
     private String conditionnement;
     private double apportNutritionnelKcal;
     private double prixEuro;
+    private int nbItem;
 
     public FoodProductResponseDto(FoodProduct food) {
         this.id = food.getId();
@@ -17,6 +18,7 @@ public class FoodProductResponseDto {
         this.conditionnement = food.getConditionnement();
         this.apportNutritionnelKcal = food.getApportNutritionnelKcal();
         this.prixEuro = food.getPrixEuro();
+        this.nbItem = food.getNbItem();
     }
 
     // Getters obligatoires pour la sérialisation JSON
@@ -26,4 +28,5 @@ public class FoodProductResponseDto {
     public String getConditionnement() { return conditionnement; }
     public double getApportNutritionnelKcal() { return apportNutritionnelKcal; }
     public double getPrixEuro() { return prixEuro; }
+    public int getNbItem() { return nbItem; }
 }

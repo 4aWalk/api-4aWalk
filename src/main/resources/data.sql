@@ -7,7 +7,7 @@ INSERT INTO food_products (id, nom, description, masse_grammes, appellation_cour
     (1, 'Ration Normale', 'Ration énergétique', 150.00, 'Ration', 'Sachet', 600.00, 5.00);
 
 INSERT INTO equipment_items (id, nom, description, masse_grammes, permet_repos) VALUES
-    (1, 'Sac de Couchage', 'Sac standard', 1500.00, TRUE);
+    (1, 'Sac de Couchage', 'Sac standard', 1500.00, TRUE, FALSE, TRUE);
 
 -- 3. Points d'Intérêt (Correction : ajout de hike_id à NULL car Hibernate l'a créé)
 INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_id) VALUES

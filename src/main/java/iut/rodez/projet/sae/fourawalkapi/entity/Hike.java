@@ -7,9 +7,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Représente une randonnée planifiée.
@@ -173,4 +171,20 @@ public class Hike {
 
     public Set<EquipmentItem> getEquipmentRequired() { return equipmentRequired; }
     public void setEquipmentRequired(Set<EquipmentItem> equipmentRequired) { this.equipmentRequired = equipmentRequired; }
+
+    public double getCalorieRandonne() {
+        double sommeCalorie = 0;
+        for(FoodProduct foodProduct : this.getFoodCatalogue()) {
+            sommeCalorie =+ foodProduct.getApportNutritionnelKcal() * foodProduct.getNbItem();
+        }
+        return sommeCalorie;
+    }
+
+    public int getCaloriesForAllParticipants() {
+        int sommeCalorie = 0;
+        for(Participant participant : participants) {
+            sommeCalorie =+ participant.getBesoinKcal();
+        }
+        return sommeCalorie;
+    }
 }
