@@ -9,6 +9,7 @@ public class EquipmentResponseDto {
     private double masseGrammes;
     private int nbItem;
     private TypeEquipment type;
+    private double masseAVide;
 
     public EquipmentResponseDto(EquipmentItem item) {
         this.id = item.getId();
@@ -16,6 +17,7 @@ public class EquipmentResponseDto {
         this.masseGrammes = item.getMasseGrammes();
         this.nbItem = item.getNbItem();
         this.type = item.getType();
+        this.masseAVide = item.getMasseAVide();
     }
 
     // Getters
@@ -24,4 +26,5 @@ public class EquipmentResponseDto {
     public double getMasseGrammes() { return masseGrammes; }
     public int getNbItem() { return nbItem; }
     public TypeEquipment getType() { return type; }
+    public double getMasseAVide() { return masseAVide; }
 }

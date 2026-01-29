@@ -119,8 +119,13 @@ public class HikeService {
     public void optimizeBackpack(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
         MetierToolsService.validateHikeForOptimize(hike);
+        // Optimisation version 1
         OptimizerService.optimizeFoodV1(hike);
         OptimizerService.optimizeEquipmentV1(hike);
+        // Fin
+
+        // Optimisation version 2
+
         hikeRepository.save(hike);
     }
 }

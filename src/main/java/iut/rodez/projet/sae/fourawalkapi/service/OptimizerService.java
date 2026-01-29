@@ -4,11 +4,22 @@ import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
+@Service
 public class OptimizerService {
+
+    private static EquipmentItemService equipmentService = null;
+
+    public OptimizerService(EquipmentItemService es) {
+        this.equipmentService = es;
+    }
+
     public static void optimizeFoodV1(Hike hike) {
         List<FoodProduct> foodList = new ArrayList<>(hike.getFoodCatalogue());
         List<Participant> participantList = new ArrayList<>(hike.getParticipants());
@@ -75,6 +86,28 @@ public class OptimizerService {
             }
         }
         if (!allEquipementAdd) {throw new RuntimeException("Tout les équipements n'ont pas pu être placer dans les sac des participant avec l'optimiseur V1");}
+    }
 
+    public static Hike optimizeEquipmentV2(Hike hike) {
+        List<EquipmentItem> equipmentSoinList = equipmentService.getEquipmentByType(hike.getId(), TypeEquipment.SOIN);
+        List<EquipmentItem> equipmentProgressionList = equipmentService.getEquipmentByType(hike.getId(), TypeEquipment.PROGRESSION);
+        List<EquipmentItem> equipmentEauList = equipmentService.getEquipmentByType(hike.getId(), TypeEquipment.EAU);
+        List<EquipmentItem> equipmentReposList = null;
+        if (hike.getDureeJours() > 1)equipmentReposList = equipmentService.getEquipmentByType(hike.getId(), TypeEquipment.REPOS);
+
+        optimizeEquipementSoinV2(equipmentSoinList);
+
+        return new Hike();
+    }
+
+    private static void optimizeEquipementSoinV2(List<EquipmentItem> equipmentSoinList) {
+        /*for (EquipmentItem e : equipmentSoinList) {
+            if(e.TypeEquipment.SOIN){}
+        }
+        TreeSet<EquipmentItem> equipmentSoinSet = new TreeSet<>(equipmentSoinList);
+    */}
+
+    public static Hike optimizeFoodV2(Hike hike) {
+        return new Hike();
     }
 }

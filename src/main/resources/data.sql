@@ -6,8 +6,8 @@ INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morpho
 INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro, nb_item) VALUES
     (1, 'Ration Normale', 'Ration énergétique', 150.00, 'Ration', 'Sachet', 600.00, 5.00, 3);
 
-INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type) VALUES
-    (1, 'Sac de Couchage', 'Sac standard', 1500.00, 3, 'REPOS');
+INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type, masse_a_vide) VALUES
+    (1, 'Sac de Couchage', 'Sac standard', 1500.00, 3, 'REPOS', 0.0);
 
 -- 3. Points d'Intérêt (Correction : ajout de hike_id à NULL car Hibernate l'a créé)
 INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_id) VALUES

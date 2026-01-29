@@ -34,7 +34,6 @@ public class UserController {
         String token = tokenProvider.generateToken(authForToken);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
         response.put("user", savedUser);
 
         return ResponseEntity.ok(response);
@@ -62,18 +61,31 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<?> updateUser(@PathVariable Long id,
+                                        @RequestBody User user,
+                                        Authentication authentication) {
+
+        String currentEmail = authentication.getName();
+
+        User currentUser = userService.findByMail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Utilisateur connecté introuvable."));
+
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(403).body("Accès refusé : Vous ne pouvez modifier que votre propre profil.");
+        }
+
         user.setId(id);
 
-        User updatedUser = userService.updateUser(user);
+        try {
+            User updatedUser = userService.updateUser(user);
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", updatedUser);
 
-        Authentication authForToken = new UsernamePasswordAuthenticationToken(updatedUser.getMail(), null);
-        String newToken = tokenProvider.generateToken(authForToken);
+            return ResponseEntity.ok(response);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", newToken);
-        response.put("user", updatedUser);
-
-        return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            // Erreur métier (ex: email déjà pris par quelqu'un d'autre)
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

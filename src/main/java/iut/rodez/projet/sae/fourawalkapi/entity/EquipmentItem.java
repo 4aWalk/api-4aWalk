@@ -33,18 +33,24 @@ public class EquipmentItem implements Item {
 
     private int nbItem;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private TypeEquipment type;
+
+    @Column(name = "masse_a_vide")
+    private double masseAVide;
 
     // --- Constructeurs ---
 
     public EquipmentItem() {}
 
-    public EquipmentItem(String nom, String description, double masseGrammes, boolean permetRepos, boolean tousLesParticipant, int nbItem, TypeEquipment type) {
+    public EquipmentItem(String nom, String description, double masseGrammes, boolean permetRepos, boolean tousLesParticipant, int nbItem, TypeEquipment type, double masseAVide) {
         this.nom = nom;
         this.description = description;
         this.masseGrammes = masseGrammes;
         this.nbItem = nbItem;
         this.type = type;
+        this.masseAVide = masseAVide;
     }
 
     // --- Méthodes de l'interface Item & Logique métier ---
@@ -99,4 +105,7 @@ public class EquipmentItem implements Item {
 
     public TypeEquipment getType() { return type; }
     public void setType(TypeEquipment type){ this.type = type;}
+
+    public double getMasseAVide() { return masseAVide; }
+    public void setMasseAVide(double masseAVide) {this.masseAVide = masseAVide;}
 }

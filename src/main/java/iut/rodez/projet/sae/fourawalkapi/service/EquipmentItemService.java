@@ -2,11 +2,13 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -50,4 +52,16 @@ public class EquipmentItemService {
         hike.getEquipmentRequired().removeIf(e -> e.getId().equals(equipId));
         hikeRepository.save(hike);
     }
+
+    public List<EquipmentItem> getEquipmentByType(Long hikeId, TypeEquipment type) {
+        List<EquipmentItem> equipmentItems = new ArrayList<>();
+        Hike hike = hikeRepository.findById(hikeId).orElseThrow();
+        for (EquipmentItem equipmentItem : hike.getEquipmentRequired()) {
+            if (equipmentItem.getType().equals(type)) {
+                equipmentItems.add(equipmentItem);
+            }
+        }
+        return equipmentItems;
+    }
+
 }

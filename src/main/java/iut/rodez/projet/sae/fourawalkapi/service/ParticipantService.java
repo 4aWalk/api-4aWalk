@@ -2,20 +2,26 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class ParticipantService {
 
     private final HikeRepository hikeRepository;
     private final ParticipantRepository participantRepository;
+    private final UserRepository userRepository;
 
-    public ParticipantService(HikeRepository hr, ParticipantRepository pr) {
+    public ParticipantService(HikeRepository hr, ParticipantRepository pr, UserRepository ur) {
         this.hikeRepository = hr;
         this.participantRepository = pr;
+        this.userRepository = ur;
     }
 
     @Transactional
@@ -50,6 +56,18 @@ public class ParticipantService {
         p.setBesoinKcal(details.getBesoinKcal());
         p.setBesoinEauLitre(details.getBesoinEauLitre());
         p.setCapaciteEmportMaxKg(details.getCapaciteEmportMaxKg());
+
+        if (p.getCreator()) {
+            User userToUpdate = userRepository.findById(hike.getCreator().getId())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur créateur introuvable en base"));
+
+            userToUpdate.setAge(details.getAge());
+            userToUpdate.setNiveau(details.getNiveau());
+            userToUpdate.setMorphologie(details.getMorphologie());
+
+            userRepository.save(userToUpdate);
+        }
+
         return participantRepository.save(p);
     }
 

@@ -52,7 +52,7 @@ CREATE TABLE points_of_interest (
 CREATE TABLE hikes (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        libelle VARCHAR(255) NOT NULL,
-                       duree_jours INT NOT NULL,
+                       duree_jours INT NOT NULL DEFAULT 1 CHECK (duree_jours >= 1 AND duree_jours <= 3),
                        creator_id BIGINT,
                        depart_id BIGINT,
                        arrivee_id BIGINT,
@@ -71,7 +71,7 @@ CREATE TABLE food_products (
                                conditionnement VARCHAR(255),
                                apport_nutritionnel_kcal DOUBLE NOT NULL,
                                prix_euro DOUBLE NOT NULL,
-                               nb_item INT
+                               nb_item INT DEFAULT 1 CHECK (nb_item >= 1 AND nb_item <= 3)
 );
 
 CREATE TABLE equipment_items (
@@ -79,9 +79,9 @@ CREATE TABLE equipment_items (
                                  nom VARCHAR(255),
                                  description VARCHAR(255),
                                  masse_grammes DOUBLE NOT NULL,
-                                 nb_item INT,
-                                 type varchar(50)
-
+                                 nb_item INT DEFAULT 1 CHECK (nb_item >= 1 AND nb_item <= 3),
+                                 type varchar(50),
+                                 masse_a_vide DOUBLE NOT NULL DEFAULT 0.0
 );
 
 -- 5. Sac à dos et Contenu

@@ -32,8 +32,8 @@ class MetierToolsService {
         // Validation de l'équipement
         validateHikeEquipment(hike);
 
-
-        // Validation équipement
+        // Validation capacité d'emport de l'eau
+        validateCapaciteEmportEauLitre(hike);
 
     }
 
@@ -166,6 +166,10 @@ class MetierToolsService {
             }
         }
 
+        if(hike.getDureeJours() < 2){
+            couvertureParType.remove(TypeEquipment.REPOS);
+        }
+
         // Déduction selon les équipements fournis
         for (EquipmentItem equipment : hike.getEquipmentRequired()) {
             TypeEquipment type = equipment.getType();
@@ -185,6 +189,21 @@ class MetierToolsService {
                 );
             }
         }
+    }
+
+    private static void validateCapaciteEmportEauLitre(Hike hike) {
+        double besoinEauLitreTotal = 0.0;
+
+        for(Participant participant : hike.getParticipants()) {
+            besoinEauLitreTotal -= participant.getBesoinEauLitre();
+        }
+
+        for(EquipmentItem equipment : hike.getEquipmentRequired()) {
+            if(equipment.getType() == TypeEquipment.EAU) {
+                besoinEauLitreTotal -= (equipment.getMasseGrammes() + equipment.getMasseAVide()) * equipment.getNbItem();
+            }
+        }
+        if(besoinEauLitreTotal > 0) { throw new RuntimeException("Les gourdes ajoutées à la randonnée ne permette pas de couvrir les besoins quotidien en eau de l'équipe");}
     }
 
 }
