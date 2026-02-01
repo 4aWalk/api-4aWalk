@@ -187,4 +187,11 @@ public class Hike {
         }
         return sommeCalorie;
     }
+    public List<Backpack> getBackpacks() {
+        List<Backpack> backpacks = new ArrayList<>();
+        for(Participant participant : participants) {
+            backpacks.add(participant.getBackpack());
+        }
+        return backpacks;
+    }
 }

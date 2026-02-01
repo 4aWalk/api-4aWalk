@@ -1,9 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
-import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
-import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
-import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
-import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import org.springframework.stereotype.Service;
 
@@ -95,17 +92,23 @@ public class OptimizerService {
         List<EquipmentItem> equipmentReposList = null;
         if (hike.getDureeJours() > 1)equipmentReposList = equipmentService.getEquipmentByType(hike.getId(), TypeEquipment.REPOS);
 
-        optimizeEquipementSoinV2(equipmentSoinList);
+        optimizeEquipementSoinV2(equipmentSoinList,hike);
 
         return new Hike();
     }
 
-    private static void optimizeEquipementSoinV2(List<EquipmentItem> equipmentSoinList) {
-        /*for (EquipmentItem e : equipmentSoinList) {
-            if(e.TypeEquipment.SOIN){}
+    private static void optimizeEquipementSoinV2(List<EquipmentItem> equipmentSoinList, Hike hike) {
+        for (EquipmentItem e : equipmentSoinList) {
+            if(e.getType() != TypeEquipment.SOIN){
+                throw new RuntimeException("L'optimisation des objets de soin ne doit être effectué seulement sur des équipement de soin");
+            }
         }
-        TreeSet<EquipmentItem> equipmentSoinSet = new TreeSet<>(equipmentSoinList);
-    */}
+        TreeSet<EquipmentItem> treeSoin = new TreeSet<>(equipmentSoinList);
+        List<Backpack> backpacks = hike.getBackpacks();
+        for (EquipmentItem e : treeSoin) {
+
+        }
+    }
 
     public static Hike optimizeFoodV2(Hike hike) {
         return new Hike();
