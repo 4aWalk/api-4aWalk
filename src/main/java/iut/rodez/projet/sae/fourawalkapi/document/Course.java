@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.document;
 
+import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
@@ -21,9 +22,9 @@ public class Course {
 
     private LocalDateTime dateRealisation;
 
-    private String depart;
+    private PointOfInterest depart;
 
-    private String arrivee;
+    private PointOfInterest arrivee;
 
     private boolean isFinished;
 
@@ -41,7 +42,7 @@ public class Course {
         this.isPaused = false;
     }
 
-    public Course(Long hikeId, String depart) {
+    public Course(Long hikeId, PointOfInterest depart) {
         this();
         this.hikeId = hikeId;
         this.depart = depart;
@@ -80,7 +81,7 @@ public class Course {
         this.isPaused = !this.isPaused;
     }
 
-    public void terminate(String arriveeFinale) {
+    public void terminate(PointOfInterest arriveeFinale) {
         this.isFinished = true;
         this.isPaused = false;
         this.arrivee = arriveeFinale;
@@ -120,11 +121,11 @@ public class Course {
     public LocalDateTime getDateRealisation() { return dateRealisation; }
     public void setDateRealisation(LocalDateTime dateRealisation) { this.dateRealisation = dateRealisation; }
 
-    public String getDepart() { return depart; }
-    public void setDepart(String depart) { this.depart = depart; }
+    public PointOfInterest getDepart() { return depart; }
+    public void setDepart(PointOfInterest depart) { this.depart = depart; }
 
-    public String getArrivee() { return arrivee; }
-    public void setArrivee(String arrivee) { this.arrivee = arrivee; }
+    public PointOfInterest getArrivee() { return arrivee; }
+    public void setArrivee(PointOfInterest arrivee) { this.arrivee = arrivee; }
 
     public boolean isFinished() { return isFinished; }
     public void setFinished(boolean finished) { isFinished = finished; }

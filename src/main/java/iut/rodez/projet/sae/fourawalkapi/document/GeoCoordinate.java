@@ -8,7 +8,7 @@ import java.util.Objects;
  * Cette classe est destinée à être stockée dans une liste au sein du document {@link Course}.
  */
 public class GeoCoordinate {
-
+    // JsonGeoPoint
     private double latitude;
     private double longitude;
     private LocalDateTime timestamp;

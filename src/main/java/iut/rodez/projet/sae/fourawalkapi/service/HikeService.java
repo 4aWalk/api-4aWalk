@@ -1,11 +1,13 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -13,12 +15,14 @@ import java.util.List;
 public class HikeService {
 
     private final HikeRepository hikeRepository;
+    private final BackpackDistributorService backpackDistributor;
     private final UserService userService;
     private final PointOfInterestRepository poiRepository;
     private final ParticipantRepository participantRepository;
 
-    public HikeService(HikeRepository hr, UserService us, PointOfInterestRepository poiRepo, ParticipantRepository pr) {
+    public HikeService(HikeRepository hr,BackpackDistributorService bds, UserService us, PointOfInterestRepository poiRepo, ParticipantRepository pr) {
         this.hikeRepository = hr;
+        this.backpackDistributor = bds;
         this.userService = us;
         this.poiRepository = poiRepo;
         this.participantRepository = pr;
@@ -63,7 +67,7 @@ public class HikeService {
         // On ignore les listes annexes
         hike.setOptionalPoints(new HashSet<>());
         hike.setFoodCatalogue(new HashSet<>());
-        hike.setEquipmentRequired(new HashSet<>());
+        hike.setEquipmentGroups(new HashMap<>());
 
         return hikeRepository.save(hike);
     }
@@ -90,7 +94,7 @@ public class HikeService {
 
         // Nettoyage manuel des relations avant suppression (si pas de Cascade ALL strict)
         hike.getFoodCatalogue().clear();
-        hike.getEquipmentRequired().clear();
+        hike.getEquipmentGroups().clear();
         hike.getOptionalPoints().clear();
         hike.getParticipants().clear();
 
@@ -110,21 +114,37 @@ public class HikeService {
     }
 
     private void validateHike(Hike hike) {
-        if (hike.getDepart().getLatitude() == hike.getArrivee().getLatitude() &&
-            hike.getDepart().getLongitude() == hike.getArrivee().getLongitude()) {
-            throw new RuntimeException("Le départ et l'arrivée ne peuvent pas être confondu");
-        }
+        // on ne vérifie plus la distance entre départ et arrivé car une randonné peut être une boucle
     }
 
+    @Transactional // Important pour que les modifications sur les Backpacks soient persistées
     public void optimizeBackpack(Long hikeId, Long userId) {
+        // 1. Récupération et Validation
         Hike hike = getHikeById(hikeId, userId);
         MetierToolsService.validateHikeForOptimize(hike);
-        // Optimisation version 1
-        OptimizerService.optimizeFoodV1(hike);
-        OptimizerService.optimizeEquipmentV1(hike);
-        // Fin
 
-        // Optimisation version 2
+        // 2. Obtention des listes optimisées (Algorithmes V2 - Récursifs)
+        // On suppose que ces méthodes sont statiques dans OptimizerService
+        List<EquipmentItem> optimizedEquipment = OptimizerService.getOptimizeAllEquipmentV2(hike);
+        List<FoodProduct> optimizedFood = OptimizerService.getOptimizeAllFoodV2(hike);
+
+        // 3. Fusion dans une liste commune générique "Item"
+        List<Item> itemsToPack = new ArrayList<>();
+        itemsToPack.addAll(optimizedEquipment);
+        itemsToPack.addAll(optimizedFood);
+
+        // 4. Récupération des sacs à dos des participants
+        List<Backpack> backpacks = hike.getBackpacks();
+
+        // 5. Lancement de la répartition physique (Backtracking - Bin Packing)
+        // Cette méthode va throw une RuntimeException si ça ne rentre pas.
+        backpackDistributor.distributeBatchesToBackpacks(itemsToPack, backpacks);
+
+        // 6. Sauvegarde
+        // Grâce au @Transactional et au fait que les Backpacks sont liés au Hike,
+        // le save(hike) ou le flush de transaction devrait suffire.
+        // Par sécurité, si ton CascadeType n'est pas ALL sur les sacs :
+        // backpackRepository.saveAll(backpacks);
 
         hikeRepository.save(hike);
     }

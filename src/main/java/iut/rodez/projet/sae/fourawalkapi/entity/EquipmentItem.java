@@ -63,13 +63,7 @@ public class EquipmentItem implements Item {
 
     @Override
     public double getMasseGrammes() {
-        return masseGrammes * this.nbItem;
-    }
-
-    /** * Retourne la masse convertie en Kilogrammes pour le calcul du sac à dos.
-     */
-    public double getWeightKg() {
-        return this.masseGrammes * this.nbItem / 1000.0;
+        return masseGrammes;
     }
 
     // --- Overrides Standards ---
@@ -108,4 +102,6 @@ public class EquipmentItem implements Item {
 
     public double getMasseAVide() { return masseAVide; }
     public void setMasseAVide(double masseAVide) {this.masseAVide = masseAVide;}
+
+    public double getTotalMasses() { return this.masseGrammes - this.masseAVide * this.nbItem; }
 }

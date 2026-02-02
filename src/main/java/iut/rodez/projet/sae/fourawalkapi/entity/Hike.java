@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import iut.rodez.projet.sae.fourawalkapi.advice.HikeException;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -59,13 +60,10 @@ public class Hike {
     )
     private Set<FoodProduct> foodCatalogue = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "hike_equipment",
-            joinColumns = @JoinColumn(name = "hike_id"),
-            inverseJoinColumns = @JoinColumn(name = "equipment_id")
-    )
-    private Set<EquipmentItem> equipmentRequired = new HashSet<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "hike_id", nullable = false)
+    @MapKey(name = "type")
+    private Map<TypeEquipment, GroupEquipment> equipmentGroups = new EnumMap<>(TypeEquipment.class);
 
     // --- Constructeurs ---
 
@@ -77,6 +75,10 @@ public class Hike {
         this.arrivee = arrivee;
         setDureeJours(dureeJours); // Utilise le setter pour valider la règle
         this.creator = creator;
+        this.participants = new HashSet<>();
+        this.optionalPoints = new HashSet<>();
+        this.foodCatalogue = new HashSet<>();
+        this.equipmentGroups = new HashMap<TypeEquipment, GroupEquipment>();
     }
 
     // --- Logique métier de bas niveau (Entity Logic) ---
@@ -167,11 +169,39 @@ public class Hike {
     public void setOptionalPoints(Set<PointOfInterest> optionalPoints) { this.optionalPoints = optionalPoints; }
 
     public Set<FoodProduct> getFoodCatalogue() { return foodCatalogue; }
+
     public void setFoodCatalogue(Set<FoodProduct> foodCatalogue) { this.foodCatalogue = foodCatalogue; }
 
-    public Set<EquipmentItem> getEquipmentRequired() { return equipmentRequired; }
-    public void setEquipmentRequired(Set<EquipmentItem> equipmentRequired) { this.equipmentRequired = equipmentRequired; }
+    public void addEquipment(EquipmentItem item) {
+        if (item == null) return;
 
+        // 1. Récupère ou Crée le groupe en O(1)
+        GroupEquipment group = this.equipmentGroups.computeIfAbsent(item.getType(),
+                k -> new GroupEquipment(k));
+
+        group.addItem(item);
+
+        // 2. Ajoute et Trie
+        group.addItem(item);
+    }
+
+    /**
+     * Pour ton Algo V2 : Accès instantané à la liste triée
+     */
+    public List<EquipmentItem> getOptimizedList(TypeEquipment type) {
+        return this.equipmentGroups.get(type).getItems();
+    }
+
+    // Getter standard
+    public Map<TypeEquipment, GroupEquipment> getEquipmentGroups() {
+        return equipmentGroups;
+    }
+
+
+    public void setEquipmentGroups(Map<TypeEquipment, GroupEquipment> equipmentGroups) { this.equipmentGroups = equipmentGroups; }
+
+
+    // Getter standard
     public double getCalorieRandonne() {
         double sommeCalorie = 0;
         for(FoodProduct foodProduct : this.getFoodCatalogue()) {

@@ -19,12 +19,4 @@ public interface Item {
     double getMasseGrammes();
 
     int getNbItem();
-
-    /**
-     * Méthode par défaut pour obtenir le poids en kilogrammes.
-     * Utile pour les calculs de charge totale du sac.
-     */
-    default double getMasseKg() {
-        return getMasseGrammes() / 1000.0;
-    }
 }

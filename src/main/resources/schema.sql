@@ -1,10 +1,10 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 1. Nettoyage
-DROP TABLE IF EXISTS hike_equipment;
+DROP TABLE IF EXISTS group_equipment_items;
+DROP TABLE IF EXISTS group_equipments;
 DROP TABLE IF EXISTS hike_food_products;
 DROP TABLE IF EXISTS hike_participants;
-DROP TABLE IF EXISTS backpack_food_items;
 DROP TABLE IF EXISTS backpack_equipment;
 DROP TABLE IF EXISTS backpacks;
 DROP TABLE IF EXISTS points_of_interest;
@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS food_products;
 DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS users;
 
--- 2. Tables de base (Sans dépendances)
+-- 2. Création des tables
 CREATE TABLE users (
                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                        nom VARCHAR(255),
@@ -38,17 +38,16 @@ CREATE TABLE participants (
                               capacite_emport_max_kg DOUBLE NOT NULL
 );
 
--- Table POI (Créée ici pour que Hike puisse la référencer)
 CREATE TABLE points_of_interest (
                                     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                     nom VARCHAR(255) NOT NULL,
                                     description VARCHAR(500),
                                     latitude DOUBLE NOT NULL,
                                     longitude DOUBLE NOT NULL,
-                                    hike_id BIGINT
+                                    hike_id BIGINT,
+                                    sequence INT -- J'ai ajouté sequence car il manquait par rapport à ton code Java précédent
 );
 
--- 3. Table des Randonnées
 CREATE TABLE hikes (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        libelle VARCHAR(255) NOT NULL,
@@ -61,7 +60,6 @@ CREATE TABLE hikes (
                        CONSTRAINT fk_hike_arrivee FOREIGN KEY (arrivee_id) REFERENCES points_of_interest(id)
 );
 
--- 4. Catalogue et Équipement
 CREATE TABLE food_products (
                                id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                nom VARCHAR(255),
@@ -84,7 +82,6 @@ CREATE TABLE equipment_items (
                                  masse_a_vide DOUBLE NOT NULL DEFAULT 0.0
 );
 
--- 5. Sac à dos et Contenu
 CREATE TABLE backpacks (
                            id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                            total_mass_kg DOUBLE NOT NULL,
@@ -100,7 +97,6 @@ CREATE TABLE backpack_equipment (
                                     FOREIGN KEY (equipment_id) REFERENCES equipment_items(id) ON DELETE CASCADE
 );
 
--- 6. Tables de jointures Randonnées (Noms alignés sur Hibernate)
 CREATE TABLE hike_participants (
                                    hike_id BIGINT NOT NULL,
                                    participant_id BIGINT NOT NULL,
@@ -117,12 +113,20 @@ CREATE TABLE hike_food_products (
                                     FOREIGN KEY (food_product_id) REFERENCES food_products(id) ON DELETE CASCADE
 );
 
-CREATE TABLE hike_equipment (
-                                hike_id BIGINT NOT NULL,
-                                equipment_id BIGINT NOT NULL,
-                                PRIMARY KEY (hike_id, equipment_id),
-                                FOREIGN KEY (hike_id) REFERENCES hikes(id) ON DELETE CASCADE,
-                                FOREIGN KEY (equipment_id) REFERENCES equipment_items(id) ON DELETE CASCADE
+CREATE TABLE group_equipments (
+                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                  type_nom VARCHAR(50) NOT NULL,
+                                  hike_id BIGINT NOT NULL,
+                                  CONSTRAINT fk_group_hike FOREIGN KEY (hike_id) REFERENCES hikes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE group_equipment_items (
+                                       group_id BIGINT NOT NULL,
+                                       equipment_id BIGINT NOT NULL,
+                                       item_order INT NOT NULL,
+                                       PRIMARY KEY (group_id, item_order),
+                                       CONSTRAINT fk_gei_group FOREIGN KEY (group_id) REFERENCES group_equipments(id) ON DELETE CASCADE,
+                                       CONSTRAINT fk_gei_item FOREIGN KEY (equipment_id) REFERENCES equipment_items(id)
 );
 
 SET FOREIGN_KEY_CHECKS = 1;

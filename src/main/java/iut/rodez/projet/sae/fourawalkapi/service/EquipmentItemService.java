@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
+import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
@@ -8,7 +9,6 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,32 +36,54 @@ public class EquipmentItemService {
 
     @Transactional
     public void addEquipmentToHike(Long hikeId, Long equipId, Long userId) {
-        Hike hike = hikeRepository.findById(hikeId).orElseThrow();
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
+        Hike hike = hikeRepository.findById(hikeId)
+                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        EquipmentItem item = equipmentRepository.findById(equipId).orElseThrow();
-        hike.getEquipmentRequired().add(item);
+        if (!hike.getCreator().getId().equals(userId)) {
+            throw new RuntimeException("Accès refusé");
+        }
+
+        EquipmentItem item = equipmentRepository.findById(equipId)
+                .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
+
+        hike.addEquipment(item);
+
         hikeRepository.save(hike);
     }
 
     @Transactional
     public void removeEquipmentFromHike(Long hikeId, Long equipId, Long userId) {
-        Hike hike = hikeRepository.findById(hikeId).orElseThrow();
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
+        Hike hike = hikeRepository.findById(hikeId)
+                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        hike.getEquipmentRequired().removeIf(e -> e.getId().equals(equipId));
+        if (!hike.getCreator().getId().equals(userId)) {
+            throw new RuntimeException("Accès refusé");
+        }
+
+        // 1. On doit récupérer l'item pour connaître son TYPE (Soin, Repos...)
+        // afin de savoir dans quel groupe chercher.
+        EquipmentItem itemToRemove = equipmentRepository.findById(equipId)
+                .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
+
+        // 2. On récupère le bon groupe dans la Map
+        GroupEquipment group = hike.getEquipmentGroups().get(itemToRemove.getType());
+
+        if (group != null) {
+            // 3. On supprime l'item de la liste du groupe
+            group.getItems().removeIf(item -> item.getId().equals(equipId));
+
+        }
+
         hikeRepository.save(hike);
     }
 
+    /**
+     * Récupère la liste déjà optimisée (triée) pour un type donné
+     */
     public List<EquipmentItem> getEquipmentByType(Long hikeId, TypeEquipment type) {
-        List<EquipmentItem> equipmentItems = new ArrayList<>();
-        Hike hike = hikeRepository.findById(hikeId).orElseThrow();
-        for (EquipmentItem equipmentItem : hike.getEquipmentRequired()) {
-            if (equipmentItem.getType().equals(type)) {
-                equipmentItems.add(equipmentItem);
-            }
-        }
-        return equipmentItems;
-    }
+        Hike hike = hikeRepository.findById(hikeId)
+                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
+        return hike.getOptimizedList(type);
+    }
 }

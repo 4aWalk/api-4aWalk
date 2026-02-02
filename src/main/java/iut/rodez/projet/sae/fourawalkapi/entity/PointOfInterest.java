@@ -37,15 +37,18 @@ public class PointOfInterest {
     @Column(length = 500)
     private String description;
 
+    int sequence;
+
     // --- Constructeurs ---
 
     public PointOfInterest() {}
 
-    public PointOfInterest(String nom, double latitude, double longitude, String description, Hike hike) {
+    public PointOfInterest(String nom, double latitude, double longitude, String description, Hike hike, int order) {
         this.nom = nom;
         this.latitude = latitude;
         this.longitude = longitude;
         this.description = description;
+        this.sequence = order;
     }
 
     // --- Logique métier de bas niveau ---
@@ -105,4 +108,7 @@ public class PointOfInterest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public int getOrder() { return sequence; }
+    public void setOrder(int order) { this.sequence = order; }
 }

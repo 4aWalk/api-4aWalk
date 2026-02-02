@@ -156,10 +156,8 @@ class MetierToolsService {
 
         int nbParticipant = hike.getParticipants().size();
 
-        // TypeEquipment -> nombre de personnes restant à couvrir
+        // 1. On définit les besoins par type
         Map<TypeEquipment, Integer> couvertureParType = new EnumMap<>(TypeEquipment.class);
-
-        // Initialisation : chaque type doit couvrir nbParticipant personnes
         for (TypeEquipment type : TypeEquipment.values()) {
             if (type != TypeEquipment.AUTRE) {
                 couvertureParType.put(type, nbParticipant);
@@ -170,22 +168,30 @@ class MetierToolsService {
             couvertureParType.remove(TypeEquipment.REPOS);
         }
 
-        // Déduction selon les équipements fournis
-        for (EquipmentItem equipment : hike.getEquipmentRequired()) {
-            TypeEquipment type = equipment.getType();
+        // 2. MAJ : On parcourt les GROUPES au lieu de la liste à plat
+        if (hike.getEquipmentGroups() != null) {
+            for (GroupEquipment group : hike.getEquipmentGroups().values()) {
+                TypeEquipment type = group.getType();
 
-            if (couvertureParType.containsKey(type)) {
-                int restant = couvertureParType.get(type);
-                restant -= equipment.getNbItem();
-                couvertureParType.put(type, restant);
+                // Si ce type nous intéresse pour la couverture (ex: SOIN, REPOS...)
+                if (couvertureParType.containsKey(type)) {
+                    int restant = couvertureParType.get(type);
+
+                    // On additionne la capacité de tous les items de ce groupe
+                    for (EquipmentItem item : group.getItems()) {
+                        restant =- item.getNbItem();
+                    }
+
+                    couvertureParType.put(type, restant);
+                }
             }
         }
 
-        // Vérification finale
+        // 3. Vérification finale
         for (Map.Entry<TypeEquipment, Integer> entry : couvertureParType.entrySet()) {
             if (entry.getValue() > 0) {
                 throw new IllegalStateException(
-                        "La couverture des participants pour le type " + entry.getKey() + "est insufisant"
+                        "La couverture des participants pour le type " + entry.getKey() + " est insuffisante"
                 );
             }
         }
@@ -193,17 +199,22 @@ class MetierToolsService {
 
     private static void validateCapaciteEmportEauLitre(Hike hike) {
         double besoinEauLitreTotal = 0.0;
-
         for(Participant participant : hike.getParticipants()) {
-            besoinEauLitreTotal -= participant.getBesoinEauLitre();
+            besoinEauLitreTotal += participant.getBesoinEauLitre();
         }
+        GroupEquipment groupeEau = hike.getEquipmentGroups().get(TypeEquipment.EAU);
 
-        for(EquipmentItem equipment : hike.getEquipmentRequired()) {
-            if(equipment.getType() == TypeEquipment.EAU) {
-                besoinEauLitreTotal -= (equipment.getMasseGrammes() + equipment.getMasseAVide()) * equipment.getNbItem();
+        if (groupeEau != null) {
+            for (EquipmentItem equipment : groupeEau.getItems()) {
+
+                // Si MasseGrammes = Contenance en ml
+                double volumeLitre = (double) equipment.getMasseGrammes() / 1000.0;
+                besoinEauLitreTotal =- volumeLitre * equipment.getNbItem();
             }
         }
-        if(besoinEauLitreTotal > 0) { throw new RuntimeException("Les gourdes ajoutées à la randonnée ne permette pas de couvrir les besoins quotidien en eau de l'équipe");}
-    }
 
+        if(besoinEauLitreTotal > 0) {
+            throw new RuntimeException("Les gourdes ajoutées à la randonnée ne permettent pas de couvrir les besoins quotidiens en eau de l'équipe");
+        }
+    }
 }

@@ -1,6 +1,9 @@
 package iut.rodez.projet.sae.fourawalkapi.controller.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,7 +19,8 @@ public class HikeResponseDto {
     private UserResponseDto creator;
     private Set<ParticipantResponseDto> participants;
     private Set<FoodProductResponseDto> foodCatalogue;
-    private Set<EquipmentResponseDto> equipmentRequired;
+    private Map<TypeEquipment, GroupEquipmentResponseDto> equipmentGroups;
+
 
     public HikeResponseDto(Hike hike) {
         this.id = hike.getId();
@@ -40,9 +44,13 @@ public class HikeResponseDto {
                 .map(FoodProductResponseDto::new)
                 .collect(Collectors.toSet());
 
-        this.equipmentRequired = hike.getEquipmentRequired().stream()
-                .map(EquipmentResponseDto::new)
-                .collect(Collectors.toSet());
+        if (hike.getEquipmentGroups() != null) {
+            this.equipmentGroups = hike.getEquipmentGroups().entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> new GroupEquipmentResponseDto(entry.getValue())
+                    ));
+        }
     }
 
     // Getters (Indispensables pour éviter l'erreur "No acceptable representation")
@@ -54,5 +62,7 @@ public class HikeResponseDto {
     public UserResponseDto getCreator() { return creator; }
     public Set<ParticipantResponseDto> getParticipants() { return participants; }
     public Set<FoodProductResponseDto> getFoodCatalogue() { return foodCatalogue; }
-    public Set<EquipmentResponseDto> getEquipmentRequired() { return equipmentRequired; }
+    public Map<TypeEquipment, GroupEquipmentResponseDto> getEquipmentGroups() {
+        return equipmentGroups;
+    }
 }

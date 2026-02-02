@@ -62,16 +62,12 @@ public class FoodProduct implements Item {
 
     @Override
     public double getMasseGrammes() {
-        return masseGrammes * this.nbItem;
+        return masseGrammes;
     }
 
     @Override
     public int getNbItem() {return nbItem;}
 
-    /** Retourne la masse en Kg pour le calcul global du sac */
-    public double getWeightKg() {
-        return this.masseGrammes * this.getNbItem()/ 1000.0;
-    }
 
     /** * Calcule le ratio Kcal/Gramme.
      * Plus ce chiffre est élevé, plus l'aliment est efficace pour la randonnée.
@@ -117,9 +113,17 @@ public class FoodProduct implements Item {
     public String getConditionnement() { return conditionnement; }
     public void setConditionnement(String conditionnement) { this.conditionnement = conditionnement; }
 
-    public double getApportNutritionnelKcal() { return apportNutritionnelKcal; }
+    public double getApportNutritionnelKcal() { return apportNutritionnelKcal;}
     public void setApportNutritionnelKcal(double apportNutritionnelKcal) { this.apportNutritionnelKcal = apportNutritionnelKcal; }
 
     public double getPrixEuro() { return prixEuro; }
     public void setPrixEuro(double prixEuro) { this.prixEuro = prixEuro; }
+
+    public int getTotalMasses() {
+        return (int) (this.masseGrammes * this.nbItem);
+    }
+
+    public int getTotalKcals() {
+        return (int) (this.apportNutritionnelKcal * this.nbItem);
+    }
 }
