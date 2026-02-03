@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.controller;
 
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.service.CourseService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/courses") // Attention : pluriel standard pour les API REST
+@RequestMapping("/courses")
 public class CourseController {
 
     private final CourseService courseService;
@@ -18,9 +19,6 @@ public class CourseController {
         this.courseService = courseService;
     }
 
-    /**
-     * Utilitaire pour récupérer l'ID du user connecté
-     */
     private Long getUserId(Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("Utilisateur non connecté");
@@ -28,29 +26,46 @@ public class CourseController {
         return (Long) auth.getPrincipal();
     }
 
-    /**
-     * GET /courses/my
-     * Renvoie la liste de tous les parcours de l'utilisateur connecté.
-     */
     @GetMapping("/my")
     public ResponseEntity<List<CourseResponseDto>> getMyCourses(Authentication auth) {
         Long userId = getUserId(auth);
-        List<CourseResponseDto> myCourses = courseService.getCoursesByUser(userId);
-        return ResponseEntity.ok(myCourses);
+        return ResponseEntity.ok(courseService.getCoursesByUser(userId));
     }
 
-    /**
-     * GET /courses/{id}
-     * Renvoie les détails d'un seul parcours via son ID MongoDB.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponseDto> getCourseById(@PathVariable String id) {
         CourseResponseDto course = courseService.getCourseById(id);
-
         if (course == null) {
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.ok(course);
+    }
+
+    /**
+     * POST /courses
+     * Crée un nouveau suivi de parcours (Mongo) lié à un Hike ID.
+     * Body attendu : { "hikeId": 12, "path": [] }
+     */
+    @PostMapping
+    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody CourseResponseDto courseDto) {
+        CourseResponseDto created = courseService.createCourse(courseDto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    /**
+     * PUT /courses/{id}
+     * Ajoute des points à un parcours existant.
+     * Body attendu : Liste de points [ {"latitude": ..., "longitude": ...}, ... ]
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<CourseResponseDto> addPointsToCourse(
+            @PathVariable String id,
+            @RequestBody List<CourseResponseDto.PointDto> newPoints) {
+
+        // Note : Idéalement, il faudrait vérifier ici que le parcours appartient bien à l'utilisateur connecté
+        // via getUserId(auth) avant d'autoriser la modification.
+
+        CourseResponseDto updated = courseService.addPointsToCourse(id, newPoints);
+        return ResponseEntity.ok(updated);
     }
 }

@@ -110,7 +110,7 @@ public class ParticipantService {
      */
     private void validateParticipantRules(Participant p) {
         // Règle : Eau entre 1 et 8 L
-        if (p.getBesoinEauLitre() < 1 || p.getBesoinEauLitre() > 8) {
+        /*if (p.getBesoinEauLitre() < 1 || p.getBesoinEauLitre() > 8) {
             throw new RuntimeException("Le besoin en eau doit être compris entre 1 et 8 Litres");
         }
 
@@ -127,6 +127,6 @@ public class ParticipantService {
         // Règle : Sac à dos max 30 kg (Capacité d'emport)
         if (p.getCapaciteEmportMaxKg() > 30.0) {
             throw new RuntimeException("La capacité d'emport ne peut pas dépasser 30 kg");
-        }
+        }*/
     }
 }

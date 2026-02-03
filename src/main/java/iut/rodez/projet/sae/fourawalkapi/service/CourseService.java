@@ -7,6 +7,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,57 +17,83 @@ import java.util.stream.Collectors;
 public class CourseService {
 
     private final CourseRepository courseRepository;
-    private final HikeRepository hikeRepository; // <--- AJOUT : Nécessaire pour le lien User -> Hike -> Course
+    private final HikeRepository hikeRepository;
 
     public CourseService(CourseRepository courseRepository, HikeRepository hikeRepository) {
         this.courseRepository = courseRepository;
         this.hikeRepository = hikeRepository;
     }
 
-    /**
-     * Récupère un parcours précis via son ID MongoDB (String)
-     */
+    // --- LECTURE ---
+
     public CourseResponseDto getCourseById(String id) {
         return courseRepository.findById(id)
                 .map(this::mapToDto)
                 .orElse(null);
     }
 
-    /**
-     * Récupère tous les parcours appartenant à un utilisateur spécifique
-     */
     public List<CourseResponseDto> getCoursesByUser(Long userId) {
-        // 1. On récupère toutes les randos (SQL) du créateur
         List<Hike> userHikes = hikeRepository.findByCreatorId(userId);
-
         List<CourseResponseDto> userCourses = new ArrayList<>();
 
-        // 2. Pour chaque rando, on regarde si un parcours (Mongo) existe
         for (Hike hike : userHikes) {
             List<Course> coursesForHike = courseRepository.findByHikeId(hike.getId());
-
-            // On convertit et on ajoute à la liste
             userCourses.addAll(coursesForHike.stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList()));
         }
-
         return userCourses;
     }
 
-    // --- LE RESTE EST INCHANGÉ ---
+    // --- ECRITURE ---
 
-    public CourseResponseDto getCourseByHikeId(Long hikeId) {
-        List<Course> courses = courseRepository.findByHikeId(hikeId);
-        if (courses.isEmpty()) return null;
-        return mapToDto(courses.get(0));
-    }
+    /**
+     * Crée un nouveau parcours (généralement vide au départ) lié à une randonnée.
+     */
+    public CourseResponseDto createCourse(CourseResponseDto dto) {
+        // Validation : Vérifier que la Rando existe (Optionnel mais recommandé)
+        if (dto.getHikeId() != null) {
+            hikeRepository.findById(dto.getHikeId())
+                    .orElseThrow(() -> new RuntimeException("Randonnée introuvable avec l'ID " + dto.getHikeId()));
+        }
 
-    public CourseResponseDto saveCourse(CourseResponseDto dto) {
         Course course = mapToEntity(dto);
+        // On s'assure que la liste est initialisée pour éviter les NullPointer plus tard
+        if (course.getTrajetsRealises() == null) {
+            course.setTrajetsRealises(new ArrayList<>());
+        }
+
         Course savedCourse = courseRepository.save(course);
         return mapToDto(savedCourse);
     }
+
+    /**
+     * Ajoute une liste de nouveaux points à un parcours existant.
+     * Utile pour envoyer les coordonnées GPS par paquets.
+     */
+    public CourseResponseDto addPointsToCourse(String courseId, List<CourseResponseDto.PointDto> newPoints) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Parcours introuvable"));
+
+        if (newPoints != null && !newPoints.isEmpty()) {
+            // Conversion DTO -> Document
+            List<GeoCoordinate> newCoordinates = newPoints.stream()
+                    .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
+                    .collect(Collectors.toList());
+
+            // Ajout à la liste existante
+            if (course.getTrajetsRealises() == null) {
+                course.setTrajetsRealises(new ArrayList<>());
+            }
+            course.getTrajetsRealises().addAll(newCoordinates);
+
+            course = courseRepository.save(course);
+        }
+
+        return mapToDto(course);
+    }
+
+    // --- MAPPERS ---
 
     private CourseResponseDto mapToDto(Course entity) {
         List<CourseResponseDto.PointDto> points = new ArrayList<>();
