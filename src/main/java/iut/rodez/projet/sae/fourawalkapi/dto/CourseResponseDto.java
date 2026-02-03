@@ -1,4 +1,4 @@
-package iut.rodez.projet.sae.fourawalkapi.controller.dto;
+package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import java.util.List;
 

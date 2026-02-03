@@ -1,4 +1,4 @@
-package iut.rodez.projet.sae.fourawalkapi.controller.request;
+package iut.rodez.projet.sae.fourawalkapi.controller;
 
 /**
  * DTO pour recevoir les informations de connexion (POST /login).

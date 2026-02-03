@@ -1,6 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.EquipmentResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.EquipmentResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.service.EquipmentItemService;
 import org.springframework.http.ResponseEntity;

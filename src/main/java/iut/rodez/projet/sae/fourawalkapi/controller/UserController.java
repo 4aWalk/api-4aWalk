@@ -1,6 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.UserResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.UserResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.security.JwtTokenProvider;
 import iut.rodez.projet.sae.fourawalkapi.service.UserService;

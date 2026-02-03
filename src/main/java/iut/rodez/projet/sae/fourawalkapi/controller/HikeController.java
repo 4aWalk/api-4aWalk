@@ -1,8 +1,8 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.HikeResponseDto;
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.ParticipantResponseDto;
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.PointOfInterestResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.HikeResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.ParticipantResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.PointOfInterestResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.service.*;
 import org.springframework.http.ResponseEntity;

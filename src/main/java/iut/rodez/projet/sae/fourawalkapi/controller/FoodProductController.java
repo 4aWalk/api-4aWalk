@@ -1,6 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
-import iut.rodez.projet.sae.fourawalkapi.controller.dto.FoodProductResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.FoodProductResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import iut.rodez.projet.sae.fourawalkapi.service.FoodProductService;
 import org.springframework.http.ResponseEntity;
