@@ -14,7 +14,9 @@ public class ParticipantResponseDto {
     private int besoinEauLitre;
     private double capaciteEmportMaxKg;
 
-    // On ajoute les infos calculées pour le monitoring dans Postman
+    private BackpackResponseDto backpack; // L'objet DTO imbriqué
+
+    // Infos calculées pour le monitoring
     private double chargeActuelleKg;
     private boolean enSurcharge;
 
@@ -28,17 +30,24 @@ public class ParticipantResponseDto {
         this.besoinEauLitre = p.getBesoinEauLitre();
         this.capaciteEmportMaxKg = p.getCapaciteEmportMaxKg();
 
-        // Calculs basés sur la logique métier de l'entité
+        // Gestion du Sac à dos
         if (p.getBackpack() != null) {
-            this.chargeActuelleKg = p.getBackpack().getTotalMassKg();
-            this.enSurcharge = p.isOverloaded();
+            // CORRECTION ICI : On passe l'entité entière au constructeur du DTO
+            this.backpack = new BackpackResponseDto(p.getBackpack());
+
+            // On récupère les valeurs directement depuis notre DTO tout neuf
+            this.chargeActuelleKg = this.backpack.getPoidsActuelKg();
+
+            // Calcul de la surcharge (Poids du sac > Capacité du PARTICIPANT)
+            this.enSurcharge = this.chargeActuelleKg > this.capaciteEmportMaxKg;
         } else {
+            this.backpack = null;
             this.chargeActuelleKg = 0.0;
             this.enSurcharge = false;
         }
     }
 
-    // --- GETTERS (Cruciaux pour Jackson) ---
+    // --- GETTERS ---
     public Long getId() { return id; }
     public int getAge() { return age; }
     public Level getNiveau() { return niveau; }
@@ -47,6 +56,7 @@ public class ParticipantResponseDto {
     public int getBesoinKcal() { return besoinKcal; }
     public int getBesoinEauLitre() { return besoinEauLitre; }
     public double getCapaciteEmportMaxKg() { return capaciteEmportMaxKg; }
+    public BackpackResponseDto getBackpack() { return backpack; } // Getter pour l'objet sac
     public double getChargeActuelleKg() { return chargeActuelleKg; }
     public boolean isEnSurcharge() { return enSurcharge; }
 }

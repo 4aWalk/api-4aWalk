@@ -3,9 +3,9 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.FoodProductRepository;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BackpackRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.FoodProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,6 @@ public class BackpackService {
     public void clearBackpack(Long idParticipant) {
         backpackRepository.findByOwnerId(idParticipant).ifPresent(backpack -> {
             backpack.getEquipmentItems().clear();
-
             backpack.getFoodItems().clear();
             backpackRepository.save(backpack);
         });

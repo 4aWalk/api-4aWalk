@@ -9,8 +9,6 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 public class ParticipantService {
 
@@ -32,7 +30,7 @@ public class ParticipantService {
         if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
         if (hike.getParticipants().size() >= 3) throw new RuntimeException("Hike complète (Max 3)");
 
-        p.setCreator(false); // Sécurité
+        p.setCreator(false);
         Participant saved = participantRepository.save(p);
 
         hike.getParticipants().add(saved);

@@ -1,11 +1,13 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
+import iut.rodez.projet.sae.fourawalkapi.controller.dto.EquipmentResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.service.EquipmentItemService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/equipments")
@@ -18,13 +20,17 @@ public class EquipmentItemController {
     }
 
     @GetMapping
-    public List<EquipmentItem> getAllEquipment() {
-        return equipmentService.getAllEquipment();
+    public List<EquipmentResponseDto> getAllEquipment() {
+        // Transformation de la liste d'entités en liste de DTOs
+        return equipmentService.getAllEquipment().stream()
+                .map(EquipmentResponseDto::new) // Utilise ton constructeur DTO
+                .collect(Collectors.toList());
     }
 
     @PostMapping
-    public EquipmentItem createEquipment(@RequestBody EquipmentItem item) {
-        return equipmentService.createEquipment(item);
+    public EquipmentResponseDto createEquipment(@RequestBody EquipmentItem item) {
+        EquipmentItem savedItem = equipmentService.createEquipment(item);
+        return new EquipmentResponseDto(savedItem);
     }
 
     @DeleteMapping("/{id}")

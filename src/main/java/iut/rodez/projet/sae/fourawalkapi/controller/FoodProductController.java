@@ -1,11 +1,13 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
+import iut.rodez.projet.sae.fourawalkapi.controller.dto.FoodProductResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import iut.rodez.projet.sae.fourawalkapi.service.FoodProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/foods")
@@ -18,13 +20,16 @@ public class FoodProductController {
     }
 
     @GetMapping
-    public List<FoodProduct> getAllFoods() {
-        return foodService.getAllFoods();
+    public List<FoodProductResponseDto> getAllFoods() {
+        return foodService.getAllFoods().stream()
+                .map(FoodProductResponseDto::new)
+                .collect(Collectors.toList());
     }
 
     @PostMapping
-    public FoodProduct createFood(@RequestBody FoodProduct food) {
-        return foodService.createFood(food);
+    public FoodProductResponseDto createFood(@RequestBody FoodProduct food) {
+        FoodProduct savedFood = foodService.createFood(food);
+        return new FoodProductResponseDto(savedFood);
     }
 
     @DeleteMapping("/{id}")
