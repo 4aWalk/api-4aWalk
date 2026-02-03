@@ -47,18 +47,18 @@ public class Participant implements Person {
     private Long creatorId;
 
     // Règle : Kcal entre 1700 et 10000
-    @Min(value = 1700, message = "Le besoin calorique minimum est de 1700 kcal")
-    @Max(value = 10000, message = "Le besoin calorique maximum est de 10000 kcal")
+    //@Min(value = 1700, message = "Le besoin calorique minimum est de 1700 kcal")
+    //@Max(value = 10000, message = "Le besoin calorique maximum est de 10000 kcal")
     private Integer besoinKcal = 1700;
 
     // Règle : Eau entre 1 et 8 Litres
-    @Min(value = 1, message = "Le besoin en eau minimum est de 1 Litre")
-    @Max(value = 8, message = "Le besoin en eau maximum est de 8 Litres")
+    //@Min(value = 1, message = "Le besoin en eau minimum est de 1 Litre")
+    //@Max(value = 8, message = "Le besoin en eau maximum est de 8 Litres")
     private Integer besoinEauLitre = 1;
 
     // Règle : Pas de sac de plus de 30kg (donc capacité max <= 30)
     @PositiveOrZero(message = "La capacité d'emport doit être positive")
-    @Max(value = 30, message = "La capacité d'emport ne peut pas dépasser 30 kg")
+    //@Max(value = 30, message = "La capacité d'emport ne peut pas dépasser 30 kg")
     private Double capaciteEmportMaxKg = 0.0;
 
     /** Le sac à dos attribué au participant */
