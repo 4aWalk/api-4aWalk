@@ -5,7 +5,6 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * DTO représentant l'état du sac à dos d'un participant.

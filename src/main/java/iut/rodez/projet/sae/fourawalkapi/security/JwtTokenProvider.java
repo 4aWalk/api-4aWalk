@@ -7,7 +7,6 @@ import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -24,7 +23,6 @@ public class JwtTokenProvider {
 
     private final UserRepository userRepository;
 
-    // Injection de UserRepository pour récupérer l'ID lors de la génération
     public JwtTokenProvider(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -34,30 +32,28 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Génère un token JWT à partir de l'objet Authentication.
+     * Génère un token JWT
      */
     public String generateToken(Authentication authentication) {
         String email = authentication.getName();
 
-        // On récupère l'ID de l'utilisateur en base une seule fois à la création du token
+        // On récupère l'user pour avoir son ID
+        // (C'est la seule fois où on tape la BDD pour l'auth, donc c'est OK)
         User user = userRepository.findByMail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé pour le token"));
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable lors de la génération du token"));
 
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
 
         return Jwts.builder()
                 .setSubject(email)
-                .claim("userId", user.getId()) // L'ID est injecté ici !
+                .claim("userId", user.getId()) // ID stocké dans le token
                 .setIssuedAt(new Date())
                 .setExpiration(expireDate)
-                .signWith(key())
+                .signWith(key(), SignatureAlgorithm.HS256) // Précision de l'algo recommandée
                 .compact();
     }
 
-    /**
-     * Récupère l'ID utilisateur (Long) depuis le token.
-     */
     public Long getUserId(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key())
@@ -65,26 +61,16 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
 
+        // Récupération sécurisée du Long
         return claims.get("userId", Long.class);
     }
 
-    public String getUserIdAsString(String token) {
-        Long id = getUserId(token);
-        return String.valueOf(id);
-    }
-
-    /**
-     * Valide la signature et l'expiration du token.
-     */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key())
-                    .build()
-                    .parse(token);
+            Jwts.parserBuilder().setSigningKey(key()).build().parse(token);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
-            System.err.println("Erreur de validation JWT : " + ex.getMessage());
+            // Tu peux logger ici si besoin pour le debug
         }
         return false;
     }

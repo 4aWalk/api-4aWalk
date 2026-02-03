@@ -123,6 +123,8 @@ public class FoodProduct implements Item {
         return (int) (this.masseGrammes * this.nbItem);
     }
 
+    public double getTotalMassesKg(){return this.masseGrammes / 1000;}
+
     public int getTotalKcals() {
         return (int) (this.apportNutritionnelKcal * this.nbItem);
     }

@@ -7,6 +7,7 @@ public class PointOfInterestResponseDto {
     private String nom;
     private double latitude;
     private double longitude;
+    private String description;
 
     public PointOfInterestResponseDto(PointOfInterest poi) {
         if (poi != null) {
@@ -14,6 +15,7 @@ public class PointOfInterestResponseDto {
             this.nom = poi.getName();
             this.latitude = poi.getLatitude();
             this.longitude = poi.getLongitude();
+            this.description = poi.getDescription();
         }
     }
 
@@ -22,4 +24,5 @@ public class PointOfInterestResponseDto {
     public String getNom() { return nom; }
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
+    public String getDescription() { return description; }
 }

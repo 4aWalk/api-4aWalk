@@ -104,4 +104,5 @@ public class EquipmentItem implements Item {
     public void setMasseAVide(double masseAVide) {this.masseAVide = masseAVide;}
 
     public double getTotalMasses() { return this.masseGrammes - this.masseAVide * this.nbItem; }
+    public double getTotalMassesKg() {return this.getTotalMasses() / 1000;}
 }

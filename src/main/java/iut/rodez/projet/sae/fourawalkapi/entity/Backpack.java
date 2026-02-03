@@ -103,6 +103,28 @@ public class Backpack {
         this.totalMassKg += equipmentItem.getTotalMasses() / 1000;
     }
 
+    /**
+     * Recalcule le poids total du sac à partir des masses de chaque item.
+     * Cette méthode doit être appelée après chaque modification du contenu.
+     */
+    public void updateAndGetTotalMass() {
+        double mass = 0.0;
+
+        if (equipmentItems != null) {
+            mass += equipmentItems.stream()
+                    .mapToDouble(EquipmentItem::getTotalMassesKg)
+                    .sum();
+        }
+
+        if (foodItems != null) {
+            mass += foodItems.stream()
+                    .mapToDouble(FoodProduct::getTotalMassesKg)
+                    .sum();
+        }
+
+        this.totalMassKg = mass;
+    }
+
     public double getTotalMassKg() { return this.totalMassKg;}
     /**
      * Récupère la capacité max définie par le participant.
