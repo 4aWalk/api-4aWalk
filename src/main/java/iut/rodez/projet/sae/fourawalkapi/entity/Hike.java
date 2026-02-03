@@ -12,7 +12,7 @@ import java.util.*;
 
 /**
  * Représente une randonnée planifiée.
- * Gère l'itinéraire, les participants et les points d'intérêt (UC004).
+ * Gère l'itinéraire, les participants, les équipements et la nourriture.
  */
 @Entity
 @Table(name = "hikes")
@@ -50,8 +50,9 @@ public class Hike {
     private Set<Participant> participants = new HashSet<>();
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "hike_id") // La colonne sera dans la table POI
+    @JoinColumn(name = "hike_id")
     private Set<PointOfInterest> optionalPoints = new HashSet<>();
+
     @ManyToMany
     @JoinTable(
             name = "hike_food_products",
@@ -60,9 +61,10 @@ public class Hike {
     )
     private Set<FoodProduct> foodCatalogue = new HashSet<>();
 
+    // La Map pour ton algo d'optimisation
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "hike_id", nullable = false)
-    @MapKey(name = "type")
+    @MapKey(name = "type") // Utilise le champ 'type' de GroupEquipment comme clé
     private Map<TypeEquipment, GroupEquipment> equipmentGroups = new EnumMap<>(TypeEquipment.class);
 
     // --- Constructeurs ---
@@ -73,68 +75,92 @@ public class Hike {
         this.libelle = libelle;
         this.depart = depart;
         this.arrivee = arrivee;
-        setDureeJours(dureeJours); // Utilise le setter pour valider la règle
+        setDureeJours(dureeJours);
         this.creator = creator;
-        this.participants = new HashSet<>();
-        this.optionalPoints = new HashSet<>();
-        this.foodCatalogue = new HashSet<>();
-        this.equipmentGroups = new HashMap<TypeEquipment, GroupEquipment>();
     }
 
-    // --- Logique métier de bas niveau (Entity Logic) ---
+    // --- Logique Métier : Équipement (Map Management) ---
 
-    /**
-     * Ajoute un participant à la randonnée.
-     * @throws HikeException si le participant est nul ou déjà présent.
-     */
+    public void addEquipment(EquipmentItem item) {
+        if (item == null) return;
+
+        // 1. Récupère ou crée le groupe pour ce type
+        GroupEquipment group = this.equipmentGroups.computeIfAbsent(item.getType(),
+                k -> new GroupEquipment(k));
+
+        // 2. Ajoute l'item
+        group.addItem(item);
+    }
+
+    public void removeEquipment(EquipmentItem item) {
+        if (item == null) return;
+
+        GroupEquipment group = this.equipmentGroups.get(item.getType());
+        if (group != null) {
+            group.getItems().remove(item);
+            // Nettoyage si le groupe est vide
+            if (group.getItems().isEmpty()) {
+                this.equipmentGroups.remove(item.getType());
+            }
+        }
+    }
+
+    public List<EquipmentItem> getOptimizedList(TypeEquipment type) {
+        GroupEquipment group = this.equipmentGroups.get(type);
+        if (group == null) return new ArrayList<>();
+        return group.getItems();
+    }
+
+    // --- Logique Métier : Participants ---
+
     public void addParticipant(Participant participant) throws HikeException {
-        if (participant == null) {
-            throw new HikeException("Le participant ne peut pas être nul.");
-        }
-        if (!this.participants.add(participant)) {
-            throw new HikeException("Ce participant est déjà inscrit à cette randonnée.");
-        }
+        if (participant == null) throw new HikeException("Le participant ne peut pas être nul.");
+        if (!this.participants.add(participant)) throw new HikeException("Ce participant est déjà inscrit.");
     }
 
-    /**
-     * Retire un participant de la randonnée.
-     * Utilise equals() basé sur l'ID du participant.
-     */
     public void removeParticipant(Participant participant) throws HikeException {
-        if (!this.participants.remove(participant)) {
-            throw new HikeException("Le participant n'a pas été trouvé dans cette randonnée.");
+        if (!this.participants.remove(participant)) throw new HikeException("Participant introuvable.");
+    }
+
+    // --- Logique Métier : Helpers Calculs (RESTITUTION) ---
+
+    /**
+     * Calcule le total des calories fournies par la nourriture présente dans la rando.
+     */
+    public double getCalorieRandonne() {
+        double sommeCalorie = 0;
+        for(FoodProduct foodProduct : this.foodCatalogue) {
+            // Correction ici : utiliser += et non =+
+            sommeCalorie += foodProduct.getApportNutritionnelKcal() * foodProduct.getNbItem();
         }
+        return sommeCalorie;
     }
 
     /**
-     * Ajoute un point d'intérêt et maintient la cohérence bidirectionnelle.
+     * Calcule le besoin calorique total de tous les participants.
      */
-    public void addPointOfInterest(PointOfInterest poi) {
-        this.optionalPoints.add(poi);
+    public int getCaloriesForAllParticipants() {
+        int sommeCalorie = 0;
+        for(Participant participant : participants) {
+            sommeCalorie += participant.getBesoinKcal();
+        }
+        return sommeCalorie;
     }
 
-    // --- Overrides Standards ---
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Hike hike = (Hike) o;
-        return Objects.equals(id, hike.id) || Objects.equals(libelle, hike.libelle);
+    /**
+     * Récupère la liste des sacs à dos de tous les participants.
+     */
+    public List<Backpack> getBackpacks() {
+        List<Backpack> backpacks = new ArrayList<>();
+        for(Participant participant : participants) {
+            if (participant.getBackpack() != null) {
+                backpacks.add(participant.getBackpack());
+            }
+        }
+        return backpacks;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, libelle);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Hike[id=%d, libelle='%s', participants=%d]",
-                id, libelle, participants.size());
-    }
-
-    // --- Getters et Setters ---
+    // --- Getters et Setters Standards ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -143,21 +169,13 @@ public class Hike {
     public void setLibelle(String libelle) { this.libelle = libelle; }
 
     public PointOfInterest getDepart() { return depart; }
-    public void setDepart(PointOfInterest depart) {
-        this.depart = depart;
-    }
+    public void setDepart(PointOfInterest depart) { this.depart = depart; }
 
     public PointOfInterest getArrivee() { return arrivee; }
-    public void setArrivee(PointOfInterest arrivee) {
-        this.arrivee = arrivee;
-    }
+    public void setArrivee(PointOfInterest arrivee) { this.arrivee = arrivee; }
 
     public int getDureeJours() { return dureeJours; }
-
-    /** Valide que la durée est comprise entre 1 et 3 jours */
-    public void setDureeJours(int dureeJours) {
-        this.dureeJours = dureeJours;
-    }
+    public void setDureeJours(int dureeJours) { this.dureeJours = dureeJours; }
 
     public User getCreator() { return creator; }
     public void setCreator(User creator) { this.creator = creator; }
@@ -169,59 +187,8 @@ public class Hike {
     public void setOptionalPoints(Set<PointOfInterest> optionalPoints) { this.optionalPoints = optionalPoints; }
 
     public Set<FoodProduct> getFoodCatalogue() { return foodCatalogue; }
-
     public void setFoodCatalogue(Set<FoodProduct> foodCatalogue) { this.foodCatalogue = foodCatalogue; }
 
-    public void addEquipment(EquipmentItem item) {
-        if (item == null) return;
-
-        // 1. Récupère ou Crée le groupe en O(1)
-        GroupEquipment group = this.equipmentGroups.computeIfAbsent(item.getType(),
-                k -> new GroupEquipment(k));
-
-        group.addItem(item);
-
-        // 2. Ajoute et Trie
-        group.addItem(item);
-    }
-
-    /**
-     * Pour ton Algo V2 : Accès instantané à la liste triée
-     */
-    public List<EquipmentItem> getOptimizedList(TypeEquipment type) {
-        return this.equipmentGroups.get(type).getItems();
-    }
-
-    // Getter standard
-    public Map<TypeEquipment, GroupEquipment> getEquipmentGroups() {
-        return equipmentGroups;
-    }
-
-
+    public Map<TypeEquipment, GroupEquipment> getEquipmentGroups() { return equipmentGroups; }
     public void setEquipmentGroups(Map<TypeEquipment, GroupEquipment> equipmentGroups) { this.equipmentGroups = equipmentGroups; }
-
-
-    // Getter standard
-    public double getCalorieRandonne() {
-        double sommeCalorie = 0;
-        for(FoodProduct foodProduct : this.getFoodCatalogue()) {
-            sommeCalorie =+ foodProduct.getApportNutritionnelKcal() * foodProduct.getNbItem();
-        }
-        return sommeCalorie;
-    }
-
-    public int getCaloriesForAllParticipants() {
-        int sommeCalorie = 0;
-        for(Participant participant : participants) {
-            sommeCalorie =+ participant.getBesoinKcal();
-        }
-        return sommeCalorie;
-    }
-    public List<Backpack> getBackpacks() {
-        List<Backpack> backpacks = new ArrayList<>();
-        for(Participant participant : participants) {
-            backpacks.add(participant.getBackpack());
-        }
-        return backpacks;
-    }
 }

@@ -8,14 +8,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import org.springframework.web.bind.annotation.PutMapping;
-
-import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Représente un participant à une randonnée.
- * Gère les capacités physiques et les besoins nutritionnels (UC 2.1.4.2 & 2.1.4.3).
+ * Gère les capacités physiques et les besoins nutritionnels.
  */
 @Entity
 @Table(name = "participants")
@@ -31,8 +27,9 @@ public class Participant implements Person {
     @Column(nullable = false)
     private String prenom;
 
+    // Règle : Age entre 10 et 100 ans
     @NotNull(message = "L'âge est obligatoire")
-    @Min(value = 5, message = "L'âge minimum est de 5 ans")
+    @Min(value = 10, message = "L'âge minimum est de 10 ans")
     @Max(value = 100, message = "L'âge maximum est de 100 ans")
     private Integer age;
 
@@ -49,13 +46,19 @@ public class Participant implements Person {
     @Column(name="creator_id")
     private Long creatorId;
 
-    @PositiveOrZero(message = "Le besoin calorique ne peut pas être négatif")
-    private Integer besoinKcal = 0;
+    // Règle : Kcal entre 1700 et 10000
+    @Min(value = 1700, message = "Le besoin calorique minimum est de 1700 kcal")
+    @Max(value = 10000, message = "Le besoin calorique maximum est de 10000 kcal")
+    private Integer besoinKcal = 1700;
 
-    @PositiveOrZero(message = "Le besoin en eau ne peut pas être négatif")
-    private Integer besoinEauLitre = 0;
+    // Règle : Eau entre 1 et 8 Litres
+    @Min(value = 1, message = "Le besoin en eau minimum est de 1 Litre")
+    @Max(value = 8, message = "Le besoin en eau maximum est de 8 Litres")
+    private Integer besoinEauLitre = 1;
 
+    // Règle : Pas de sac de plus de 30kg (donc capacité max <= 30)
     @PositiveOrZero(message = "La capacité d'emport doit être positive")
+    @Max(value = 30, message = "La capacité d'emport ne peut pas dépasser 30 kg")
     private Double capaciteEmportMaxKg = 0.0;
 
     /** Le sac à dos attribué au participant */
@@ -80,19 +83,14 @@ public class Participant implements Person {
         this.capaciteEmportMaxKg = capaciteEmportMaxKg;
     }
 
-    // --- Logique métier de bas niveau (Entity Logic) ---
+    // --- Logique métier ---
 
-    /**
-     * Vérifie si le participant est en surcharge par rapport à sa capacité maximale.
-     * @return true si le poids du sac dépasse la capacité.
-     */
     public boolean isOverloaded() {
         if (this.backpack == null) return false;
         return this.backpack.getTotalMassKg() > this.capaciteEmportMaxKg;
     }
 
-
-    // --- Implémentation de l'interface Person ---
+    // --- Implémentation Person ---
 
     @Override
     public String getPrenom() { return prenom; }
@@ -105,29 +103,19 @@ public class Participant implements Person {
     public void setNom(String nom) { this.nom = nom; }
 
     @Override
-    public int getAge() {
-        return this.age;
-    }
-
-    @Override
-    public Level getNiveau() {
-        return this.niveau;
-    }
-
-    @Override
-    public Morphology getMorphologie() {
-        return this.morphologie;
-    }
-
+    public int getAge() { return this.age; }
     @Override
     public void setAge(int age) { this.age = age; }
 
     @Override
+    public Level getNiveau() { return this.niveau; }
+    @Override
     public void setNiveau(Level niveau) { this.niveau = niveau; }
 
     @Override
+    public Morphology getMorphologie() { return this.morphologie; }
+    @Override
     public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
-
 
     // --- Getters et Setters ---
 

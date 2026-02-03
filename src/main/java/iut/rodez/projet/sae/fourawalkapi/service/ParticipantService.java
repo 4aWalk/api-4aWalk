@@ -24,24 +24,23 @@ public class ParticipantService {
         this.userRepository = ur;
     }
 
-    /**
-     * Récupère tous les profils participants créés par l'utilisateur connecté
-     */
     public List<Participant> getMyParticipants(Long userId) {
         return participantRepository.findByCreatorIdAndCreatorFalse(userId);
     }
 
     @Transactional
     public Participant addParticipant(Long hikeId, Participant p, Long userId) {
+        // 1. Validation métier des données brutes
+        validateParticipantRules(p);
+
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
         if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
         if (hike.getParticipants().size() >= 3) throw new RuntimeException("Hike complète (Max 3)");
 
-        // Configuration automatique
-        p.setCreator(false); // Ce n'est pas le compte principal, c'est un invité
-        p.setCreatorId(userId); // <--- CRUCIAL : On lie ce participant à l'utilisateur connecté
+        p.setCreator(false);
+        p.setCreatorId(userId);
 
         Participant saved = participantRepository.save(p);
 
@@ -53,6 +52,9 @@ public class ParticipantService {
 
     @Transactional
     public Participant updateParticipant(Long hikeId, Long participantId, Participant details, Long userId) {
+        // 1. Validation métier des nouvelles données
+        validateParticipantRules(details);
+
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
         if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
@@ -60,11 +62,8 @@ public class ParticipantService {
         Participant p = participantRepository.findById(participantId)
                 .orElseThrow(() -> new RuntimeException("Participant introuvable"));
 
-        // Mise à jour des infos d'identité
         p.setNom(details.getNom());
         p.setPrenom(details.getPrenom());
-
-        // Mise à jour des stats
         p.setAge(details.getAge());
         p.setNiveau(details.getNiveau());
         p.setMorphologie(details.getMorphologie());
@@ -72,12 +71,10 @@ public class ParticipantService {
         p.setBesoinEauLitre(details.getBesoinEauLitre());
         p.setCapaciteEmportMaxKg(details.getCapaciteEmportMaxKg());
 
-        // On s'assure que le creatorId reste cohérent (ou on le met à jour si besoin)
         if(p.getCreatorId() == null) {
             p.setCreatorId(userId);
         }
 
-        // Synchronisation si c'est le profil "Moi" (le créateur de la rando)
         if (p.getCreator()) {
             User userToUpdate = userRepository.findById(hike.getCreator().getId())
                     .orElseThrow(() -> new RuntimeException("Utilisateur créateur introuvable en base"));
@@ -85,8 +82,6 @@ public class ParticipantService {
             userToUpdate.setAge(details.getAge());
             userToUpdate.setNiveau(details.getNiveau());
             userToUpdate.setMorphologie(details.getMorphologie());
-            // On ne met pas à jour le nom/prénom du User principal ici par sécurité,
-            // mais tu pourrais le faire si tu le souhaites.
 
             userRepository.save(userToUpdate);
         }
@@ -108,5 +103,30 @@ public class ParticipantService {
         hike.getParticipants().remove(p);
         hikeRepository.save(hike);
         participantRepository.delete(p);
+    }
+
+    /**
+     * Valide les règles métiers spécifiques (Eau, Kcal, Age, Sac)
+     */
+    private void validateParticipantRules(Participant p) {
+        // Règle : Eau entre 1 et 8 L
+        if (p.getBesoinEauLitre() < 1 || p.getBesoinEauLitre() > 8) {
+            throw new RuntimeException("Le besoin en eau doit être compris entre 1 et 8 Litres");
+        }
+
+        // Règle : Kcal entre 1700 et 10000
+        if (p.getBesoinKcal() < 1700 || p.getBesoinKcal() > 10000) {
+            throw new RuntimeException("Le besoin calorique doit être compris entre 1700 et 10000 kcal");
+        }
+
+        // Règle : Age entre 10 et 100 ans
+        if (p.getAge() < 10 || p.getAge() > 100) {
+            throw new RuntimeException("L'âge doit être compris entre 10 et 100 ans");
+        }
+
+        // Règle : Sac à dos max 30 kg (Capacité d'emport)
+        if (p.getCapaciteEmportMaxKg() > 30.0) {
+            throw new RuntimeException("La capacité d'emport ne peut pas dépasser 30 kg");
+        }
     }
 }

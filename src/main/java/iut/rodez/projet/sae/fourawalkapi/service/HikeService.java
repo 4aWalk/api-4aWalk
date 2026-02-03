@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -149,5 +150,21 @@ public class HikeService {
         // backpackRepository.saveAll(backpacks);
 
         hikeRepository.save(hike);
+    }
+
+    /**
+     * Récupère la liste des équipements d'une randonnée pour un type donné.
+     * Cette méthode est transactionnelle pour gérer le Lazy Loading de la Map si besoin.
+     */
+    @Transactional(readOnly = true)
+    public List<EquipmentItem> getEquipmentByType(Long hikeId, TypeEquipment type) {
+        Hike hike = hikeRepository.findById(hikeId)
+                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+
+        // On utilise la méthode de l'entité qui accède directement à la Map
+        List<EquipmentItem> items = hike.getOptimizedList(type);
+
+        // Optionnel : Si tu veux être sûr que la liste est modifiable ou pour éviter des effets de bord
+        return new ArrayList<>(items);
     }
 }

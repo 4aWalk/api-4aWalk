@@ -6,11 +6,6 @@ import jakarta.validation.constraints.*;
 
 import java.util.Objects;
 
-/**
- * Représente un produit alimentaire du catalogue.
- * Implémente l'interface Item pour s'intégrer dans le calcul de charge du sac.
- * (Correspond à l'UC 2.1.4.4 - Caractéristiques nutritionnelles)
- */
 @Entity
 @Table(name = "food_products")
 public class FoodProduct implements Item {
@@ -23,14 +18,18 @@ public class FoodProduct implements Item {
     @Column(nullable = false)
     private String nom;
 
+    // Règle : Poids entre 50g et 5000g (5kg)
     @NotNull(message = "Le poids est requis")
-    @Positive(message = "Le poids doit être strictement positif")
+    @Min(value = 50, message = "Le poids minimum est de 50g")
+    @Max(value = 5000, message = "Le poids maximum est de 5kg (5000g)")
     private Double masseGrammes;
 
     private String appellationCourante;
     private String conditionnement;
 
-    @PositiveOrZero(message = "Les calories ne peuvent pas être négatives")
+    // Règle : Kcal entre 50 et 3000
+    @Min(value = 50, message = "L'apport calorique minimum est de 50 kcal")
+    @Max(value = 3000, message = "L'apport calorique maximum est de 3000 kcal")
     private Double apportNutritionnelKcal;
 
     @PositiveOrZero
@@ -38,8 +37,8 @@ public class FoodProduct implements Item {
 
     @Min(1) @Max(3)
     private int nbItem;
-    // --- Constructeurs ---
 
+    // --- Constructeurs ---
     public FoodProduct() {}
 
     public FoodProduct(String nom, double masseGrammes, String appellationCourante,
@@ -53,31 +52,23 @@ public class FoodProduct implements Item {
         this.nbItem = nbItem;
     }
 
-    // --- Méthodes de l'interface Item & Logique métier ---
+    // --- Interface Item ---
 
     @Override
-    public String getNom() {
-        return nom;
-    }
+    public String getNom() { return nom; }
 
     @Override
-    public double getMasseGrammes() {
-        return masseGrammes;
-    }
+    public double getMasseGrammes() { return masseGrammes; }
 
     @Override
-    public int getNbItem() {return nbItem;}
+    public int getNbItem() { return nbItem; }
 
-
-    /** * Calcule le ratio Kcal/Gramme.
-     * Plus ce chiffre est élevé, plus l'aliment est efficace pour la randonnée.
-     */
     public double getEnergyDensity() {
         if (masseGrammes <= 0) return 0;
         return apportNutritionnelKcal / masseGrammes;
     }
 
-    // --- Overrides Standards ---
+    // --- Overrides ---
 
     @Override
     public boolean equals(Object o) {
@@ -88,14 +79,11 @@ public class FoodProduct implements Item {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id, nom);
-    }
+    public int hashCode() { return Objects.hash(id, nom); }
 
     @Override
     public String toString() {
-        return String.format("%s [%s] (%.0f Kcal, %.2f€)",
-                nom, conditionnement, apportNutritionnelKcal, prixEuro);
+        return String.format("%s [%s] (%.0f Kcal, %.2f€)", nom, conditionnement, apportNutritionnelKcal, prixEuro);
     }
 
     // --- Getters et Setters ---
@@ -119,13 +107,9 @@ public class FoodProduct implements Item {
     public double getPrixEuro() { return prixEuro; }
     public void setPrixEuro(double prixEuro) { this.prixEuro = prixEuro; }
 
-    public int getTotalMasses() {
-        return (int) (this.masseGrammes * this.nbItem);
-    }
+    public int getTotalMasses() { return (int) (this.masseGrammes * this.nbItem); }
 
-    public double getTotalMassesKg(){return this.masseGrammes / 1000;}
+    public double getTotalMassesKg(){ return this.masseGrammes / 1000; }
 
-    public int getTotalKcals() {
-        return (int) (this.apportNutritionnelKcal * this.nbItem);
-    }
+    public int getTotalKcals() { return (int) (this.apportNutritionnelKcal * this.nbItem); }
 }

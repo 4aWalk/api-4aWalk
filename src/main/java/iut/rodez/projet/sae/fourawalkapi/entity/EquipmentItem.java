@@ -3,16 +3,14 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
-/**
- * Représente un équipement (matériel indispensable comme une tente, un duvet, etc.).
- * Implémente l'interface Item pour la logique de calcul de charge.
- */
 @Entity
 @Table(name = "equipment_items")
 public class EquipmentItem implements Item {
@@ -27,8 +25,10 @@ public class EquipmentItem implements Item {
 
     private String description;
 
+    // Règle : Poids entre 50g et 5000g (5kg)
     @NotNull(message = "Le poids est requis")
-    @Positive(message = "Le poids doit être strictement positif")
+    @Min(value = 50, message = "Le poids minimum est de 50g")
+    @Max(value = 5000, message = "Le poids maximum est de 5kg (5000g)")
     private Double masseGrammes;
 
     private int nbItem;
@@ -41,7 +41,6 @@ public class EquipmentItem implements Item {
     private double masseAVide;
 
     // --- Constructeurs ---
-
     public EquipmentItem() {}
 
     public EquipmentItem(String nom, String description, double masseGrammes, boolean permetRepos, boolean tousLesParticipant, int nbItem, TypeEquipment type, double masseAVide) {
@@ -53,35 +52,26 @@ public class EquipmentItem implements Item {
         this.masseAVide = masseAVide;
     }
 
-    // --- Méthodes de l'interface Item & Logique métier ---
+    // --- Interface Item ---
 
     @Override
-    public String getNom() {
-        return nom;
-    }
-
+    public String getNom() { return nom; }
 
     @Override
-    public double getMasseGrammes() {
-        return masseGrammes;
-    }
+    public double getMasseGrammes() { return masseGrammes; }
 
-    // --- Overrides Standards ---
+    // --- Overrides ---
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EquipmentItem that = (EquipmentItem) o;
-        // Si l'ID est présent, on l'utilise, sinon on compare par nom (clé naturelle)
         return Objects.equals(id, that.id) || Objects.equals(nom, that.nom);
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id, nom);
-    }
-
+    public int hashCode() { return Objects.hash(id, nom); }
 
     // --- Getters et Setters ---
 
