@@ -17,8 +17,8 @@ DROP TABLE IF EXISTS users;
 -- 2. Création des tables
 CREATE TABLE users (
                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                       nom VARCHAR(255),
-                       prenom VARCHAR(255),
+                       nom VARCHAR(255) NOT NULL,
+                       prenom VARCHAR(255) NOT NULL,
                        mail VARCHAR(255) NOT NULL UNIQUE,
                        password VARCHAR(255),
                        adresse VARCHAR(255),
@@ -29,10 +29,13 @@ CREATE TABLE users (
 
 CREATE TABLE participants (
                               id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                              nom VARCHAR(255) NOT NULL,
+                              prenom VARCHAR(255) NOT NULL,
                               age INT,
                               niveau VARCHAR(50),
                               morphologie VARCHAR(50),
                               creator BOOLEAN,
+                              creator_id BIGINT,
                               besoin_kcal INTEGER NOT NULL,
                               besoin_eau_litre INTEGER NOT NULL,
                               capacite_emport_max_kg DOUBLE NOT NULL

@@ -8,7 +8,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import org.springframework.web.bind.annotation.PutMapping;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -22,6 +24,12 @@ public class Participant implements Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private String nom;
+
+    @Column(nullable = false)
+    private String prenom;
 
     @NotNull(message = "L'âge est obligatoire")
     @Min(value = 5, message = "L'âge minimum est de 5 ans")
@@ -37,6 +45,9 @@ public class Participant implements Person {
     private Morphology morphologie;
 
     private boolean creator = false;
+
+    @Column(name="creator_id")
+    private Long creatorId;
 
     @PositiveOrZero(message = "Le besoin calorique ne peut pas être négatif")
     private Integer besoinKcal = 0;
@@ -55,12 +66,15 @@ public class Participant implements Person {
 
     public Participant() {}
 
-    public Participant(int age, Level niveau, Morphology morphologie, boolean creator,
-                       int besoinKcal, int besoinEauLitre, double capaciteEmportMaxKg) {
+    public Participant(String prenom, String nom, int age, Level niveau, Morphology morphologie, boolean creator,
+                       Long creatorId, int besoinKcal, int besoinEauLitre, double capaciteEmportMaxKg) {
+        this.prenom = prenom;
+        this.nom = nom;
         this.age = age;
         this.niveau = niveau;
         this.morphologie = morphologie;
         this.creator = creator;
+        this.creatorId = creatorId;
         this.besoinKcal = besoinKcal;
         this.besoinEauLitre = besoinEauLitre;
         this.capaciteEmportMaxKg = capaciteEmportMaxKg;
@@ -81,6 +95,16 @@ public class Participant implements Person {
     // --- Implémentation de l'interface Person ---
 
     @Override
+    public String getPrenom() { return prenom; }
+    @Override
+    public void setPrenom(String prenom) { this.prenom = prenom; }
+
+    @Override
+    public String getNom() {return this.nom;}
+    @Override
+    public void setNom(String nom) { this.nom = nom; }
+
+    @Override
     public int getAge() {
         return this.age;
     }
@@ -95,9 +119,14 @@ public class Participant implements Person {
         return this.morphologie;
     }
 
-    // --- Overrides Standards ---
+    @Override
+    public void setAge(int age) { this.age = age; }
 
+    @Override
+    public void setNiveau(Level niveau) { this.niveau = niveau; }
 
+    @Override
+    public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
 
 
     // --- Getters et Setters ---
@@ -105,14 +134,11 @@ public class Participant implements Person {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public void setAge(int age) { this.age = age; }
-
-    public void setNiveau(Level niveau) { this.niveau = niveau; }
-
-    public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
-
     public boolean getCreator() { return creator; }
     public void setCreator(boolean isCreator) { this.creator = isCreator; }
+
+    public Long getCreatorId() { return creatorId; }
+    public void setCreatorId(Long creatorId) { this.creatorId = creatorId; }
 
     public int getBesoinKcal() { return besoinKcal; }
     public void setBesoinKcal(int besoinKcal) { this.besoinKcal = besoinKcal; }

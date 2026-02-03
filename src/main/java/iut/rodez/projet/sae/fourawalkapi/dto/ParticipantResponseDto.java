@@ -6,10 +6,13 @@ import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
 public class ParticipantResponseDto {
     private Long id;
+    private String prenom;
+    private String nom;
     private int age;
     private Level niveau;
     private Morphology morphologie;
     private boolean creator;
+    private Long creatorId;
     private int besoinKcal;
     private int besoinEauLitre;
     private double capaciteEmportMaxKg;
@@ -22,10 +25,13 @@ public class ParticipantResponseDto {
 
     public ParticipantResponseDto(Participant p) {
         this.id = p.getId();
+        this.prenom = p.getPrenom();
+        this.nom = p.getNom();
         this.age = p.getAge();
         this.niveau = p.getNiveau();
         this.morphologie = p.getMorphologie();
         this.creator = p.getCreator();
+        this.creatorId = p.getCreatorId();
         this.besoinKcal = p.getBesoinKcal();
         this.besoinEauLitre = p.getBesoinEauLitre();
         this.capaciteEmportMaxKg = p.getCapaciteEmportMaxKg();
@@ -49,14 +55,17 @@ public class ParticipantResponseDto {
 
     // --- GETTERS ---
     public Long getId() { return id; }
+    public String getPrenom() { return prenom; }
+    public String getNom() { return nom; }
     public int getAge() { return age; }
     public Level getNiveau() { return niveau; }
     public Morphology getMorphologie() { return morphologie; }
-    public boolean isCreator() { return creator; }
+    public boolean getIsCreator() { return creator; }
+    public Long getCreatorId() { return creatorId; }
     public int getBesoinKcal() { return besoinKcal; }
     public int getBesoinEauLitre() { return besoinEauLitre; }
     public double getCapaciteEmportMaxKg() { return capaciteEmportMaxKg; }
     public BackpackResponseDto getBackpack() { return backpack; } // Getter pour l'objet sac
     public double getChargeActuelleKg() { return chargeActuelleKg; }
-    public boolean isEnSurcharge() { return enSurcharge; }
+    public boolean getIsEnSurcharge() { return enSurcharge; }
 }

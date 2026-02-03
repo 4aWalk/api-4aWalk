@@ -50,10 +50,12 @@ public class HikeService {
 
         // Création du Participant "Chef" depuis le User
         Participant pCreator = new Participant(
+                user.getPrenom(),
+                user.getNom(),
                 user.getAge(),
                 user.getNiveau(),
                 user.getMorphologie(),
-                true, 0, 0, 0.0
+                true, user.getId(), 0, 0, 0.0
         );
 
         hike.setParticipants(new HashSet<>());

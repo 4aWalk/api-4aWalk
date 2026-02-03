@@ -22,6 +22,7 @@ public class UserResponseDto {
 
     // Constructeur pour mapper l'Entité User vers ce DTO
     public UserResponseDto(User user) {
+        this.id = user.getId();
         this.mail = user.getMail();
         this.nom = user.getNom();
         this.prenom = user.getPrenom();
