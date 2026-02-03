@@ -15,4 +15,6 @@ public interface HikeRepository extends JpaRepository<Hike, Long> {
      * @return La liste des randonnées.
      */
     List<Hike> findByCreatorId(Long creatorId);
+
+    boolean existsByCreatorIdAndLibelle(Long creatorId, String libelle);
 }
