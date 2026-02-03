@@ -64,13 +64,6 @@ public class User implements Person {
         this.morphologie = morphologie;
     }
 
-    // --- Logique métier de bas niveau ---
-
-    /** Retourne le nom complet formaté */
-    public String getFullName() {
-        return prenom + " " + nom.toUpperCase();
-    }
-
     // --- Implémentation de l'interface Person ---
 
     @Override

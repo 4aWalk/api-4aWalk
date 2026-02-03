@@ -1,7 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import iut.rodez.projet.sae.fourawalkapi.advice.HikeException;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -113,13 +112,13 @@ public class Hike {
 
     // --- Logique Métier : Participants ---
 
-    public void addParticipant(Participant participant) throws HikeException {
-        if (participant == null) throw new HikeException("Le participant ne peut pas être nul.");
-        if (!this.participants.add(participant)) throw new HikeException("Ce participant est déjà inscrit.");
+    public void addParticipant(Participant participant) throws RuntimeException {
+        if (participant == null) throw new RuntimeException("Le participant ne peut pas être nul.");
+        if (!this.participants.add(participant)) throw new RuntimeException("Ce participant est déjà inscrit.");
     }
 
-    public void removeParticipant(Participant participant) throws HikeException {
-        if (!this.participants.remove(participant)) throw new HikeException("Participant introuvable.");
+    public void removeParticipant(Participant participant) throws RuntimeException {
+        if (!this.participants.remove(participant)) throw new RuntimeException("Participant introuvable.");
     }
 
     // --- Logique Métier : Helpers Calculs (RESTITUTION) ---

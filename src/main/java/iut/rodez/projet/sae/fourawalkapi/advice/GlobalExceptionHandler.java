@@ -49,12 +49,12 @@ public class GlobalExceptionHandler {
      * Gère tes exceptions métier personnalisées (ex: HikeException).
      * Si tu n'as pas créé de classe spécifique, tu peux garder IllegalArgumentException.
      */
-    @ExceptionHandler(HikeException.class)
+    /*@ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleHikeException(HikeException ex) {
         System.err.println("Erreur métier Hike : " + ex.getMessage());
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
-    }
+    }*/
 
     /**
      * Gère les RuntimeException génériques (ex: "Utilisateur introuvable" lancé par .orElseThrow()).

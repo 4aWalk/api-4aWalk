@@ -95,7 +95,7 @@ public class Backpack {
 
     public void addFoodItems(FoodProduct foodItem) {
         this.foodItems.add(foodItem);
-        this.totalMassKg += foodItem.getTotalMasses() / 1000;
+        this.totalMassKg += (double) foodItem.getTotalMasses() / 1000;
     }
 
     public void addEquipmentItems(EquipmentItem equipmentItem) {
