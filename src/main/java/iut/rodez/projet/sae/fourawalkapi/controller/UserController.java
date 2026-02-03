@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
+import iut.rodez.projet.sae.fourawalkapi.dto.UserResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.security.JwtTokenProvider;
 import iut.rodez.projet.sae.fourawalkapi.service.UserService;
@@ -27,20 +28,22 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
         User savedUser = userService.registerNewUser(user);
-        Authentication authForToken = new UsernamePasswordAuthenticationToken(savedUser.getMail(), null);
 
+        // On génère le token immédiatement après l'inscription pour connecter l'utilisateur
+        Authentication authForToken = new UsernamePasswordAuthenticationToken(savedUser.getMail(), null);
         String token = tokenProvider.generateToken(authForToken);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("user", savedUser);
+        response.put("token", token);
+        response.put("user", new UserResponseDto(savedUser)); // Utilisation du DTO
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("mail");
         String password = loginRequest.get("password");
 
@@ -55,7 +58,7 @@ public class UserController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("user", userFromDb);
+        response.put("user", new UserResponseDto(userFromDb)); // Utilisation du DTO
 
         return ResponseEntity.ok(response);
     }
@@ -78,13 +81,14 @@ public class UserController {
 
         try {
             User updatedUser = userService.updateUser(user);
+
+            // On renvoie un objet propre contenant le DTO
             Map<String, Object> response = new HashMap<>();
-            response.put("user", updatedUser);
+            response.put("user", new UserResponseDto(updatedUser));
 
             return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
-            // Erreur métier (ex: email déjà pris par quelqu'un d'autre)
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

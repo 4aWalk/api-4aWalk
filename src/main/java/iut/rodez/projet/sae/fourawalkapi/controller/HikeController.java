@@ -1,14 +1,16 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
+import iut.rodez.projet.sae.fourawalkapi.dto.HikeResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.ParticipantResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.PointOfInterestResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/hikes")
@@ -20,7 +22,6 @@ public class HikeController {
     private final FoodProductService foodService;
     private final EquipmentItemService equipmentService;
 
-    // PLUS BESOIN de UserService ici !
     public HikeController(HikeService hs, ParticipantService ps, PointOfInterestService pois,
                           FoodProductService fs, EquipmentItemService es) {
         this.hikeService = hs;
@@ -30,39 +31,41 @@ public class HikeController {
         this.equipmentService = es;
     }
 
-    /**
-     * Méthode utilitaire pour récupérer l'ID directement depuis le Token décodé
-     */
     private Long getUserId(Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("Utilisateur non connecté");
         }
-        // Grâce à ton JwtAuthenticationFilter, le principal EST un Long
         return (Long) auth.getPrincipal();
     }
 
     // --- SCOPE HIKE ---
 
     @GetMapping("/my")
-    public List<Hike> getMyHikes(Authentication auth) {
-        // Renvoie uniquement les randos où creator_id = userId du token
-        return hikeService.getHikesByCreator(getUserId(auth));
+    public List<HikeResponseDto> getMyHikes(Authentication auth) {
+        List<Hike> hikes = hikeService.getHikesByCreator(getUserId(auth));
+
+        // Conversion de la liste d'Entités en liste de DTOs
+        return hikes.stream()
+                .map(HikeResponseDto::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public Hike getHike(@PathVariable Long id, Authentication auth) {
-        return hikeService.getHikeById(id, getUserId(auth));
+    public ResponseEntity<HikeResponseDto> getHike(@PathVariable Long id, Authentication auth) {
+        Hike hike = hikeService.getHikeById(id, getUserId(auth));
+        return ResponseEntity.ok(new HikeResponseDto(hike));
     }
 
     @PostMapping
-    public Hike createHike(@RequestBody Hike hike, Authentication auth) {
-        // Le service va chercher le User en base à partir de cet ID pour faire le lien
-        return hikeService.createHike(hike, getUserId(auth));
+    public ResponseEntity<HikeResponseDto> createHike(@RequestBody Hike hike, Authentication auth) {
+        Hike savedHike = hikeService.createHike(hike, getUserId(auth));
+        return ResponseEntity.ok(new HikeResponseDto(savedHike));
     }
 
     @PutMapping("/{id}")
-    public Hike updateHike(@PathVariable Long id, @RequestBody Hike hike, Authentication auth) {
-        return hikeService.updateHike(id, hike, getUserId(auth));
+    public ResponseEntity<HikeResponseDto> updateHike(@PathVariable Long id, @RequestBody Hike hike, Authentication auth) {
+        Hike updatedHike = hikeService.updateHike(id, hike, getUserId(auth));
+        return ResponseEntity.ok(new HikeResponseDto(updatedHike));
     }
 
     @DeleteMapping("/{id}")
@@ -74,13 +77,15 @@ public class HikeController {
     // --- SCOPE PARTICIPANT ---
 
     @PostMapping("/{hikeId}/participants")
-    public Participant addParticipant(@PathVariable Long hikeId, @RequestBody Participant p, Authentication auth) {
-        return participantService.addParticipant(hikeId, p, getUserId(auth));
+    public ParticipantResponseDto addParticipant(@PathVariable Long hikeId, @RequestBody Participant p, Authentication auth) {
+        Participant savedParticipant = participantService.addParticipant(hikeId, p, getUserId(auth));
+        return new ParticipantResponseDto(savedParticipant);
     }
 
     @PutMapping("/{hikeId}/participants/{pId}")
-    public Participant updateParticipant(@PathVariable Long hikeId, @PathVariable Long pId, @RequestBody Participant p, Authentication auth) {
-        return participantService.updateParticipant(hikeId, pId, p, getUserId(auth));
+    public ParticipantResponseDto updateParticipant(@PathVariable Long hikeId, @PathVariable Long pId, @RequestBody Participant p, Authentication auth) {
+        Participant updatedParticipant = participantService.updateParticipant(hikeId, pId, p, getUserId(auth));
+        return new ParticipantResponseDto(updatedParticipant);
     }
 
     @DeleteMapping("/{hikeId}/participants/{pId}")
@@ -92,8 +97,9 @@ public class HikeController {
     // --- SCOPE POI ---
 
     @PostMapping("/{hikeId}/poi")
-    public PointOfInterest addPoi(@PathVariable Long hikeId, @RequestBody PointOfInterest poi, Authentication auth) {
-        return poiService.addPoiToHike(hikeId, poi, getUserId(auth));
+    public PointOfInterestResponseDto addPoi(@PathVariable Long hikeId, @RequestBody PointOfInterest poi, Authentication auth) {
+        PointOfInterest savedPoi = poiService.addPoiToHike(hikeId, poi, getUserId(auth));
+        return new PointOfInterestResponseDto(savedPoi);
     }
 
     @DeleteMapping("/{hikeId}/poi/{poiId}")
@@ -106,7 +112,6 @@ public class HikeController {
 
     @PostMapping("/{hikeId}/food")
     public ResponseEntity<Void> addFoodToHike(@PathVariable Long hikeId, @RequestBody FoodProduct food, Authentication auth) {
-        // On attend { "id": X } dans le body
         foodService.addFoodToHike(hikeId, food.getId(), getUserId(auth));
         return ResponseEntity.ok().build();
     }
@@ -134,9 +139,11 @@ public class HikeController {
     // --- SCOPE OPTIMISATION ---
 
     @PostMapping("/{hikeId}/optimize")
-    public ResponseEntity<?> optimizeBackpacks(@PathVariable Long hikeId, Authentication auth) {
+    public ResponseEntity<HikeResponseDto> optimizeBackpacks(@PathVariable Long hikeId, Authentication auth) {
         hikeService.optimizeBackpack(hikeId, getUserId(auth));
 
-        return ResponseEntity.ok(hikeService.getHikeById(hikeId, getUserId(auth)));
+        // On récupère la rando fraîchement optimisée et on la renvoie en DTO
+        Hike optimizedHike = hikeService.getHikeById(hikeId, getUserId(auth));
+        return ResponseEntity.ok(new HikeResponseDto(optimizedHike));
     }
 }
