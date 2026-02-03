@@ -14,6 +14,8 @@ import java.util.List;
 @Service
 public class ParticipantService {
 
+    private final String MSG_ERROR_NOT_FOUND_HIKE = "Randonnée introuvable";
+
     private final HikeRepository hikeRepository;
     private final ParticipantRepository participantRepository;
     private final UserRepository userRepository;
@@ -34,7 +36,7 @@ public class ParticipantService {
         validateParticipantRules(p);
 
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
 
         if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
         if (hike.getParticipants().size() >= 3) throw new RuntimeException("Hike complète (Max 3)");
@@ -56,7 +58,7 @@ public class ParticipantService {
         validateParticipantRules(details);
 
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
         if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
 
         Participant p = participantRepository.findById(participantId)
@@ -92,7 +94,7 @@ public class ParticipantService {
     @Transactional
     public void deleteParticipant(Long hikeId, Long participantId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
         if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
 
         Participant p = participantRepository.findById(participantId)

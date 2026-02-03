@@ -67,11 +67,24 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(key())
+                    .build()
+                    .parseClaimsJws(token);
+
             return true;
-        } catch (JwtException | IllegalArgumentException ex) {
-            // Tu peux logger ici si besoin pour le debug
+        } catch (MalformedJwtException e) {
+            System.err.println("Token JWT invalide : " + e.getMessage());
+        } catch (ExpiredJwtException e) {
+            System.err.println("Token JWT expiré : " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            System.err.println("Token JWT non supporté : " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println("La chaîne claims JWT est vide : " + e.getMessage());
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            System.err.println("Signature JWT invalide : " + e.getMessage());
         }
+
         return false;
     }
 }

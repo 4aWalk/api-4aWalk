@@ -9,212 +9,218 @@ import java.util.*;
 
 class MetierToolsService {
 
+    private static final double TOLERANCE_PERCENTAGE = 0.10;
+
+    // --- MAIN VALIDATION ---
+
     public static void validateHikeForOptimize(Hike hike) {
-        PointOfInterest pDepart = hike.getDepart();
-        PointOfInterest pArrive = hike.getArrivee();
-        double distanceRando = pDepart.distanceTo(pArrive.getLatitude(), pArrive.getLongitude());
+        if (hike.getParticipants().isEmpty()) {
+            throw new RuntimeException("Aucun participant n'a été trouvé dans la randonnée");
+        }
 
-        // Validation de la distance de la randonné cohérente
-        validateDistanceHike(distanceRando, hike.getDureeJours(), getParticipantWithBadStat(hike));
+        double distanceRando = hike.getDepart().distanceTo(hike.getArrivee().getLatitude(), hike.getArrivee().getLongitude());
 
-        // Validation des informations participants
+        // 1. Validation Randonnée Globale
+        validateDistanceHike(distanceRando, hike.getDureeJours(), getParticipantWithBadStat(hike.getParticipants()));
+
+        // 2. Validation Participants
         int besoinCalorieTotalParticipant = 0;
         for (Participant p : hike.getParticipants()) {
             validateKcalParticipant(p, distanceRando);
             validateEauParticipant(p, distanceRando);
             validatePoidsParticipant(p);
-            besoinCalorieTotalParticipant =+ p.getBesoinKcal();
+            besoinCalorieTotalParticipant += p.getBesoinKcal();
         }
 
-        // Validation de la nourriture
+        // 3. Validations Logistiques
         validateHikeFood(hike, besoinCalorieTotalParticipant);
-
-        // Validation de l'équipement
         validateHikeEquipment(hike);
-
-        // Validation capacité d'emport de l'eau
         validateCapaciteEmportEauLitre(hike);
-
     }
 
+    // --- REFACTORISATION : LOGIQUE COMMUNE ---
 
-    private static Participant getParticipantWithBadStat(Hike hike) {
-        if (hike.getParticipants().size()==0) {throw new RuntimeException("Aucun participant n'a été trouvé dans la randonné");}
-        if (hike.getParticipants().size()==1) {return hike.getParticipants().iterator().next();}
-        Set<Participant> participants = hike.getParticipants();
-        Participant participant =  participants.iterator().next();
-        double scoreInitial = 1.0;
-        for (Participant p : participants) {
-            double tempScore = 1.0;
-            if(p.getNiveau() == Level.DEBUTANT){tempScore =- 0.2;}
-            if(p.getNiveau() == Level.ENTRAINE){tempScore =- 0.1;}
-            if(p.getMorphologie() == Morphology.MOYENNE){tempScore =- 0.1;}
-            if(p.getMorphologie() == Morphology.FORTE){tempScore =- 0.2;}
-            if(p.getAge() < 16) {tempScore =- 0.3;}
-            else if(p.getAge() > 50 && p.getAge() < 71){tempScore =- 0.2;}
-            else if(p.getAge() > 70){tempScore =- 0.3;}
-            else if(tempScore < scoreInitial){scoreInitial = tempScore; participant = p;}
-        }
-        return participant;
+    /**
+     * Calcule un modificateur basé sur le profil du participant (Niveau, Morpho, Age).
+     * Permet d'éviter de copier-coller les if/else if.
+     */
+    private static double calculateProfileModifier(Participant p,
+                                                   double modDebutant, double modSportif,
+                                                   double modLegere, double modForte,
+                                                   double modJunior, double modJeuneAdulte, double modSenior, double modVeteran) {
+        double modifier = 0.0;
+
+        // Niveau
+        if (p.getNiveau() == Level.DEBUTANT) modifier += modDebutant;
+        if (p.getNiveau() == Level.SPORTIF) modifier += modSportif;
+
+        // Morphologie
+        if (p.getMorphologie() == Morphology.LEGERE) modifier += modLegere;
+        if (p.getMorphologie() == Morphology.FORTE) modifier += modForte;
+
+        // Age (Ranges standardisés pour simplifier la lecture)
+        int age = p.getAge();
+        if (age < 16) modifier += modJunior;
+        else if (age < 31) modifier += modJeuneAdulte;
+        else if (age > 50 && age <= 70) modifier += modSenior;
+        else if (age > 70) modifier += modVeteran;
+
+        return modifier;
     }
 
-    private static void validateDistanceHike(double distanceHike, int nbJour, Participant participantReferent){
-        if (nbJour <1 || nbJour > 3){throw new IllegalArgumentException("Le nombre de jour de la randonné n'est pas valide");}
-        double distanceAVerifier = distanceHike/nbJour;
-        double distanceQuotidienne = 25;
-        if(participantReferent.getNiveau() == Level.ENTRAINE){distanceQuotidienne =+ 5;}
-        if(participantReferent.getNiveau() == Level.SPORTIF){distanceQuotidienne =+ 10;}
-        if(participantReferent.getMorphologie() == Morphology.LEGERE){distanceQuotidienne =+ 5;}
-        if(participantReferent.getMorphologie() == Morphology.FORTE){distanceQuotidienne =- 5;}
-        if(participantReferent.getAge() < 16){distanceQuotidienne =- 5;}
-        else if(participantReferent.getAge() > 50 && participantReferent.getAge() < 71){distanceQuotidienne =- 5;}
-        else if(participantReferent.getAge() > 70){distanceQuotidienne =- 10;}
+    /**
+     * Vérifie si une valeur est aberrante (en dehors de l'intervalle cible +/- 10%)
+     */
+    private static void checkAbberation(double actual, double target, String errorMessage) {
+        double min = target * (1.0 - TOLERANCE_PERCENTAGE);
+        double max = target * (1.0 + TOLERANCE_PERCENTAGE);
 
-        if(distanceQuotidienne > distanceAVerifier - distanceAVerifier * 0.1 &&
-                distanceQuotidienne < distanceAVerifier + distanceAVerifier * 0.1) {
-            throw new RuntimeException("Les la distance de la randonné " + distanceHike + "km est aberrant");
-        }
-
-    }
-
-    private static void validateKcalParticipant(Participant participant, double distanceRandonne) {
-        if(participant.getBesoinKcal() <= 0){
-            throw new RuntimeException("Les besoins caloriques d'un participant n'a pas été définies");
-        }
-        double besoinInitial = 2400 + distanceRandonne * 50;
-        if(participant.getNiveau() == Level.DEBUTANT){besoinInitial =+ 200;}
-        if(participant.getNiveau() == Level.SPORTIF){besoinInitial =- 200;}
-        if(participant.getMorphologie() == Morphology.LEGERE){besoinInitial =- 200;}
-        if(participant.getMorphologie() == Morphology.FORTE){besoinInitial =+ 200;}
-        if(participant.getAge() < 16){besoinInitial =- 300;}
-        else if(participant.getAge() < 31){besoinInitial =+ 100;}
-        else if(participant.getAge() > 50 && participant.getAge() < 71){besoinInitial =- 100;}
-        else if(participant.getAge() > 70){besoinInitial =- 300;}
-
-        if(participant.getBesoinKcal() > besoinInitial - besoinInitial * 0.1 &&
-            participant.getBesoinKcal() < besoinInitial + besoinInitial * 0.1) {
-            throw new RuntimeException("Les besoins kcal " + participant.getBesoinKcal() + "kcal/j est aberrant");
+        // CORRECTION DU BUG : On lève l'exception si on est EN DEHORS des bornes
+        if (actual < min || actual > max) {
+            throw new RuntimeException(errorMessage + " (Valeur: " + actual + ", Attendu: ~" + target + ")");
         }
     }
 
-    private static void validateEauParticipant(Participant participant, double distanceRandonne) {
-        if(participant.getBesoinEauLitre() <= 0){
-            throw new RuntimeException("Les besoins en eau d'un participant n'a pas été définies");
+    // --- VALIDATIONS SPÉCIFIQUES ---
+
+    private static void validateDistanceHike(double distanceHike, int nbJour, Participant referent) {
+        if (nbJour < 1 || nbJour > 3) {
+            throw new IllegalArgumentException("Le nombre de jours (1-3) n'est pas valide");
         }
-        double besoinInitial = 2 + distanceRandonne * 0.1;
-        if(participant.getNiveau() == Level.DEBUTANT){besoinInitial =+ 0.5;}
-        if(participant.getNiveau() == Level.SPORTIF){besoinInitial =- 0.25;}
-        if(participant.getMorphologie() == Morphology.LEGERE){besoinInitial =- 0.25;}
-        if(participant.getMorphologie() == Morphology.FORTE){besoinInitial =+ 0.5;}
-        if(participant.getAge() < 16){besoinInitial =- 0.5;}
-        else if(participant.getAge() < 31){besoinInitial =- 0.25;}
-        else if(participant.getAge() > 50 && participant.getAge() < 71){besoinInitial =+ 0.25;}
-        else if (participant.getAge() > 70){besoinInitial =+ 0.5;}
-        if(participant.getBesoinEauLitre() > besoinInitial - besoinInitial * 0.1 &&
-                participant.getBesoinEauLitre() < besoinInitial + besoinInitial * 0.1) {
-            throw new RuntimeException("Les besoins en eau " + participant.getBesoinEauLitre() + "L/j est aberrant");
-        }
+
+        double distanceMoyenneJour = distanceHike / nbJour;
+
+        // Base 25km + Modificateurs
+        double distanceTheorique = 25.0 + calculateProfileModifier(referent,
+                0, 10,  // Debutant (0), Sportif (+10) -> (Note: Entrainé +5 géré implicitement comme base ou ajout spécifique si besoin)
+                5, -5,  // Legere, Forte
+                -5, 0, -5, -10 // <16, <31, 50-70, >70
+        );
+
+        // Petit fix spécifique pour le niveau 'ENTRAINE' qui n'était pas standard dans les autres calculs
+        if (referent.getNiveau() == Level.ENTRAINE) distanceTheorique += 5;
+
+        checkAbberation(distanceMoyenneJour, distanceTheorique, "La distance quotidienne de la randonnée est aberrante");
     }
 
-    private static void validatePoidsParticipant(Participant participant) {
-        if(participant.getCapaciteEmportMaxKg() <= 0){
-            throw new RuntimeException("La capacité du sac d'un participant n'a pas été définie");
-        }
-        double besoinInitial = 15;
-        if(participant.getNiveau() == Level.DEBUTANT){besoinInitial =- 3;}
-        if(participant.getNiveau() == Level.SPORTIF){besoinInitial =+ 3;}
-        if(participant.getMorphologie() == Morphology.LEGERE){besoinInitial =- 3;}
-        if(participant.getMorphologie() == Morphology.FORTE){besoinInitial =+ 3;}
-        if(participant.getAge() < 16){besoinInitial =- 5;}
-        else if(participant.getAge() < 31){besoinInitial =- 3;}
-        else if(participant.getAge() < 51){besoinInitial =+ 1;}
-        else if(participant.getAge() < 71){besoinInitial =- 3;}
-        else {besoinInitial =- 5;}
-        if(participant.getCapaciteEmportMaxKg() > besoinInitial - besoinInitial * 0.1 &&
-                participant.getCapaciteEmportMaxKg() < besoinInitial + besoinInitial * 0.1) {
-            throw new RuntimeException("La capacité du sac à dos " + participant.getBesoinEauLitre() + "kg est aberrant");
-        }
+    private static void validateKcalParticipant(Participant p, double distance) {
+        if (p.getBesoinKcal() <= 0) throw new RuntimeException("Besoin Kcal non défini");
+
+        double base = 2400 + (distance * 50);
+        double target = base + calculateProfileModifier(p,
+                200, -200,      // Debutant, Sportif
+                -200, 200,      // Legere, Forte
+                -300, 100, -100, -300 // Ages
+        );
+
+        checkAbberation(p.getBesoinKcal(), target, "Le besoin calorique est aberrant");
+    }
+
+    private static void validateEauParticipant(Participant p, double distance) {
+        if (p.getBesoinEauLitre() <= 0) throw new RuntimeException("Besoin eau non défini");
+
+        double base = 2.0 + (distance * 0.1);
+        double target = base + calculateProfileModifier(p,
+                0.5, -0.25,      // Debutant, Sportif
+                -0.25, 0.5,      // Legere, Forte
+                -0.5, -0.25, 0.25, 0.5 // Ages
+        );
+
+        checkAbberation(p.getBesoinEauLitre(), target, "Le besoin en eau est aberrant");
+    }
+
+    private static void validatePoidsParticipant(Participant p) {
+        if (p.getCapaciteEmportMaxKg() <= 0) throw new RuntimeException("Capacité emport non définie");
+
+        double base = 15.0;
+        double target = base + calculateProfileModifier(p,
+                -3, 3,        // Debutant, Sportif
+                -3, 3,        // Legere, Forte
+                -5, -3, 0, -5 // Ages (Note: <51 ans a +1 dans ton code original, ajusté ici à 0 pour simplifier ou à modifier selon règle exacte)
+        );
+
+        // Cas spécifique du code original pour l'âge 31-50 qui ajoutait +1
+        if (p.getAge() >= 31 && p.getAge() <= 50) target += 1;
+
+        checkAbberation(p.getCapaciteEmportMaxKg(), target, "La capacité d'emport est aberrante");
+    }
+
+    // --- UTILITAIRES ---
+
+    private static Participant getParticipantWithBadStat(Set<Participant> participants) {
+        // Utilisation de Comparator pour simplifier la logique de score "plus faible"
+        return participants.stream()
+                .min(Comparator.comparingDouble(MetierToolsService::calculateWeaknessScore))
+                .orElseThrow(() -> new RuntimeException("Aucun participant trouvé"));
+    }
+
+    private static double calculateWeaknessScore(Participant p) {
+        double score = 1.0;
+        if (p.getNiveau() == Level.DEBUTANT) score -= 0.2;
+        if (p.getNiveau() == Level.ENTRAINE) score -= 0.1;
+        if (p.getMorphologie() == Morphology.MOYENNE) score -= 0.1;
+        if (p.getMorphologie() == Morphology.FORTE) score -= 0.2;
+
+        int age = p.getAge();
+        if (age < 16 || age > 70) score -= 0.3;
+        else if (age > 50) score -= 0.2;
+
+        return score;
     }
 
     private static void validateHikeFood(Hike hike, int besoinCalorieTotal) {
-        List<String> foodAlreadyUsed = new ArrayList<>();
-        int maxCalorieForHike = hike.getCaloriesForAllParticipants() / 4;
-        for(FoodProduct foodProduct : hike.getFoodCatalogue()) {
-            if (foodAlreadyUsed.contains(foodProduct.getAppellationCourante())) {
-                throw new RuntimeException("Une randonné ne peut pas contenir plusieur fois un même type de nourriture");
+        double maxCaloriePerItem = hike.getCaloriesForAllParticipants() / 4.0;
+        Set<String> processedFoods = new HashSet<>();
+
+        for (FoodProduct food : hike.getFoodCatalogue()) {
+            if (!processedFoods.add(food.getAppellationCourante())) {
+                throw new RuntimeException("Doublon de type de nourriture détecté : " + food.getAppellationCourante());
             }
-            if (foodProduct.getApportNutritionnelKcal() > maxCalorieForHike) {
-                throw new RuntimeException("Une nourriture ne peux pas excéder le quart des besoins caloriques des participants");
+            if (food.getApportNutritionnelKcal() > maxCaloriePerItem) {
+                throw new RuntimeException("Nourriture trop calorique : " + food.getNom());
             }
         }
-        if (besoinCalorieTotal > hike.getCalorieRandonne()) {
-            throw new RuntimeException("La nourriture de la randonné ne permet pas de couvrir l'ensemble des besoin caloriques des participants");
+
+        if (hike.getCalorieRandonne() < besoinCalorieTotal) {
+            throw new RuntimeException("Nourriture insuffisante pour la randonnée");
         }
     }
 
     private static void validateHikeEquipment(Hike hike) {
+        if (hike.getEquipmentGroups() == null) return;
 
-        int nbParticipant = hike.getParticipants().size();
+        int nbParticipants = hike.getParticipants().size();
 
-        // 1. On définit les besoins par type
-        Map<TypeEquipment, Integer> couvertureParType = new EnumMap<>(TypeEquipment.class);
+        // Calcul simplifié de la couverture
         for (TypeEquipment type : TypeEquipment.values()) {
-            if (type != TypeEquipment.AUTRE) {
-                couvertureParType.put(type, nbParticipant);
-            }
-        }
+            if (type == TypeEquipment.AUTRE) continue;
+            if (type == TypeEquipment.REPOS && hike.getDureeJours() < 2) continue;
 
-        if(hike.getDureeJours() < 2){
-            couvertureParType.remove(TypeEquipment.REPOS);
-        }
+            GroupEquipment group = hike.getEquipmentGroups().get(type);
+            int totalItems = (group != null) ? group.getItems().stream().mapToInt(EquipmentItem::getNbItem).sum() : 0;
 
-        // 2. MAJ : On parcourt les GROUPES au lieu de la liste à plat
-        if (hike.getEquipmentGroups() != null) {
-            for (GroupEquipment group : hike.getEquipmentGroups().values()) {
-                TypeEquipment type = group.getType();
-
-                // Si ce type nous intéresse pour la couverture (ex: SOIN, REPOS...)
-                if (couvertureParType.containsKey(type)) {
-                    int restant = couvertureParType.get(type);
-
-                    // On additionne la capacité de tous les items de ce groupe
-                    for (EquipmentItem item : group.getItems()) {
-                        restant =- item.getNbItem();
-                    }
-
-                    couvertureParType.put(type, restant);
-                }
-            }
-        }
-
-        // 3. Vérification finale
-        for (Map.Entry<TypeEquipment, Integer> entry : couvertureParType.entrySet()) {
-            if (entry.getValue() > 0) {
-                throw new IllegalStateException(
-                        "La couverture des participants pour le type " + entry.getKey() + " est insuffisante"
-                );
+            if (totalItems < nbParticipants) {
+                throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
             }
         }
     }
 
     private static void validateCapaciteEmportEauLitre(Hike hike) {
-        double besoinEauLitreTotal = 0.0;
-        for(Participant participant : hike.getParticipants()) {
-            besoinEauLitreTotal += participant.getBesoinEauLitre();
-        }
+        double besoinTotal = hike.getParticipants().stream()
+                .mapToDouble(Participant::getBesoinEauLitre)
+                .sum();
+
         GroupEquipment groupeEau = hike.getEquipmentGroups().get(TypeEquipment.EAU);
+        double capaciteEmport = 0.0;
 
         if (groupeEau != null) {
-            for (EquipmentItem equipment : groupeEau.getItems()) {
-
-                // Si MasseGrammes = Contenance en ml
-                double volumeLitre = (double) equipment.getMasseGrammes() / 1000.0;
-                besoinEauLitreTotal =- volumeLitre * equipment.getNbItem();
-            }
+            capaciteEmport = groupeEau.getItems().stream()
+                    .mapToDouble(item -> (item.getMasseGrammes() / 1000.0) * item.getNbItem())
+                    .sum();
         }
 
-        if(besoinEauLitreTotal > 0) {
-            throw new RuntimeException("Les gourdes ajoutées à la randonnée ne permettent pas de couvrir les besoins quotidiens en eau de l'équipe");
+        if (capaciteEmport < besoinTotal) { // Correction logique : Si emport < besoin => Erreur
+            throw new RuntimeException("Pas assez de gourdes pour couvrir les besoins en eau.");
         }
     }
 }
