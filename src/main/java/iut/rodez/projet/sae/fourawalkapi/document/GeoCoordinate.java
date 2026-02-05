@@ -1,50 +1,44 @@
 package iut.rodez.projet.sae.fourawalkapi.document;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
-/**
- * Coordonnée GPS élémentaire.
- * Cette classe est destinée à être stockée dans une liste au sein du document {@link Course}.
- */
 public class GeoCoordinate {
 
-    private double latitude;
-    private double longitude;
-    private LocalDateTime timestamp;
+    private GeoJsonPoint geojson;
 
     // --- Constructeurs ---
 
-    public GeoCoordinate() {}
+    public GeoCoordinate() {
+    }
 
     /**
-     * Crée une coordonnée avec un timestamp automatique à l'instant présent.
+     * Constructeur qui prend lat/lon mais crée l'objet standard GeoJsonPoint.
+     * @param latitude (Y)
+     * @param longitude (X)
      */
     public GeoCoordinate(double latitude, double longitude) {
-        this(latitude, longitude, LocalDateTime.now());
+        this.geojson = new GeoJsonPoint(longitude, latitude);
     }
 
-    public GeoCoordinate(double latitude, double longitude, LocalDateTime timestamp) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.timestamp = timestamp;
-    }
+    // --- Logique métier ---
 
-    // --- Logique métier de bas niveau ---
-
-    /**
-     * Calcule la distance en mètres entre ce point et un autre point GPS.
-     * Utilise la formule de Haversine pour prendre en compte la courbure de la Terre.
-     */
     public double distanceTo(GeoCoordinate other) {
-        if (other == null) return 0;
-        final int R = 6371000; // Rayon moyen de la Terre en mètres
+        if (other == null || other.getGeojson() == null || this.geojson == null) return 0;
 
-        double latDistance = Math.toRadians(other.latitude - this.latitude);
-        double lonDistance = Math.toRadians(other.longitude - this.longitude);
+        // Avec GeoJsonPoint : getY() = Latitude, getX() = Longitude
+        double lat1 = this.geojson.getY();
+        double lon1 = this.geojson.getX();
+
+        double lat2 = other.getGeojson().getY();
+        double lon2 = other.getGeojson().getX();
+
+        final int R = 6371000; // Rayon Terre en mètres
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
 
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(this.latitude)) * Math.cos(Math.toRadians(other.latitude))
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
 
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -52,52 +46,18 @@ public class GeoCoordinate {
         return R * c;
     }
 
-    // --- Overrides Standards ---
+    // --- Getter / Setter ---
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GeoCoordinate that = (GeoCoordinate) o;
-        // On compare les coordonnées et le timestamp pour l'égalité parfaite
-        return Double.compare(that.latitude, latitude) == 0 &&
-                Double.compare(that.longitude, longitude) == 0 &&
-                Objects.equals(timestamp, that.timestamp);
+    public GeoJsonPoint getGeojson() {
+        return geojson;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(latitude, longitude, timestamp);
+    public void setGeojson(GeoJsonPoint geojson) {
+        this.geojson = geojson;
     }
 
     @Override
     public String toString() {
-        return String.format("GPS[lat=%.6f, lon=%.6f, time=%s]", latitude, longitude, timestamp);
-    }
-
-    // --- Getters et Setters ---
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+        return "GeoCoordinate{geojson=" + geojson + '}';
     }
 }

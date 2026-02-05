@@ -15,7 +15,7 @@ public class HikeResponseDto {
     // Nouveaux types DTO pour le départ et l'arrivée
     private PointOfInterestResponseDto depart;
     private PointOfInterestResponseDto arrivee;
-
+    private Set<PointOfInterestResponseDto> points;
     private UserResponseDto creator;
     private Set<ParticipantResponseDto> participants;
     private Set<FoodProductResponseDto> foodCatalogue;
@@ -30,7 +30,9 @@ public class HikeResponseDto {
         // Mapping des POI
         this.depart = new PointOfInterestResponseDto(hike.getDepart());
         this.arrivee = new PointOfInterestResponseDto(hike.getArrivee());
-
+        this.points = hike.getOptionalPoints().stream()
+                .map(PointOfInterestResponseDto::new)
+                .collect(Collectors.toSet());
         if (hike.getCreator() != null) {
             this.creator = new UserResponseDto(hike.getCreator());
         }

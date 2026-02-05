@@ -80,6 +80,7 @@ public class EquipmentItem implements Item {
 
     public void setNom(String nom) { this.nom = nom; }
 
+    public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
     public void setMasseGrammes(double masseGrammes) { this.masseGrammes = masseGrammes; }

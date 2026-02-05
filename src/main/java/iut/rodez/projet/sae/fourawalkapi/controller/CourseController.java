@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto; // <--- Nouvel import
 import iut.rodez.projet.sae.fourawalkapi.service.CourseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,12 +56,12 @@ public class CourseController {
     /**
      * PUT /courses/{id}
      * Ajoute des points à un parcours existant.
-     * Body attendu : Liste de points [ {"latitude": ..., "longitude": ...}, ... ]
+     * Body attendu : Liste de points [ {"latitude": 44.3, "longitude": 2.5}, ... ]
      */
     @PutMapping("/{id}")
     public ResponseEntity<CourseResponseDto> addPointsToCourse(
             @PathVariable String id,
-            @RequestBody List<CourseResponseDto.PointDto> newPoints) {
+            @RequestBody List<GeoCoordinateResponseDto> newPoints) { // <--- Correction ici : Utilisation du bon DTO
 
         // Note : Idéalement, il faudrait vérifier ici que le parcours appartient bien à l'utilisateur connecté
         // via getUserId(auth) avant d'autoriser la modification.
