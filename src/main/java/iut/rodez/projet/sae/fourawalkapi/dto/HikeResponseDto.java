@@ -62,6 +62,7 @@ public class HikeResponseDto {
     public PointOfInterestResponseDto getDepart() { return depart; }
     public PointOfInterestResponseDto getArrivee() { return arrivee; }
     public UserResponseDto getCreator() { return creator; }
+    public Set<PointOfInterestResponseDto> getPoints() { return points; }
     public Set<ParticipantResponseDto> getParticipants() { return participants; }
     public Set<FoodProductResponseDto> getFoodCatalogue() { return foodCatalogue; }
     public Map<TypeEquipment, GroupEquipmentResponseDto> getEquipmentGroups() {
