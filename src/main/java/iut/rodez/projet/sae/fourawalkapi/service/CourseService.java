@@ -152,7 +152,7 @@ public class CourseService {
                 new PointOfInterest();
 
         poi.setId(dto.getId());
-        poi.setName(dto.getName()); // Attention : vérifie si c'est setNom() ou setName() dans ton entité
+        poi.setName(dto.getNom()); // Attention : vérifie si c'est setNom() ou setName() dans ton entité
         poi.setDescription(dto.getDescription());
         poi.setLatitude(dto.getLatitude());
         poi.setLongitude(dto.getLongitude());
