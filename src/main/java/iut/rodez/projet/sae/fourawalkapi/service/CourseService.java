@@ -5,6 +5,7 @@ import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto; // Import
 import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import iut.rodez.projet.sae.fourawalkapi.document.GeoCoordinate;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import org.springframework.stereotype.Service;
@@ -104,18 +105,33 @@ public class CourseService {
         return new CourseResponseDto(entity);
     }
 
-    /**
-     * Transforme le DTO en Entité Mongo.
-     */
     private Course mapToEntity(CourseResponseDto dto) {
         Course course = new Course();
+
+        // 1. Identifiants
         course.setId(dto.getId());
         course.setHikeId(dto.getHikeId());
 
-        // Mapping manuel inversé pour le path
+        // 2. Dates (Si le DTO envoie une date, on la prend, sinon on laisse le constructeur mettre 'now')
+        if (dto.getDateRealisation() != null) {
+            course.setDateRealisation(dto.getDateRealisation());
+        }
+
+        // 3. Booleans (C'est ici que tu avais le problème !)
+        course.setFinished(dto.isFinished());
+        course.setPaused(dto.isPaused());
+
+        // 4. Points d'intérêt (Départ / Arrivée)
+        if (dto.getDepart() != null) {
+            course.setDepart(mapPoiDtoToEntity(dto.getDepart()));
+        }
+        if (dto.getArrivee() != null) {
+            course.setArrivee(mapPoiDtoToEntity(dto.getArrivee()));
+        }
+
+        // 5. Le chemin (Path)
         List<GeoCoordinate> coordinates = new ArrayList<>();
         if (dto.getPath() != null) {
-            // On convertit chaque DTO (lat/lon) en objet GeoCoordinate (qui contient le GeoJsonPoint interne)
             coordinates = dto.getPath().stream()
                     .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
                     .collect(Collectors.toList());
@@ -123,5 +139,24 @@ public class CourseService {
         course.setTrajetsRealises(coordinates);
 
         return course;
+    }
+
+    /**
+     * Petite méthode utilitaire pour transformer le DTO du POI en Entité POI
+     * pour le stockage dans MongoDB.
+     */
+    private PointOfInterest mapPoiDtoToEntity(
+            iut.rodez.projet.sae.fourawalkapi.dto.PointOfInterestResponseDto dto) {
+
+        PointOfInterest poi =
+                new PointOfInterest();
+
+        poi.setId(dto.getId());
+        poi.setName(dto.getName()); // Attention : vérifie si c'est setNom() ou setName() dans ton entité
+        poi.setDescription(dto.getDescription());
+        poi.setLatitude(dto.getLatitude());
+        poi.setLongitude(dto.getLongitude());
+
+        return poi;
     }
 }

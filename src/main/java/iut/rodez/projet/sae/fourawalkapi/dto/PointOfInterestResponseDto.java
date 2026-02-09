@@ -5,7 +5,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 public class PointOfInterestResponseDto {
 
     private Long id;
-    private String name;
+    private String nom;
     private String description;
     private double latitude;
     private double longitude;
@@ -17,7 +17,7 @@ public class PointOfInterestResponseDto {
     public PointOfInterestResponseDto(PointOfInterest poi) {
         if (poi != null) {
             this.id = poi.getId();
-            this.name = poi.getName(); // ou getName() selon ton entité
+            this.nom = poi.getName(); // ou getName() selon ton entité
             this.description = poi.getDescription();
             this.latitude = poi.getLatitude();
             this.longitude = poi.getLongitude();
@@ -30,8 +30,8 @@ public class PointOfInterestResponseDto {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() { return nom; }
+    public void setName(String nom) { this.nom = nom; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
