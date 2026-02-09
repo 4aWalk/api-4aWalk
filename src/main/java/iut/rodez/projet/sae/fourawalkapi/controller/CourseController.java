@@ -61,7 +61,7 @@ public class CourseController {
     @PutMapping("/{id}")
     public ResponseEntity<CourseResponseDto> addPointsToCourse(
             @PathVariable String id,
-            @RequestBody List<GeoCoordinateResponseDto> newPoints) { // <--- Correction ici : Utilisation du bon DTO
+            @RequestBody List<GeoCoordinateResponseDto> newPoints) {
 
         // Note : Idéalement, il faudrait vérifier ici que le parcours appartient bien à l'utilisateur connecté
         // via getUserId(auth) avant d'autoriser la modification.
