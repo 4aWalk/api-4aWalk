@@ -95,6 +95,40 @@ public class CourseService {
         return mapToDto(course);
     }
 
+    /**
+     * Termine la course.
+     */
+    public Course finishCourse(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course non trouvée"));
+
+        if (course.isFinished()) {
+            throw new RuntimeException("Cette course est déjà terminée.");
+        }
+
+        course.setFinished(true);
+        course.setPaused(false); // On enlève la pause si elle était active
+
+        return courseRepository.save(course);
+    }
+
+    /**
+     * Met en pause (true) ou reprend (false).
+     */
+    public Course setPauseState(String courseId, boolean wantPause) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course non trouvée"));
+
+        // Sécurité : Impossible de mettre en pause une course finie
+        if (course.isFinished()) {
+            throw new RuntimeException("Impossible de modifier une course terminée.");
+        }
+
+        course.setPaused(wantPause);
+
+        return courseRepository.save(course);
+    }
+
     // --- MAPPERS ---
 
     /**

@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
+import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto; // <--- Nouvel import
 import iut.rodez.projet.sae.fourawalkapi.service.CourseService;
@@ -69,4 +70,23 @@ public class CourseController {
         CourseResponseDto updated = courseService.addPointsToCourse(id, newPoints);
         return ResponseEntity.ok(updated);
     }
+
+    @PutMapping("/{id}/finish")
+    public ResponseEntity<Course> finishCourse(@PathVariable String id) {
+        Course updatedCourse = courseService.finishCourse(id);
+        return ResponseEntity.ok(updatedCourse);
+    }
+
+    // 2. Endpoint pour le STATUT (Pause / Reprise)
+    // URL pour mettre en pause : PUT /api/courses/{id}/state?paused=true
+    // URL pour reprendre :       PUT /api/courses/{id}/state?paused=false
+    @PutMapping("/{id}/state")
+    public ResponseEntity<Course> setCourseState(
+            @PathVariable String id,
+            @RequestParam("paused") boolean paused) {
+
+        Course updatedCourse = courseService.setPauseState(id, paused);
+        return ResponseEntity.ok(updatedCourse);
+    }
+
 }
