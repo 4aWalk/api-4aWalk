@@ -1,7 +1,7 @@
 SET FOREIGN_KEY_CHECKS = 0; -- INDISPENSABLE pour les dépendances circulaires
 
 INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morphologie) VALUES
-                                                                                           (1, 'Brouz', 'Admin', 'admin@4awalk.fr', '$2a$10$wTf7JzG3i8xG4oWw0oTf7eQ7xG4oWw0oTf7e', '12 Rue de la SAE', 30, 'SPORTIF', 'LEGERE'),
+                                                                                           (1, 'Alex', 'Admin', 'admin@4awalk.fr', '$2a$10$wTf7JzG3i8xG4oWw0oTf7eQ7xG4oWw0oTf7e', '12 Rue de la SAE', 30, 'SPORTIF', 'LEGERE'),
                                                                                            (2, 'Tony', 'Admin', 'test@4awalk.fr', '$2a$10$4yw3VmTFMRjKjs1utXDKIO/Zb7RpGXC/eaTT9Sw.JZqGtHtbMa5IS', '12 Rue de la SAE', 30, 'SPORTIF', 'LEGERE');
 
 INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro, nb_item) VALUES
@@ -17,7 +17,8 @@ INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type,
 INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_id, sequence) VALUES
                                                                                                   (1, 'Rodez Centre', 'Départ de la randonnée', 44.3526, 2.5734, NULL, 0),
                                                                                                   (2, 'Laguiole Village', 'Arrivée prévue', 44.6844, 2.8472, NULL, 1),
-                                                                                                  (3, 'Un point d interêt', 'un nouveau poi', 45.6844, 3.8472, 2, 0);
+                                                                                                  (3, 'Un point d interêt', 'un nouveau poi', 45.6844, 3.8472, 2, 0),
+                                                                                                  (3, 'Un deuxieme point d interêt', 'un nouveau poi', 45.8844, 3.9472, 2, 1);
 
 INSERT INTO participants (id, prenom, nom, age, niveau, morphologie, creator, creator_id, besoin_kcal, besoin_eau_litre, capacite_emport_max_kg) VALUES
                                                                                                                             (1, "un kilomêtre", "à pied",25, 'ENTRAINE', 'MOYENNE', TRUE, 2,2500, 3, 15.0),
@@ -25,7 +26,7 @@ INSERT INTO participants (id, prenom, nom, age, niveau, morphologie, creator, cr
 
 INSERT INTO hikes (id, libelle, depart_id, arrivee_id, duree_jours, creator_id) VALUES
                                                                                     (1, 'Tour de l Aubrac', 1, 2, 2, 1),
-                                                                                    (2, 'La randonné de Tony', 1, 2, 2, 2);
+                                                                                    (2, 'La randonnée de Tony', 1, 2, 2, 2);
 
 INSERT INTO hike_participants (hike_id, participant_id) VALUES
                                                             (1, 1), (1, 2);

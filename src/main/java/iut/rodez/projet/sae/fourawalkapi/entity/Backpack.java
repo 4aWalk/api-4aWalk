@@ -63,22 +63,6 @@ public class Backpack {
         this.totalMassKg = 0.0;
     }
 
-    // --- Overrides Standards ---
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Backpack backpack = (Backpack) o;
-        // L'égalité est basée sur l'ID technique ou sur le propriétaire unique
-        return Objects.equals(id, backpack.id) || Objects.equals(owner, backpack.owner);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, owner);
-    }
-
     // --- Getters et Setters ---
 
     public Long getId() { return id; }
