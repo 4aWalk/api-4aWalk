@@ -48,4 +48,12 @@ public class GroupEquipment {
 
     public List<EquipmentItem> getItems() { return items; }
     public void setItems(List<EquipmentItem> items) { this.items = items; }
+
+    public double getTotalMassesKg() {
+        double totalMassesKg = 0;
+        for (EquipmentItem item : items) {
+            totalMassesKg += item.getTotalMassesKg();
+        }
+        return totalMassesKg;
+    }
 }

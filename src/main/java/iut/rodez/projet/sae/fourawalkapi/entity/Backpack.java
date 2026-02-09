@@ -2,13 +2,13 @@ package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import jakarta.persistence.*;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Représente le chargement du sac à dos d'un participant.
- * C'est l'entité centrale pour le résultat de l'optimisation du chargement.
  */
 @Entity
 @Table(name = "backpacks")
@@ -18,15 +18,13 @@ public class Backpack {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Poids total réel porté en Kg (Somme des équipements et de la nourriture) */
+    /** Poids total réel porté en Kg */
     private double totalMassKg;
 
-    /** Le propriétaire du sac (Lien One-to-One avec Participant) */
     @OneToOne
     @JoinColumn(name = "participant_id", nullable = false)
     private Participant owner;
 
-    /** Liste des produits alimentaires présents dans le sac */
     @ManyToMany
     @JoinTable(
             name = "backpack_food",
@@ -34,13 +32,17 @@ public class Backpack {
             inverseJoinColumns = @JoinColumn(name = "food_id"))
     private Set<FoodProduct> foodItems = new HashSet<>();
 
-    /** Liste des équipements présents dans le sac */
+    /** * Map des équipements de groupe.
+     * Clé : ID de l'équipement (Long)
+     * Valeur : L'entité GroupEquipment
+     */
     @ManyToMany
     @JoinTable(
-            name = "backpack_equipment",
+            name = "backpack_group_equipment",
             joinColumns = @JoinColumn(name = "backpack_id"),
-            inverseJoinColumns = @JoinColumn(name = "equipment_id"))
-    private Set<EquipmentItem> equipmentItems = new HashSet<>();
+            inverseJoinColumns = @JoinColumn(name = "group_equipment_id"))
+    @MapKey(name = "id") // Utilise le champ 'id' de GroupEquipment comme clé de la Map
+    private Map<Long, GroupEquipment> groupEquipments = new HashMap<>();
 
     // --- Constructeurs ---
 
@@ -53,13 +55,11 @@ public class Backpack {
         this.owner = owner;
     }
 
-    // --- Logique métier de bas niveau (Entity Logic) ---
+    // --- Logique métier ---
 
-
-    /** Vide intégralement le contenu du sac */
     public void clearContent() {
         this.foodItems.clear();
-        this.equipmentItems.clear();
+        this.groupEquipments.clear();
         this.totalMassKg = 0.0;
     }
 
@@ -74,29 +74,31 @@ public class Backpack {
     public Set<FoodProduct> getFoodItems() { return foodItems; }
     public void setFoodItems(Set<FoodProduct> foodItems) { this.foodItems = foodItems; }
 
-    public Set<EquipmentItem> getEquipmentItems() { return equipmentItems; }
-    public void setEquipmentItems(Set<EquipmentItem> equipmentItems) { this.equipmentItems = equipmentItems; }
+    public Map<Long, GroupEquipment> getGroupEquipments() { return groupEquipments; }
+    public void setGroupEquipments(Map<Long, GroupEquipment> groupEquipments) { this.groupEquipments = groupEquipments; }
 
     public void addFoodItems(FoodProduct foodItem) {
         this.foodItems.add(foodItem);
-        this.totalMassKg += (double) foodItem.getTotalMasses() / 1000;
+        // On suppose que getTotalMasses() retourne des grammes, d'où la division
+        this.totalMassKg += (double) foodItem.getTotalMasses() / 1000.0;
     }
 
-    public void addEquipmentItems(EquipmentItem equipmentItem) {
-        this.equipmentItems.add(equipmentItem);
-        this.totalMassKg += equipmentItem.getTotalMasses() / 1000;
+    public void addGroupEquipment(GroupEquipment equipment) {
+        // Dans une Map, on utilise put(clé, valeur)
+        this.groupEquipments.put(equipment.getId(), equipment);
+        updateTotalMass();
     }
 
     /**
-     * Recalcule le poids total du sac à partir des masses de chaque item.
-     * Cette méthode doit être appelée après chaque modification du contenu.
+     * Recalcule le poids total (Food + GroupEquipment)
      */
-    public void updateAndGetTotalMass() {
+    public void updateTotalMass() {
         double mass = 0.0;
 
-        if (equipmentItems != null) {
-            mass += equipmentItems.stream()
-                    .mapToDouble(EquipmentItem::getTotalMassesKg)
+        // Pour iterer sur une Map, on prend ses .values()
+        if (groupEquipments != null) {
+            mass += groupEquipments.values().stream()
+                    .mapToDouble(GroupEquipment::getTotalMassesKg)
                     .sum();
         }
 
@@ -109,66 +111,56 @@ public class Backpack {
         this.totalMassKg = mass;
     }
 
-    public double getTotalMassKg() { return this.totalMassKg;}
-    /**
-     * Récupère la capacité max définie par le participant.
-     * (Suppose que Participant a une méthode getPoidsMaxSac())
-     */
+    public double getTotalMassKg() { return this.totalMassKg; }
+
     @Transient
     public double getCapacityMaxKg() {
-        // Si ce n'est pas le cas, tu peux mettre une valeur par défaut ou l'ajouter dans Participant
-        return owner.getCapaciteEmportMaxKg();
+        return owner != null ? owner.getCapaciteEmportMaxKg() : 0.0;
     }
 
-    /**
-     * Vérifie si on peut ajouter un poids (en grammes) sans exploser le sac.
-     */
     public boolean canAddWeightGrammes(double weightInGrammes) {
         double weightInKg = weightInGrammes / 1000.0;
         return (this.totalMassKg + weightInKg) <= getCapacityMaxKg();
     }
 
     /**
-     * Méthode générique pour ajouter un Item (Food ou Equipment).
-     * Gère le polymorphisme et la mise à jour du poids.
+     * Méthode générique pour ajouter un Item.
+     * Gère maintenant GroupEquipment via la Map.
      */
     public void addItem(Item item) {
         if (item instanceof FoodProduct) {
             this.foodItems.add((FoodProduct) item);
-        } else if (item instanceof EquipmentItem) {
-            this.equipmentItems.add((EquipmentItem) item);
+        } else if (item instanceof GroupEquipment) {
+            GroupEquipment ge = (GroupEquipment) item;
+            this.groupEquipments.put(ge.getId(), ge);
         }
 
-        // Mise à jour du poids total (Lot complet)
-        // On convertit grammes -> kg
         double itemTotalWeightKg = (item.getMasseGrammes() * item.getNbItem()) / 1000.0;
         this.totalMassKg += itemTotalWeightKg;
     }
 
     /**
-     * CRUCIAL POUR LE BACKTRACKING : Permet de retirer un objet si le chemin est une impasse.
+     * Retire un item (Backtracking).
      */
     public void removeItem(Item item) {
         boolean removed = false;
 
         if (item instanceof FoodProduct) {
             removed = this.foodItems.remove(item);
-        } else if (item instanceof EquipmentItem) {
-            removed = this.equipmentItems.remove(item);
+        } else if (item instanceof GroupEquipment) {
+            // Pour retirer d'une map, on remove par la clé (ID)
+            GroupEquipment removedItem = this.groupEquipments.remove(((GroupEquipment) item).getId());
+            removed = (removedItem != null);
         }
 
         if (removed) {
             double itemTotalWeightKg = (item.getMasseGrammes() * item.getNbItem()) / 1000.0;
             this.totalMassKg -= itemTotalWeightKg;
 
-            // Sécurité pour éviter les -0.000001 Kg dus aux arrondis float
             if (this.totalMassKg < 0) this.totalMassKg = 0.0;
         }
     }
 
-    /**
-     * Helper pour l'optimisation : Espace restant en grammes
-     */
     @Transient
     public double getSpaceRemainingGrammes() {
         return (getCapacityMaxKg() - this.totalMassKg) * 1000.0;
