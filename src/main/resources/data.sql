@@ -18,7 +18,7 @@ INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_
                                                                                                   (1, 'Rodez Centre', 'Départ de la randonnée', 44.3526, 2.5734, NULL, 0),
                                                                                                   (2, 'Laguiole Village', 'Arrivée prévue', 44.6844, 2.8472, NULL, 1),
                                                                                                   (3, 'Un point d interêt', 'un nouveau poi', 45.6844, 3.8472, 2, 0),
-                                                                                                  (3, 'Un deuxieme point d interêt', 'un nouveau poi', 45.8844, 3.9472, 2, 1);
+                                                                                                  (4, 'Un deuxieme point d interêt', 'un nouveau poi', 45.8844, 3.9472, 2, 1);
 
 INSERT INTO participants (id, prenom, nom, age, niveau, morphologie, creator, creator_id, besoin_kcal, besoin_eau_litre, capacite_emport_max_kg) VALUES
                                                                                                                             (1, "un kilomêtre", "à pied",25, 'ENTRAINE', 'MOYENNE', TRUE, 2,2500, 3, 15.0),
