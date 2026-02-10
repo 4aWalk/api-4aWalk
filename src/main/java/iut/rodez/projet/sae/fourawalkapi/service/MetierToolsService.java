@@ -18,7 +18,7 @@ class MetierToolsService {
             throw new RuntimeException("Aucun participant n'a été trouvé dans la randonnée");
         }
 
-        double distanceRando = hike.getDepart().distanceTo(hike.getArrivee().getLatitude(), hike.getArrivee().getLongitude());
+        double distanceRando = HikeService.getAllDistance(hike);
 
         // 1. Validation Randonnée Globale
         validateDistanceHike(distanceRando, hike.getDureeJours(), getParticipantWithBadStat(hike.getParticipants()));

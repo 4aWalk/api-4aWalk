@@ -6,10 +6,7 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class HikeService {
@@ -158,5 +155,33 @@ public class HikeService {
         backpackDistributor.distributeBatchesToBackpacks(itemsToPack, backpacks);
 
         hikeRepository.save(hike);
+    }
+
+    public static double getAllDistance(Hike hike) {
+        double distance = 0.0;
+
+        // 1. Convertir le Set en List pour pouvoir trier
+        Set<PointOfInterest> setPoi = hike.getOptionalPoints();
+        List<PointOfInterest> sortedPois = new ArrayList<>();
+
+        if (setPoi != null) {
+            sortedPois.addAll(setPoi);
+            sortedPois.sort(Comparator.comparingInt(PointOfInterest::getSequence));
+        }
+
+        // On part du point de départ de la rando
+        PointOfInterest currentPoint = hike.getDepart();
+
+        // 3. Boucle sur les POI triés
+        for (PointOfInterest nextPoi : sortedPois) {
+            // calcul distance entre point courant (précédent) et le prochain poi
+            distance += currentPoint.distanceTo(nextPoi.getLatitude(), nextPoi.getLongitude());
+
+            // poidepart (point courant) devient le poi qu'on vient d'atteindre
+            currentPoint = nextPoi;
+        }
+
+        // 4. Ajout de la dernière étape : Dernier POI (ou Départ si pas de POI) -> Arrivée
+        return distance + currentPoint.distanceTo(hike.getArrivee().getLatitude(), hike.getArrivee().getLongitude());
     }
 }

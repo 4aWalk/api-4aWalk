@@ -26,7 +26,8 @@ INSERT INTO participants (id, prenom, nom, age, niveau, morphologie, creator, cr
 
 INSERT INTO hikes (id, libelle, depart_id, arrivee_id, duree_jours, creator_id) VALUES
                                                                                     (1, 'Tour de l Aubrac', 1, 2, 2, 1),
-                                                                                    (2, 'La randonnée de Tony', 1, 2, 2, 2);
+                                                                                    (2, 'La randonnée de Tony', 1, 2, 2, 2),
+                                                                                    (3, 'La randonnée de Tony 2', 1, 2, 2, 2);
 
 INSERT INTO hike_participants (hike_id, participant_id) VALUES
                                                             (1, 1), (1, 2);

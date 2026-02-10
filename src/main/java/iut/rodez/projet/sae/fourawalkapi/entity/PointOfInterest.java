@@ -37,7 +37,7 @@ public class PointOfInterest {
     @Column(length = 500)
     private String description;
 
-    int sequence;
+    private int sequence;
 
     // --- Constructeurs ---
 
@@ -109,6 +109,6 @@ public class PointOfInterest {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public int getOrder() { return sequence; }
-    public void setOrder(int order) { this.sequence = order; }
+    public int getSequence() { return sequence; }
+    public void setSequence(int order) { this.sequence = order; }
 }
