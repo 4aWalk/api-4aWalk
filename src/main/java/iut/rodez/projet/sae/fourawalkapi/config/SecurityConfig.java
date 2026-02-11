@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,7 +40,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Expose l'AuthenticationManager pour l'utiliser lors de l'authentification (/login).
+     * Expose l'AuthenticationManager pour l'utiliser lors de l'authentification
      * @param config La configuration de l'authentification.
      * @return L'AuthenticationManager.
      */
@@ -57,20 +58,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Désactiver le CSRF
-                .csrf(csrf -> csrf.disable())
+                // Désactiver le CSRF
+                .csrf(AbstractHttpConfigurer::disable)
 
-                // 2. Définir la politique de session comme stateless
+                // Définir la politique de session comme stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 3. Définir les autorisations d'accès aux Endpoints
+                // Définir les autorisations d'accès aux Endpoints
                 .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
                 .anyRequest().authenticated()
                 )
 
-                // 4. Intégrer notre filtre JWT
+                // Intégrer le filtre JWT
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

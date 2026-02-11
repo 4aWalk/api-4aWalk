@@ -46,38 +46,24 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Gère tes exceptions métier personnalisées (ex: HikeException).
-     * Si tu n'as pas créé de classe spécifique, tu peux garder IllegalArgumentException.
-     */
-    /*@ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleHikeException(HikeException ex) {
-        System.err.println("Erreur métier Hike : " + ex.getMessage());
-        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
-    }*/
-
-    /**
      * Gère les RuntimeException génériques (ex: "Utilisateur introuvable" lancé par .orElseThrow()).
-     * On le mappe souvent en 400 ou 404 selon la logique, ici 400 pour simplifier.
+     * On mappe le code retour avec 400
      */
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleRuntimeException(RuntimeException ex) {
-        // Utile pour tes .orElseThrow(() -> new RuntimeException("..."))
-        System.err.println("Erreur Runtime : " + ex.getMessage());
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
     }
 
     /**
-     * Filet de sécurité global pour les bugs imprévus (NullPointerException, SQL error, etc.).
+     * Sécurité permettant de gérer les Exception générale
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGenericException(Exception ex) {
-        ex.printStackTrace(); // Important pour voir l'erreur dans la console serveur
+        //ex.printStackTrace(); // Important pour voir l'erreur dans la console serveur
         return new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Une erreur interne du serveur est survenue. " + ex.getMessage() // En prod, masque le message
-        );
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),"Une erreur est interne est survenu");
+
     }
 }

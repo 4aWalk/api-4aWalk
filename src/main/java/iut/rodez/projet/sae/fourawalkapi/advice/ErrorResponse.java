@@ -1,18 +1,19 @@
 package iut.rodez.projet.sae.fourawalkapi.advice;
 
 /**
- * DTO standard pour les réponses d'erreur JSON.
+ * Objet d'erreur utilisé pour les retours clients
  */
 public class ErrorResponse {
-    private int status;
-    private String message;
+    private int status; // code erreur
+    private String message; // message associé
 
+    // Contructeur d'une erreur réponse
     public ErrorResponse(int status, String message) {
         this.status = status;
         this.message = message;
     }
 
-    // Getters nécessaires pour la sérialisation JSON
+    // Getters
     public int getStatus() { return status; }
     public String getMessage() { return message; }
 }
