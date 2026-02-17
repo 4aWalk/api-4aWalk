@@ -90,10 +90,12 @@ public class CourseService {
         }
 
         Hike hike = hikeRepository.findById(dto.getHikeId())
-                .orElseThrow(() -> new RuntimeException("Erreur intégrité : Randonnée introuvable avec l'ID " + dto.getHikeId()));
+                .orElseThrow(() -> new RuntimeException("Erreur intégrité : Randonnée introuvable avec l'ID " +
+                        dto.getHikeId()));
 
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new SecurityException("Accès refusé : Vous ne pouvez pas démarrer un parcours sur une randonnée qui ne vous appartient pas.");
+            throw new SecurityException("Accès refusé : Vous ne pouvez pas démarrer un parcours sur une randonnée" +
+                    " qui ne vous appartient pas.");
         }
 
         Course course = mapToEntity(dto);
@@ -105,7 +107,8 @@ public class CourseService {
 
         // Gestion du point de départ
         if (course.getTrajetsRealises().isEmpty()) {
-            throw new IllegalArgumentException("Impossible de créer un parcours sans au moins un point de géolocalisation initial.");
+            throw new IllegalArgumentException("Impossible de créer un parcours " +
+                    "sans au moins un point de géolocalisation initial.");
         }
 
         // On récupère le premier point pour définir le départ
@@ -128,7 +131,8 @@ public class CourseService {
      * @param newPointsDto La liste des nouveaux points capturés.
      * @return Le parcours mis à jour.
      */
-    public CourseResponseDto addPointsToCourse(String courseId, List<GeoCoordinateResponseDto> newPointsDto, Long userId) {
+    public CourseResponseDto addPointsToCourse(String courseId, List<GeoCoordinateResponseDto> newPointsDto,
+                                               Long userId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Parcours introuvable"));
 
