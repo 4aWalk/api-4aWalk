@@ -12,12 +12,18 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
+/**
+ * Composant utilitaire responsable de la gestion des JSON Web Tokens (JWT).
+ * Il gère la génération (création), la validation (signature/expiration) et l'extraction d'informations (parsing).
+ */
 @Component
 public class JwtTokenProvider {
 
+    /* Clé secrète utilisée pour signer les tokens (définie dans application.properties) */
     @Value("${app.jwt-secret}")
     private String jwtSecret;
 
+    /* Durée de validité du token en millisecondes */
     @Value("${app.jwt-expiration-milliseconds}")
     private long jwtExpirationDate;
 
@@ -27,51 +33,82 @@ public class JwtTokenProvider {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Décode la clé secrète encodée en Base64 pour l'algorithme de signature HMAC-SHA.
+     * @return L'objet Key cryptographique.
+     */
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
     /**
-     * Génère un token JWT
+     * Génère un token JWT complet pour un utilisateur spécifique.
+     * Cette méthode construit le "payload" du token avec l'email (subject) et l'ID (claim personnalisé).
+     *
+     * @param user L'entité utilisateur pour laquelle on crée le token.
+     * @return La chaîne de caractères du token JWT signé.
      */
-    public String generateToken(Authentication authentication) {
-        String email = authentication.getName();
-
-        // On récupère l'user pour avoir son ID
-        // (C'est la seule fois où on tape la BDD pour l'auth, donc c'est OK)
-        User user = userRepository.findByMail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable lors de la génération du token"));
-
+    public String generateToken(User user) {
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
 
         return Jwts.builder()
-                .setSubject(email)
-                .claim("userId", user.getId()) // ID stocké dans le token
-                .setIssuedAt(new Date())
-                .setExpiration(expireDate)
-                .signWith(key(), SignatureAlgorithm.HS256) // Précision de l'algo recommandée
+                .setSubject(user.getMail())        // Identifiant principal (Email)
+                .claim("userId", user.getId())     // Stockage de l'ID pour récupération rapide sans BDD
+                .setIssuedAt(new Date())           // Date de création
+                .setExpiration(expireDate)         // Date d'expiration
+                .signWith(key(), SignatureAlgorithm.HS256) // Signature cryptographique
                 .compact();
     }
 
+    /**
+     * Surcharge pour générer un token directement depuis l'objet d'authentification Spring Security.
+     * Utile lors de la phase de login.
+     *
+     * @param authentication L'objet contenant les détails de l'utilisateur connecté.
+     * @return Le token JWT signé.
+     */
+    public String generateToken(Authentication authentication) {
+        String email = authentication.getName();
+
+        // Récupération de l'entité complète pour accéder à l'ID
+        User user = userRepository.findByMail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable lors de la génération du token"));
+
+        return generateToken(user);
+    }
+
+    /**
+     * Extrait l'identifiant (ID) de l'utilisateur stocké dans le token (Claim "userId").
+     * Cette méthode est critique pour le filtre d'authentification.
+     *
+     * @param token Le token JWT à décoder.
+     * @return L'ID de l'utilisateur (Long).
+     */
     public Long getUserId(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key())
                 .build()
-                .parseClaimsJws(token)
+                .parseClaimsJws(token) // Vérifie la signature et parse le token
                 .getBody();
 
-        // Récupération sécurisée du Long
+        // Extraction sûre grâce au typage
         return claims.get("userId", Long.class);
     }
 
+    /**
+     * Vérifie l'intégrité et la validité du token JWT.
+     * Contrôle la signature, l'expiration et le format.
+     *
+     * @param token Le token JWT à valider.
+     * @return true si le token est valide, false sinon.
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(key())
                     .build()
                     .parseClaimsJws(token);
-
             return true;
         } catch (MalformedJwtException e) {
             System.err.println("Token JWT invalide : " + e.getMessage());
@@ -84,7 +121,6 @@ public class JwtTokenProvider {
         } catch (io.jsonwebtoken.security.SignatureException e) {
             System.err.println("Signature JWT invalide : " + e.getMessage());
         }
-
         return false;
     }
 }

@@ -62,7 +62,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
 
                 // Définir la politique de session comme stateless
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // Définir les autorisations d'accès aux Endpoints
                 .authorizeHttpRequests(authorize -> authorize

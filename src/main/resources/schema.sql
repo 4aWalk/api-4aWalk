@@ -118,7 +118,7 @@ CREATE TABLE hike_food_products (
 
 CREATE TABLE group_equipments (
                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                  type_nom VARCHAR(50) NOT NULL,
+                                  type VARCHAR(50) NOT NULL,
                                   hike_id BIGINT NOT NULL,
                                   CONSTRAINT fk_group_hike FOREIGN KEY (hike_id) REFERENCES hikes(id) ON DELETE CASCADE
 );

@@ -4,38 +4,47 @@ import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
-import java.util.Objects;
-
+/**
+ * Nourriture consomable par un randonneur
+ */
 @Entity
 @Table(name = "food_products")
 public class FoodProduct implements Item {
 
+    /* identifiant de la nourriture */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* Nom de la nourriture */
     @NotBlank(message = "Le nom de l'aliment est obligatoire")
     @Column(nullable = false)
     private String nom;
 
-    // Règle : Poids entre 50g et 5000g (5kg)
+    /* Poids en gramme de la nourriture par unité */
     @NotNull(message = "Le poids est requis")
     @Min(value = 50, message = "Le poids minimum est de 50g")
     @Max(value = 5000, message = "Le poids maximum est de 5kg (5000g)")
     private Double masseGrammes;
 
+    /* Appellation courante de la nourriture */
     private String appellationCourante;
+
+    /* Conditionnement de la nourriture */
     private String conditionnement;
 
-    // Règle : Kcal entre 50 et 3000
+    // Apport calorique de la nourriture
     @Min(value = 50, message = "L'apport calorique minimum est de 50 kcal")
     @Max(value = 3000, message = "L'apport calorique maximum est de 3000 kcal")
     private Double apportNutritionnelKcal;
 
+    /* Prix de la nourriture */
     @PositiveOrZero
     private Double prixEuro;
 
-    @Min(1) @Max(3)
+    /* Quantité de la nourriture */
+    @Min(value = 1, message = "Un lot de nourriture doit comporté au mois 1 nourriture")
+    @Max(value = 3, message = "Un lot de nourriture doit comporté au plus 3 nourritures")
     private int nbItem;
 
     // --- Constructeurs ---
@@ -52,7 +61,7 @@ public class FoodProduct implements Item {
         this.nbItem = nbItem;
     }
 
-    // --- Interface Item ---
+    // Override de l'interface
 
     @Override
     public String getNom() { return nom; }
@@ -63,37 +72,21 @@ public class FoodProduct implements Item {
     @Override
     public int getNbItem() { return nbItem; }
 
-    public double getEnergyDensity() {
-        if (masseGrammes <= 0) return 0;
-        return apportNutritionnelKcal / masseGrammes;
-    }
-
-    // --- Overrides ---
+    @Override
+    public void setNom(String nom) { this.nom = nom; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FoodProduct that = (FoodProduct) o;
-        return Objects.equals(id, that.id) || Objects.equals(nom, that.nom);
-    }
+    public void setMasseGrammes(double masseGrammes) { this.masseGrammes = masseGrammes; }
 
     @Override
-    public int hashCode() { return Objects.hash(id, nom); }
-
-    @Override
-    public String toString() {
-        return String.format("%s [%s] (%.0f Kcal, %.2f€)", nom, conditionnement, apportNutritionnelKcal, prixEuro);
-    }
+    public void setNbItem(int nbItem) { this.nbItem = nbItem; }
 
     // --- Getters et Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public void setNom(String nom) { this.nom = nom; }
 
-    public void setMasseGrammes(double masseGrammes) { this.masseGrammes = masseGrammes; }
 
     public String getAppellationCourante() { return appellationCourante; }
     public void setAppellationCourante(String appellationCourante) { this.appellationCourante = appellationCourante; }
@@ -102,14 +95,16 @@ public class FoodProduct implements Item {
     public void setConditionnement(String conditionnement) { this.conditionnement = conditionnement; }
 
     public double getApportNutritionnelKcal() { return apportNutritionnelKcal;}
-    public void setApportNutritionnelKcal(double apportNutritionnelKcal) { this.apportNutritionnelKcal = apportNutritionnelKcal; }
+    public void setApportNutritionnelKcal(double apportNutritionnelKcal) {
+        this.apportNutritionnelKcal = apportNutritionnelKcal;
+    }
 
     public double getPrixEuro() { return prixEuro; }
     public void setPrixEuro(double prixEuro) { this.prixEuro = prixEuro; }
 
     public int getTotalMasses() { return (int) (this.masseGrammes * this.nbItem); }
 
-    public double getTotalMassesKg(){ return this.masseGrammes / 1000; }
+    public double getTotalMassesKg(){ return this.masseGrammes * this.nbItem / 1000; }
 
     public int getTotalKcals() { return (int) (this.apportNutritionnelKcal * this.nbItem); }
 }

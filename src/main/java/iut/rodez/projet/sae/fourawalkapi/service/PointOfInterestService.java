@@ -7,6 +7,9 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mysql.PointOfInterestReposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service poi gérant la logique métier de base
+ */
 @Service
 public class PointOfInterestService {
 
@@ -18,6 +21,15 @@ public class PointOfInterestService {
         this.poiRepository = pr;
     }
 
+    /**
+     * Ajoute un point d'intérêt à une randonnée.
+     *
+     * @param hikeId Identifiant de la randonnée.
+     * @param poi Point d'intérêt à ajouter.
+     * @param userId Identifiant de l'utilisateur propriétaire.
+     * @return Le point d'intérêt sauvegardé.
+     * @throws RuntimeException Si l'utilisateur n'est pas le créateur de la randonnée.
+     */
     @Transactional
     public PointOfInterest addPoiToHike(Long hikeId, PointOfInterest poi, Long userId) {
         Hike hike = hikeRepository.findById(hikeId).orElseThrow();
@@ -29,6 +41,14 @@ public class PointOfInterestService {
         return saved;
     }
 
+    /**
+     * Supprime un point d'intérêt d'une randonnée.
+     *
+     * @param hikeId Identifiant de la randonnée.
+     * @param poiId Identifiant du point d'intérêt.
+     * @param userId Identifiant de l'utilisateur propriétaire.
+     * @throws RuntimeException Si l'utilisateur n'est pas autorisé.
+     */
     @Transactional
     public void removePoiFromHike(Long hikeId, Long poiId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId).orElseThrow();

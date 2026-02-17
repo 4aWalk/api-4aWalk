@@ -2,6 +2,9 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 
+/**
+ * Data transfert object utilisé dans les communications d'objet nourriture avec le client
+ */
 public class FoodProductResponseDto {
     private Long id;
     private String nom;
@@ -11,6 +14,10 @@ public class FoodProductResponseDto {
     private double prixEuro;
     private int nbItem;
 
+    /**
+     * Mapper entity to dto
+     * @param food nourriture à mapper
+     */
     public FoodProductResponseDto(FoodProduct food) {
         this.id = food.getId();
         this.nom = food.getNom();
@@ -21,7 +28,7 @@ public class FoodProductResponseDto {
         this.nbItem = food.getNbItem();
     }
 
-    // Getters obligatoires pour la sérialisation JSON
+    // Getters
     public Long getId() { return id; }
     public String getNom() { return nom; }
     public double getMasseGrammes() { return masseGrammes; }

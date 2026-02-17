@@ -2,6 +2,9 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 
+/**
+ * Data transfert object utilisé dans les communications d'objet point d'interêt avec le client
+ */
 public class PointOfInterestResponseDto {
 
     private Long id;
@@ -10,35 +13,24 @@ public class PointOfInterestResponseDto {
     private double latitude;
     private double longitude;
 
-    public PointOfInterestResponseDto() {
-    }
-
-    // --- 2. Ton constructeur existant (pour convertir depuis l'entité) ---
+    /**
+     * Mapper entity to dto
+     * @param poi poi à mapper
+     */
     public PointOfInterestResponseDto(PointOfInterest poi) {
         if (poi != null) {
             this.id = poi.getId();
-            this.nom = poi.getName(); // ou getName() selon ton entité
+            this.nom = poi.getName();
             this.description = poi.getDescription();
             this.latitude = poi.getLatitude();
             this.longitude = poi.getLongitude();
         }
     }
 
-    // --- 3. GETTERS ET SETTERS (OBLIGATOIRES POUR LE JSON) ---
-    // Jackson utilise les Setters pour remplir l'objet à partir du JSON
-
+    // Getters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
-
     public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
     public double getLatitude() { return latitude; }
-    public void setLatitude(double latitude) { this.latitude = latitude; }
-
     public double getLongitude() { return longitude; }
-    public void setLongitude(double longitude) { this.longitude = longitude; }
 }

@@ -13,10 +13,15 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+/**
+ * Service utilisateur permettant de gérer l'inscriuption, la connexion et la mise à jour des informations
+ * d'un utilisateur
+ */
 @Service
 public class UserService implements UserDetailsService {
 
-    private static final String EMAIL_REGEX = "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
+    private static final String EMAIL_REGEX =
+            "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
     private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
     private static final String P_REGEX = "^(?=.*[A-Z])(?=.*[!@#$%^&*()]).{8,}$";
@@ -30,6 +35,13 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Enregistre un nouvel utilisateur après validation et hachage du mot de passe.
+     *
+     * @param newUser L'objet utilisateur à créer.
+     * @return L'utilisateur sauvegardé en base de données.
+     * @throws IllegalArgumentException Si l'email existe déjà ou si les données sont invalides.
+     */
     public User registerNewUser(User newUser) {
         validateUserData(newUser);
 
@@ -43,6 +55,13 @@ public class UserService implements UserDetailsService {
         return userRepository.save(newUser);
     }
 
+    /**
+     * Charge un utilisateur par son email pour l'authentification Spring Security.
+     *
+     * @param email L'email de l'utilisateur.
+     * @return Les détails de l'utilisateur (UserDetails).
+     * @throws UsernameNotFoundException Si aucun utilisateur ne correspond à l'email.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByMail(email)
@@ -55,6 +74,13 @@ public class UserService implements UserDetailsService {
         );
     }
 
+    /**
+     * Met à jour les informations d'un utilisateur existant.
+     * Gère le changement de mot de passe et la vérification d'unicité de l'email.
+     *
+     * @param user L'utilisateur avec les nouvelles données.
+     * @return L'utilisateur mis à jour.
+     */
     public User updateUser(User user) {
         if (user.getId() == null) {
             throw new IllegalArgumentException("Impossible de mettre à jour un utilisateur sans ID.");
@@ -74,14 +100,12 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
-    public Optional<User> findById(Long userId) {
-        return userRepository.findById(userId);
-    }
-
-    public Optional<User> findByMail(String mail) {
-        return userRepository.findByMail(mail);
-    }
-
+    /**
+     * Valide les données brutes de l'utilisateur (Regex Email, complexité mot de passe, âge).
+     *
+     * @param user L'utilisateur à valider.
+     * @throws IllegalArgumentException Si une contrainte n'est pas respectée.
+     */
     private void validateUserData(User user) {
         if (user.getMail() == null || user.getMail().trim().isEmpty() ||
                 user.getPassword() == null || user.getPassword().isEmpty() ||
@@ -98,7 +122,8 @@ public class UserService implements UserDetailsService {
         }
 
         if (!P_PATTERN.matcher(user.getPassword()).matches()) {
-            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 8 caractères, une majuscule et un caractère spécial.");
+            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 8 caractères," +
+                    " une majuscule et un caractère spécial.");
         }
 
         int age = user.getAge();

@@ -4,6 +4,9 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
+/**
+ * Data transfert object utilisé dans les communications d'objet participant avec le client
+ */
 public class ParticipantResponseDto {
     private Long id;
     private String prenom;
@@ -16,44 +19,32 @@ public class ParticipantResponseDto {
     private int besoinKcal;
     private int besoinEauLitre;
     private double capaciteEmportMaxKg;
+    private BackpackResponseDto backpack;
 
-    private BackpackResponseDto backpack; // L'objet DTO imbriqué
-
-    // Infos calculées pour le monitoring
-    private double chargeActuelleKg;
-    private boolean enSurcharge;
-
-    public ParticipantResponseDto(Participant p) {
-        this.id = p.getId();
-        this.prenom = p.getPrenom();
-        this.nom = p.getNom();
-        this.age = p.getAge();
-        this.niveau = p.getNiveau();
-        this.morphologie = p.getMorphologie();
-        this.creator = p.getCreator();
-        this.creatorId = p.getCreatorId();
-        this.besoinKcal = p.getBesoinKcal();
-        this.besoinEauLitre = p.getBesoinEauLitre();
-        this.capaciteEmportMaxKg = p.getCapaciteEmportMaxKg();
-
-        // Gestion du Sac à dos
-        if (p.getBackpack() != null) {
-            // CORRECTION ICI : On passe l'entité entière au constructeur du DTO
-            this.backpack = new BackpackResponseDto(p.getBackpack());
-
-            // On récupère les valeurs directement depuis notre DTO tout neuf
-            this.chargeActuelleKg = this.backpack.getPoidsActuelKg();
-
-            // Calcul de la surcharge (Poids du sac > Capacité du PARTICIPANT)
-            this.enSurcharge = this.chargeActuelleKg > this.capaciteEmportMaxKg;
+    /**
+     * Mapper entity to dto
+     * @param participant participant à mapper
+     */
+    public ParticipantResponseDto(Participant participant) {
+        this.id = participant.getId();
+        this.prenom = participant.getPrenom();
+        this.nom = participant.getNom();
+        this.age = participant.getAge();
+        this.niveau = participant.getNiveau();
+        this.morphologie = participant.getMorphologie();
+        this.creator = participant.getCreator();
+        this.creatorId = participant.getCreatorId();
+        this.besoinKcal = participant.getBesoinKcal();
+        this.besoinEauLitre = participant.getBesoinEauLitre();
+        this.capaciteEmportMaxKg = participant.getCapaciteEmportMaxKg();
+        if (participant.getBackpack() != null) {
+            this.backpack = new BackpackResponseDto(participant.getBackpack());
         } else {
             this.backpack = null;
-            this.chargeActuelleKg = 0.0;
-            this.enSurcharge = false;
         }
     }
 
-    // --- GETTERS ---
+    // Getters
     public Long getId() { return id; }
     public String getPrenom() { return prenom; }
     public String getNom() { return nom; }
@@ -65,7 +56,5 @@ public class ParticipantResponseDto {
     public int getBesoinKcal() { return besoinKcal; }
     public int getBesoinEauLitre() { return besoinEauLitre; }
     public double getCapaciteEmportMaxKg() { return capaciteEmportMaxKg; }
-    public BackpackResponseDto getBackpack() { return backpack; } // Getter pour l'objet sac
-    public double getChargeActuelleKg() { return chargeActuelleKg; }
-    public boolean getIsEnSurcharge() { return enSurcharge; }
+    public BackpackResponseDto getBackpack() { return backpack; }
 }

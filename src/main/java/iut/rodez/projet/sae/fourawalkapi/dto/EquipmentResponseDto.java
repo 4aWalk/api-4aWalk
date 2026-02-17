@@ -3,6 +3,9 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 
+/**
+ * Data transfert object utilisé dans les communications d'objet equipement avec le client
+ */
 public class EquipmentResponseDto {
     private Long id;
     private String nom;
@@ -12,6 +15,10 @@ public class EquipmentResponseDto {
     private TypeEquipment type;
     private double masseAVide;
 
+    /**
+     * Mapper entity to dto
+     * @param item équipement à mapper
+     */
     public EquipmentResponseDto(EquipmentItem item) {
         this.id = item.getId();
         this.nom = item.getNom();

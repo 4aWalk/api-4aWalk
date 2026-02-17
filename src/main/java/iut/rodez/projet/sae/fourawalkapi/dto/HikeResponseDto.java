@@ -7,12 +7,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Data transfert object utilisé dans les communications d'objet randonnée avec le client
+ */
 public class HikeResponseDto {
     private Long id;
     private String libelle;
     private int dureeJours;
-
-    // Nouveaux types DTO pour le départ et l'arrivée
     private PointOfInterestResponseDto depart;
     private PointOfInterestResponseDto arrivee;
     private Set<PointOfInterestResponseDto> points;
@@ -21,13 +22,14 @@ public class HikeResponseDto {
     private Set<FoodProductResponseDto> foodCatalogue;
     private Map<TypeEquipment, GroupEquipmentResponseDto> equipmentGroups;
 
-
+    /**
+     * Mapper entity to dto
+     * @param hike randonnée à mapper
+     */
     public HikeResponseDto(Hike hike) {
         this.id = hike.getId();
         this.libelle = hike.getLibelle();
         this.dureeJours = hike.getDureeJours();
-
-        // Mapping des POI
         this.depart = new PointOfInterestResponseDto(hike.getDepart());
         this.arrivee = new PointOfInterestResponseDto(hike.getArrivee());
         this.points = hike.getOptionalPoints().stream()
@@ -37,7 +39,6 @@ public class HikeResponseDto {
             this.creator = new UserResponseDto(hike.getCreator());
         }
 
-        // Mapping des collections avec Streams
         this.participants = hike.getParticipants().stream()
                 .map(ParticipantResponseDto::new)
                 .collect(Collectors.toSet());
@@ -55,7 +56,7 @@ public class HikeResponseDto {
         }
     }
 
-    // Getters (Indispensables pour éviter l'erreur "No acceptable representation")
+    // Getters
     public Long getId() { return id; }
     public String getLibelle() { return libelle; }
     public int getDureeJours() { return dureeJours; }

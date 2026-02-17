@@ -8,49 +8,88 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+/**
+ * Service de gestion des randonnées assurant les opérations de persistance,
+ * la validation métier et l'orchestration des algorithmes d'optimisation.
+ */
 @Service
 public class HikeService {
 
     private final HikeRepository hikeRepository;
     private final BackpackDistributorService backpackDistributor;
-    private final UserService userService;
+    private final MetierToolsService metierToolsService;
+    private final OptimizerService optimizerService;
+    private final UserRepository userRepository;
     private final PointOfInterestRepository poiRepository;
     private final ParticipantRepository participantRepository;
 
-    public HikeService(HikeRepository hr, BackpackDistributorService bds, UserService us, PointOfInterestRepository poiRepo, ParticipantRepository pr) {
+    /**
+     * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
+     * @param hr Repository pour l'accès aux données des randonnées.
+     * @param bds Service de distribution des items dans les sacs à dos.
+     * @param mts Service d'outils de validation métier.
+     * @param os Service de sélection optimisée du matériel et de la nourriture.
+     * @param ur Repository pour l'accès aux données utilisateurs.
+     * @param poiRepo Repository pour la gestion des points d'intérêt.
+     * @param pr Repository pour la gestion des participants.
+     */
+    public HikeService(HikeRepository hr,
+                       BackpackDistributorService bds,
+                       MetierToolsService mts,
+                       OptimizerService os, UserRepository ur,
+                       PointOfInterestRepository poiRepo,
+                       ParticipantRepository pr) {
         this.hikeRepository = hr;
         this.backpackDistributor = bds;
-        this.userService = us;
+        this.metierToolsService = mts;
+        this.optimizerService = os;
+        this.userRepository = ur;
         this.poiRepository = poiRepo;
         this.participantRepository = pr;
     }
 
+    /**
+     * Récupère la liste des randonnées créées par un utilisateur spécifique.
+     * @param creatorId Identifiant unique du créateur.
+     * @return Une liste d'objets Hike appartenant à l'utilisateur.
+     */
     public List<Hike> getHikesByCreator(Long creatorId) {
         return hikeRepository.findByCreatorId(creatorId);
     }
 
+    /**
+     * Récupère une randonnée par son identifiant après vérification de la propriété.
+     * @param hikeId Identifiant de la randonnée recherchée.
+     * @param userId Identifiant de l'utilisateur effectuant la requête.
+     * @return La randonnée correspondante.
+     * @throws RuntimeException Si la randonnée n'existe pas ou si l'utilisateur n'est pas le créateur.
+     */
     public Hike getHikeById(Long hikeId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        // Sécurité : on vérifie que c'est bien le créateur qui accède
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé");
+            throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
         return hike;
     }
 
+    /**
+     * Enregistre une nouvelle randonnée et initialise le créateur comme premier participant.
+     * @param hike L'objet randonnée à persister.
+     * @param creatorId Identifiant de l'utilisateur créateur.
+     * @return La randonnée sauvegardée avec ses relations initialisées.
+     * @throws RuntimeException Si l'utilisateur est introuvable ou si le libellé est déjà utilisé.
+     */
     @Transactional
     public Hike createHike(Hike hike, Long creatorId) {
-        User user = userService.findById(creatorId)
+        User user = userRepository.findById(creatorId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        // 1. Vérification unicité du nom (Libellé) pour cet utilisateur
         checkLibelleUniqueness(creatorId, hike.getLibelle());
 
         hike.setCreator(user);
 
-        // Création du Participant "Chef" depuis le User
         Participant pCreator = new Participant(
                 user.getPrenom(),
                 user.getNom(),
@@ -65,20 +104,26 @@ public class HikeService {
         hike.getParticipants().add(savedCreator);
 
         resolvePois(hike);
-        validateHike(hike);
+        metierToolsService.validateHikeForOptimize(hike);
 
         hike.setOptionalPoints(new HashSet<>());
-        hike.setFoodCatalogue(new HashSet<>());
+        hike.setFoodCatalogue(new ArrayList<>());
         hike.setEquipmentGroups(new HashMap<>());
 
         return hikeRepository.save(hike);
     }
 
+    /**
+     * Met à jour les informations d'une randonnée existante.
+     * @param hikeId Identifiant de la randonnée à modifier.
+     * @param details Objet contenant les nouvelles valeurs.
+     * @param userId Identifiant de l'utilisateur demandeur.
+     * @return La randonnée mise à jour.
+     */
     @Transactional
     public Hike updateHike(Long hikeId, Hike details, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
-        // 1. Vérification unicité SEULEMENT si le libellé change
         if (details.getLibelle() != null && !details.getLibelle().equals(hike.getLibelle())) {
             checkLibelleUniqueness(userId, details.getLibelle());
             hike.setLibelle(details.getLibelle());
@@ -89,11 +134,16 @@ public class HikeService {
         if (details.getArrivee() != null) hike.setArrivee(details.getArrivee());
 
         resolvePois(hike);
-        validateHike(hike);
+        metierToolsService.validateHikeForOptimize(hike);
 
         return hikeRepository.save(hike);
     }
 
+    /**
+     * Supprime définitivement une randonnée et rompt ses associations avec les autres entités.
+     * * @param hikeId Identifiant de la randonnée à supprimer.
+     * @param userId Identifiant de l'utilisateur demandeur.
+     */
     @Transactional
     public void deleteHike(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
@@ -107,20 +157,24 @@ public class HikeService {
         hikeRepository.delete(hike);
     }
 
-    // --- Méthodes Privées ---
-
     /**
-     * Vérifie si une randonnée avec ce nom existe déjà pour cet utilisateur.
-     * Throws RuntimeException si c'est le cas.
+     * Vérifie la disponibilité d'un libellé pour les randonnées d'un utilisateur donné.
+     * @param userId Identifiant de l'utilisateur.
+     * @param libelle Nom de la randonnée à tester.
+     * @throws RuntimeException Si le libellé est déjà utilisé par ce même utilisateur.
      */
     private void checkLibelleUniqueness(Long userId, String libelle) {
-        if (libelle == null || libelle.trim().isEmpty()) return; // Ou lever une erreur si le nom vide est interdit
-
+        if (libelle == null || libelle.trim().isEmpty()) return;
         if (hikeRepository.existsByCreatorIdAndLibelle(userId, libelle)) {
             throw new RuntimeException("Vous avez déjà une randonnée nommée : " + libelle);
         }
     }
 
+    /**
+     * Synchronise les points de départ et d'arrivée avec les données de la base de données.
+     * @param hike La randonnée dont les points d'intérêt doivent être résolus.
+     * @throws RuntimeException Si l'un des points d'intérêt est introuvable.
+     */
     private void resolvePois(Hike hike) {
         if (hike.getDepart() != null && hike.getDepart().getId() != null) {
             hike.setDepart(poiRepository.findById(hike.getDepart().getId())
@@ -132,19 +186,19 @@ public class HikeService {
         }
     }
 
-    private void validateHike(Hike hike) {
-        // on ne vérifie plus la distance entre départ et arrivé car une randonné peut être une boucle
-    }
-
+    /**
+     * Exécute les algorithmes de sélection de matériel et de répartition dans les sacs à dos.
+     * @param hikeId Identifiant de la randonnée à optimiser.
+     * @param userId Identifiant de l'utilisateur demandeur.
+     */
     @Transactional
     public void optimizeBackpack(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
-        MetierToolsService.validateHikeForOptimize(hike);
 
-        // Attention : Assure-toi que OptimizerService existe et possède ces méthodes statiques
-        // Sinon il faut l'injecter via le constructeur comme backpackDistributor
-        List<EquipmentItem> optimizedEquipment = OptimizerService.getOptimizeAllEquipmentV2(hike);
-        List<FoodProduct> optimizedFood = OptimizerService.getOptimizeAllFoodV2(hike);
+        metierToolsService.validateHikeForOptimize(hike);
+
+        List<EquipmentItem> optimizedEquipment = optimizerService.getOptimizeAllEquipmentV2(hike);
+        List<FoodProduct> optimizedFood = optimizerService.getOptimizeAllFoodV2(hike);
 
         List<Item> itemsToPack = new ArrayList<>();
         itemsToPack.addAll(optimizedEquipment);
@@ -157,10 +211,13 @@ public class HikeService {
         hikeRepository.save(hike);
     }
 
+    /**
+     * Calcule la distance cumulée entre le départ, les points optionnels triés et l'arrivée.
+     * @param hike La randonnée pour laquelle calculer la distance.
+     * @return La distance totale exprimée dans l'unité de mesure du système.
+     */
     public static double getAllDistance(Hike hike) {
         double distance = 0.0;
-
-        // 1. Convertir le Set en List pour pouvoir trier
         Set<PointOfInterest> setPoi = hike.getOptionalPoints();
         List<PointOfInterest> sortedPois = new ArrayList<>();
 
@@ -169,19 +226,13 @@ public class HikeService {
             sortedPois.sort(Comparator.comparingInt(PointOfInterest::getSequence));
         }
 
-        // On part du point de départ de la rando
         PointOfInterest currentPoint = hike.getDepart();
 
-        // 3. Boucle sur les POI triés
         for (PointOfInterest nextPoi : sortedPois) {
-            // calcul distance entre point courant (précédent) et le prochain poi
             distance += currentPoint.distanceTo(nextPoi.getLatitude(), nextPoi.getLongitude());
-
-            // poidepart (point courant) devient le poi qu'on vient d'atteindre
             currentPoint = nextPoi;
         }
 
-        // 4. Ajout de la dernière étape : Dernier POI (ou Départ si pas de POI) -> Arrivée
         return distance + currentPoint.distanceTo(hike.getArrivee().getLatitude(), hike.getArrivee().getLongitude());
     }
 }

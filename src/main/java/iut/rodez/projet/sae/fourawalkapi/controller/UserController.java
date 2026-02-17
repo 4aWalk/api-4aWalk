@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.controller;
 
 import iut.rodez.projet.sae.fourawalkapi.dto.UserResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import iut.rodez.projet.sae.fourawalkapi.security.JwtTokenProvider;
 import iut.rodez.projet.sae.fourawalkapi.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -15,35 +16,55 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controlleur des endpoints de gestion d'utilisateur
+ */
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
 
-    public UserController(UserService userService, AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
+    /**
+     * Injection de dépendance
+     * @param userService service utilisateur
+     * @param userRepository repository utilisateur
+     * @param authenticationManager manager d'authentification spring
+     * @param tokenProvider récupérateur d'authentification
+     */
+    public UserController(UserService userService, UserRepository userRepository, AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
         this.userService = userService;
+        this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
     }
 
+    /**
+     * Inscription d'un utilisateur
+     * @param user utilisateur à inscrire
+     * @return le token d'authentification et l'utilisateur créer
+     */
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
         User savedUser = userService.registerNewUser(user);
 
-        // On génère le token immédiatement après l'inscription pour connecter l'utilisateur
-        Authentication authForToken = new UsernamePasswordAuthenticationToken(savedUser.getMail(), null);
-        String token = tokenProvider.generateToken(authForToken);
+        String token = tokenProvider.generateToken(savedUser);
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("user", new UserResponseDto(savedUser)); // Utilisation du DTO
+        response.put("user", new UserResponseDto(savedUser));
 
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Connexion de l'utilisateur
+     * @param loginRequest map de mail et de mot de passe
+     * @return le token de connexion et l'utilisateur
+     */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("mail");
@@ -55,42 +76,39 @@ public class UserController {
 
         String token = tokenProvider.generateToken(authentication);
 
-        User userFromDb = userService.findByMail(email)
+        User userFromDb = userRepository.findByMail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("user", new UserResponseDto(userFromDb)); // Utilisation du DTO
+        response.put("user", new UserResponseDto(userFromDb));
 
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Mise à jour des informations de l'utilisateur
+     * @param id identifiant de l'utilisateur à modifier
+     * @param user utilisateur modifier
+     * @param auth token d'identification
+     * @return L'utilisateur mis à jour
+     */
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id,
                                                       @RequestBody User user,
-                                                      Authentication authentication) {
-
-        String currentEmail = authentication.getName();
-
-        User currentUser = userService.findByMail(currentEmail)
+                                                      Authentication auth) {
+        String currentEmail = auth.getName();
+        User currentUser = userRepository.findByMail(currentEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur connecté introuvable."));
-
-        // 2. Pour les erreurs, on LANCE une exception au lieu de return un String
-        // Spring va attraper ça et renvoyer une belle erreur HTTP automatiquement
         if (!currentUser.getId().equals(id)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé : Vous ne pouvez modifier que votre propre profil.");
         }
-
         user.setId(id);
-
         try {
             User updatedUser = userService.updateUser(user);
-
-            // 3. On renvoie directement le DTO typé (plus besoin de Map)
             return ResponseEntity.ok(new UserResponseDto(updatedUser));
 
         } catch (IllegalArgumentException e) {
-            // Idem ici, on transforme l'exception Java en erreur HTTP 400
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }

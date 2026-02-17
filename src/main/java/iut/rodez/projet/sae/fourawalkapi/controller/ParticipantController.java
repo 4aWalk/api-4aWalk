@@ -10,32 +10,39 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static iut.rodez.projet.sae.fourawalkapi.security.SecurityUtils.getUserId;
+
+/**
+ * Controlleur les endpoints de gestions des participants
+ */
 @RestController
 @RequestMapping("/participants")
 public class ParticipantController {
 
     private final ParticipantService participantService;
 
+    /**
+     * Injection de dépendance
+     * @param participantService service participant
+     */
     public ParticipantController(ParticipantService participantService) {
         this.participantService = participantService;
     }
 
     /**
-     * GET /participants/my
-     * Récupère la liste de tous les participants créés par l'utilisateur connecté.
-     * Utile pour proposer une liste de "Favoris" ou "Déjà utilisés" dans le frontend.
+     * Récupération de l'ensemble des particiants créer par l'utilisateur identifier à partir du token
+     * @param auth token d'identification
+     * @return Listes de tous les participants créer par l'utilisateur
      */
     @GetMapping("/my")
-    public ResponseEntity<List<Participant>> getMyParticipants(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+    public ResponseEntity<List<Participant>> getMyParticipants(Authentication auth) {
+        // Récupération de l'identifiant
+        if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(401).build();
         }
-
-        // L'ID est stocké en tant que Principal (Long) grâce à ton JwtAuthenticationFilter
-        Long userId = (Long) authentication.getPrincipal();
+        Long userId = getUserId(auth);
 
         List<Participant> participants = participantService.getMyParticipants(userId);
-
         return ResponseEntity.ok(participants);
     }
 }

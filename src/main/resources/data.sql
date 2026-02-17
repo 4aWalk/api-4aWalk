@@ -35,7 +35,7 @@ INSERT INTO hike_participants (hike_id, participant_id) VALUES
 INSERT INTO hike_food_products (hike_id, food_product_id) VALUES
                                                               (1, 1), (2,2);
 
-INSERT INTO group_equipments (id, type_nom, hike_id) VALUES
+INSERT INTO group_equipments (id, type, hike_id) VALUES
                                                          (1, 'SOIN', 1), (2,'SOIN',2);
 
 INSERT INTO group_equipment_items (group_id, equipment_id, item_order) VALUES

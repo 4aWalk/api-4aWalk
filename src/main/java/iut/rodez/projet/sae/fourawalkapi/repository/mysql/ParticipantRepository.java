@@ -6,8 +6,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Gestion des dialogues bd pour les participants
+ */
 @Repository
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
-    // Permet de retrouver tous les participants créés par un utilisateur spécifique
+    /**
+     * Recherche de la liste de tous les participants créer par un utilisateur
+     * @param creatorId identifiant du créateur
+     * @return liste de tous les participants créer par l'utilisateur
+     */
     List<Participant> findByCreatorIdAndCreatorFalse(Long creatorId);
 }

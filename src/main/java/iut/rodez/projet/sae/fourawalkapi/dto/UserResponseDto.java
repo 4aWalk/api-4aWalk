@@ -6,10 +6,10 @@ import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
 
 /**
- * DTO pour renvoyer les données d'un utilisateur au client (après inscription ou connexion).
- * Le mot de passe (haché) est omis pour des raisons de sécurité.
+ * Data transfert object utilisé dans les communications d'objet utilisateur avec le client
  */
 public class UserResponseDto {
+    // Le mot de passe n'est jamais communiquer au client
     private Long id;
     private String mail;
     private String nom;
@@ -20,7 +20,10 @@ public class UserResponseDto {
     private Morphology morphologie;
 
 
-    // Constructeur pour mapper l'Entité User vers ce DTO
+    /**
+     * Mapper entity to dto
+     * @param user utilisateur à mapper
+     */
     public UserResponseDto(User user) {
         this.id = user.getId();
         this.mail = user.getMail();
@@ -32,6 +35,7 @@ public class UserResponseDto {
         this.morphologie = user.getMorphologie();
     }
 
+    // Getters
     public Long getId() { return id; }
     public String getMail() { return mail; }
     public String getNom() { return nom; }

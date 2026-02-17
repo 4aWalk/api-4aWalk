@@ -5,21 +5,25 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Liste d'équipement d'une même catégorie
+ */
 @Entity
 @Table(name = "group_equipments")
 public class GroupEquipment {
 
+    /* identifiant du groupe d'équipement */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // --- CORRECTION MAJEURE ICI ---
-    // On mappe le champ Java "type" sur la colonne SQL "type_nom"
+    /* Type | catégorie des équipements de la liste */
     @Enumerated(EnumType.STRING)
-    @Column(name = "type_nom", nullable = false, length = 50)
+    @Column(name = "type", nullable = false, length = 50)
     private TypeEquipment type;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    /* Liste d'équipement associé au type */
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "group_equipment_items",
             joinColumns = @JoinColumn(name = "group_id"),

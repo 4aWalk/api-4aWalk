@@ -6,44 +6,46 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.util.Objects;
-
 /**
- * Représente un point d'intérêt (POI) sur l'itinéraire d'une randonnée.
- * (Ex: Point de vue, source d'eau, refuge optionnel).
+ * Point d'intêret est un lieu à visiter pendant la randonnée
  */
 @Entity
 @Table(name = "points_of_interest")
 public class PointOfInterest {
 
+    /* Identifiant du point d'intêret */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* Nom du point d'intêret */
     @NotBlank(message = "Le nom du POI est obligatoire")
     @Column(nullable = false)
     private String nom;
 
+    /* Latitude du poi */
     @NotNull(message = "La latitude est requise")
     @Min(value = -90, message = "La latitude doit être entre -90 et 90")
     @Max(value = 90, message = "La latitude doit être entre -90 et 90")
     private Double latitude;
 
+    /* Longitude du poi */
     @NotNull(message = "La longitude est requise")
     @Min(value = -180, message = "La longitude doit être entre -180 et 180")
     @Max(value = 180, message = "La longitude doit être entre -180 et 180")
     private Double longitude;
 
-    @Column(length = 500)
+    /* Description du point d'intêret */
     private String description;
 
+    /* Ordre de visite du point d'intêret */
     private int sequence;
 
     // --- Constructeurs ---
 
     public PointOfInterest() {}
 
-    public PointOfInterest(String nom, double latitude, double longitude, String description, Hike hike, int order) {
+    public PointOfInterest(String nom, double latitude, double longitude, String description, int order) {
         this.nom = nom;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -54,8 +56,7 @@ public class PointOfInterest {
     // --- Logique métier de bas niveau ---
 
     /**
-     * Calcule la distance entre ce POI et une coordonnée GPS donnée.
-     * Utile pour savoir si le randonneur est proche du point.
+     * Calcule la distance entre ce POI et une coordonnée GPS donnée
      */
     public double distanceTo(double lat, double lon) {
         final int R = 6371000; // Rayon de la Terre en mètres
@@ -66,30 +67,6 @@ public class PointOfInterest {
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
-    }
-
-    // --- Overrides Standards ---
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PointOfInterest that = (PointOfInterest) o;
-        // Égalité sur l'ID ou sur le nom et les coordonnées
-        return Objects.equals(id, that.id) ||
-                (Double.compare(that.latitude, latitude) == 0 &&
-                        Double.compare(that.longitude, longitude) == 0 &&
-                        Objects.equals(nom, that.nom));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, nom, latitude, longitude);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("POI[name='%s', lat=%.4f, lon=%.4f]", nom, latitude, longitude);
     }
 
     // --- Getters et Setters ---

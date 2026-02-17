@@ -6,111 +6,43 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * Service dédié à l'optimisation combinatoire.
+ * Résout des problèmes de type "Sac à dos" et "Couverture d'ensemble"
+ * pour sélectionner le matériel et la nourriture les plus adaptés aux contraintes.
+ */
 @Service
 public class OptimizerService {
 
-    public OptimizerService(EquipmentItemService es){}
-
-    public static void optimizeFoodV1(Hike hike) {
-        /*List<FoodProduct> foodList = new ArrayList<>(hike.getFoodCatalogue());
-        List<Participant> participantList = new ArrayList<>(hike.getParticipants());
-        if (participantList.isEmpty()) throw new RuntimeException("Aucun particpant trouvé pour l'optimisation");
-        int participantIndex = 0;
-        boolean allFoodadd = true;
-
-        for (FoodProduct fp : foodList) {
-            boolean assigned = false;
-            for (int i = 0; i < participantList.size(); i++) {
-                int currentIndex = (participantIndex + i) % participantList.size();
-                Participant p = participantList.get(currentIndex);
-
-                p.getBackpack().updateAndGetTotalMass();
-
-                if (p.getBackpack().getTotalMassKg() + fp.getWeightKg() <= p.getCapaciteEmportMaxKg()) {
-
-                    p.getBackpack().addFoodItems(fp);
-
-                    participantIndex = (currentIndex + 1) % participantList.size();
-
-                    assigned = true;
-                    break;
-                }
-            }
-
-            if (!assigned) {
-                allFoodadd = false;
-                break;
-            }
-        }
-        if (!allFoodadd) {throw new RuntimeException("Toutes la nourriture n'as pas pu être placer dans les sac des participant avec l'optimiseur V1");}*/
-    }
-
-    public static void optimizeEquipmentV1(Hike hike) {
-        /*List<EquipmentItem> equipmentList = new ArrayList<>(hike.getEquipmentRequired());
-        List<Participant> participantList = new ArrayList<>(hike.getParticipants());
-        if (participantList.isEmpty()) throw new RuntimeException("Aucun particpant trouvé pour l'optimisation");
-        int participantIndex = 0;
-        boolean allEquipementAdd = true;
-
-        for (EquipmentItem e : equipmentList) {
-            boolean assigned = false;
-            for (int i = 0; i < participantList.size(); i++) {
-                int currentIndex = (participantIndex + i) % participantList.size();
-                Participant p = participantList.get(currentIndex);
-
-                p.getBackpack().updateAndGetTotalMass();
-
-                if (p.getBackpack().getTotalMassKg() + e.getWeightKg() <= p.getCapaciteEmportMaxKg()) {
-
-                    p.getBackpack().addEquipmentItems(e);
-
-                    participantIndex = (currentIndex + 1) % participantList.size();
-
-                    assigned = true;
-                    break;
-                }
-            }
-
-            if (!assigned) {
-                allEquipementAdd = false;
-                break;
-            }
-        }
-        if (!allEquipementAdd) {throw new RuntimeException("Tout les équipements n'ont pas pu être placer dans les sac des participant avec l'optimiseur V1");}
-    */}
+    public OptimizerService() {}
 
     /**
-     * Algorithme d'optimisation V2 pour l'équipement.
-     * Sélectionne la meilleure combinaison d'équipements pour chaque type requis.
+     * Algorithme d'optimisation pour l'équipement.
+     * Parcourt chaque catégorie d'équipement requise et sélectionne la combinaison
+     * la plus légère permettant de couvrir tous les participants.
+     *
+     * @param hike La randonnée contenant les participants et le catalogue d'équipements.
+     * @return Une liste plate des équipements optimisés à emporter.
+     * @throws RuntimeException Si une catégorie obligatoire ne peut pas être satisfaite.
      */
-    public static List<EquipmentItem> getOptimizeAllEquipmentV2(Hike hike) {
+    public List<EquipmentItem> getOptimizeAllEquipmentV2(Hike hike) {
         List<TypeEquipment> typeList = new ArrayList<>(Arrays.asList(TypeEquipment.values()));
         List<EquipmentItem> equipmentOptimized = new ArrayList<>();
 
-        // Suppression des types inutiles
         typeList.remove(TypeEquipment.AUTRE);
 
-        // Règle métier : Pas de repos si rando de 1 jour
         if (hike.getDureeJours() == 1) {
             typeList.remove(TypeEquipment.REPOS);
         }
 
         for (TypeEquipment type : typeList) {
-            // CORRECTION MAJEURE : On récupère la liste directement depuis l'entité Hike
-            // Cela évite un appel inutile à la base de données via un service
-            List<EquipmentItem> itemsDispo = hike.getOptimizedList(type);
+            GroupEquipment group = hike.getEquipmentGroups().get(type);
+            List<EquipmentItem> itemsDispo = (group != null) ? new ArrayList<>(group.getItems()) : new ArrayList<>();
 
-            // Si aucun équipement de ce type n'est dispo dans le catalogue de la rando, on passe
-            if (itemsDispo.isEmpty()) {
-                continue;
-                // Ou throw new RuntimeException("Aucun équipement disponible pour le type " + type);
-            }
-
-            // Appel de l'algo récursif
             List<EquipmentItem> bestItemsForType = sortBestEquipmentV2(
                     itemsDispo,
                     new ArrayList<>(),
-                    hike.getParticipants().size(), // Objectif : Couvrir tous les participants
+                    hike.getParticipants().size(),
                     0
             );
 
@@ -125,10 +57,16 @@ public class OptimizerService {
     }
 
     /**
-     * Moteur récursif (Backtracking) pour l'équipement.
-     * Cherche à atteindre la couverture (nbParticipant) avec le moins d'objets possible.
+     * Moteur récursif (Backtracking) pour la sélection d'équipement.
+     * Explore l'arbre des possibilités binaires (prendre ou ne pas prendre l'item).
+     *
+     * @param candidats Liste des équipements disponibles pour ce type.
+     * @param currentSelection Liste des équipements actuellement sélectionnés dans cette branche.
+     * @param nbParticipant Nombre de personnes à équiper.
+     * @param index Index de l'item en cours d'évaluation.
+     * @return La liste d'équipements optimale (la plus petite taille) ou null si aucune solution n'est trouvée.
      */
-    private static List<EquipmentItem> sortBestEquipmentV2(
+    private List<EquipmentItem> sortBestEquipmentV2(
             List<EquipmentItem> candidats,
             List<EquipmentItem> currentSelection,
             int nbParticipant,
@@ -136,65 +74,56 @@ public class OptimizerService {
 
         int couverture = currentSelection.stream().mapToInt(EquipmentItem::getNbItem).sum();
 
-        // 1. CAS DE BASE : SUCCÈS
+        // Cas de base : Succès, la couverture est suffisante
         if (couverture >= nbParticipant) {
             return new ArrayList<>(currentSelection);
         }
 
-        // 2. CAS DE BASE : ECHEC (Fin de liste)
+        // Cas de base : Échec, fin de la liste des candidats sans atteindre l'objectif
         if (index >= candidats.size()) {
             return null;
         }
 
         EquipmentItem item = candidats.get(index);
 
-        // 3. BRANCHE 1 : PRENDRE L'OBJET
+        // Exploration de la branche : Inclusion de l'item
         currentSelection.add(item);
         List<EquipmentItem> solutionTake = sortBestEquipmentV2(candidats, currentSelection, nbParticipant, index + 1);
 
-        // Backtracking (On retire pour tester l'autre branche)
+        // Backtrack : Retrait de l'item pour explorer l'autre branche
         currentSelection.remove(currentSelection.size() - 1);
 
-        // 4. BRANCHE 2 : SAUTER L'OBJET
+        // Exploration de la branche : Exclusion de l'item
         List<EquipmentItem> solutionSkip = sortBestEquipmentV2(candidats, currentSelection, nbParticipant, index + 1);
 
-        // 5. COMPARAISON DES SOLUTIONS
+        // Comparaison des résultats des deux branches
         if (solutionTake == null) return solutionSkip;
         if (solutionSkip == null) return solutionTake;
 
-        // Critère : On privilégie la solution avec le MOINS d'items (pour éviter d'avoir 15 petites tentes)
+        // Priorité à la solution comportant le moins d'items distincts
         if (solutionTake.size() < solutionSkip.size()) {
             return solutionTake;
         } else if (solutionSkip.size() < solutionTake.size()) {
             return solutionSkip;
         }
 
-        // Si égalité de taille, on privilégie 'Take' car la liste 'candidats' est supposée triée par qualité/rentabilité
         return solutionTake;
     }
 
     /**
-     * Algorithme d'optimisation V2 pour la nourriture.
-     * Maximise les calories tout en minimisant le poids transporté.
+     * Algorithme d'optimisation pour la nourriture.
+     * Cherche à atteindre l'objectif calorique total en minimisant le poids transporté.
+     *
+     * @param hike La randonnée contenant le catalogue de nourriture et les besoins caloriques.
+     * @return La liste des aliments sélectionnés pour le voyage.
      */
-    public static List<FoodProduct> getOptimizeAllFoodV2(Hike hike) {
-        // 1. Objectif : Besoin Total (Participants * Jours)
+    public List<FoodProduct> getOptimizeAllFoodV2(Hike hike) {
         int targetKcal = hike.getCaloriesForAllParticipants();
 
         if (targetKcal == 0) return new ArrayList<>();
 
-        // 2. Récupérer et convertir le Set en List
         List<FoodProduct> allFood = new ArrayList<>(hike.getFoodCatalogue());
 
-        // 3. TRI PAR DENSITÉ ÉNERGÉTIQUE (Kcal / Poids)
-        // Les aliments les plus "rentables" (légers mais caloriques) en premier
-        allFood.sort((f1, f2) -> {
-            double density1 = (double) f1.getTotalKcals() / f1.getTotalMasses();
-            double density2 = (double) f2.getTotalKcals() / f2.getTotalMasses();
-            return Double.compare(density2, density1);
-        });
-
-        // 4. Lancement Récursif
         List<FoodProduct> optimizedList = sortBestFoodRecursive(
                 allFood,
                 new ArrayList<>(),
@@ -203,54 +132,52 @@ public class OptimizerService {
         );
 
         if (optimizedList == null) {
-            System.out.println("Attention : Pas assez de nourriture dans le catalogue pour couvrir " + targetKcal + " kcal.");
-            return new ArrayList<>(); // Ou retourner tout ce qu'on a, selon ton besoin
+            return new ArrayList<>();
         }
 
         return optimizedList;
     }
 
     /**
-     * Moteur récursif pour la nourriture.
-     * Cherche à atteindre targetKcal avec le poids total minimum.
+     * Moteur récursif pour la sélection de nourriture.
+     * Minimise le poids pour une valeur calorique cible atteinte.
+     *
+     * @param candidats Liste des aliments disponibles.
+     * @param currentSelection Sélection courante.
+     * @param targetKcal Objectif calorique à atteindre.
+     * @param index Index courant.
+     * @return La liste d'aliments la plus légère satisfaisant les besoins caloriques.
      */
-    private static List<FoodProduct> sortBestFoodRecursive(
+    private List<FoodProduct> sortBestFoodRecursive(
             List<FoodProduct> candidats,
             List<FoodProduct> currentSelection,
             int targetKcal,
             int index) {
 
-        // --- A. SUCCÈS ? ---
-        int currentKcal = currentSelection.stream()
-                .mapToInt(FoodProduct::getTotalKcals)
-                .sum();
+        int currentKcal = currentSelection.stream().mapToInt(FoodProduct::getTotalKcals).sum();
 
         if (currentKcal >= targetKcal) {
             return new ArrayList<>(currentSelection);
         }
 
-        // --- B. IMPASSE ? ---
         if (index >= candidats.size()) {
             return null;
         }
 
         FoodProduct item = candidats.get(index);
 
-        // --- C. BRANCHE 1 : PRENDRE ---
+        // Branche inclusion
         currentSelection.add(item);
         List<FoodProduct> solutionTake = sortBestFoodRecursive(candidats, currentSelection, targetKcal, index + 1);
-
-        // Backtrack
         currentSelection.remove(currentSelection.size() - 1);
 
-        // --- D. BRANCHE 2 : SKIP ---
+        // Branche exclusion
         List<FoodProduct> solutionSkip = sortBestFoodRecursive(candidats, currentSelection, targetKcal, index + 1);
 
-        // --- E. ARBITRAGE (LE PLUS LÉGER) ---
         if (solutionTake == null) return solutionSkip;
         if (solutionSkip == null) return solutionTake;
 
-        // Comparaison des masses totales pour minimiser le portage
+        // Comparaison sur le critère du poids total
         int massTake = solutionTake.stream().mapToInt(FoodProduct::getTotalMasses).sum();
         int massSkip = solutionSkip.stream().mapToInt(FoodProduct::getTotalMasses).sum();
 

@@ -1,49 +1,57 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 import iut.rodez.projet.sae.fourawalkapi.model.Person;
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 /**
- * Utilisateur principal du système.
- * Gère le compte, l'authentification et les randonnées créées (UC001, UC002).
+ * Utilisateur de l'application
  */
 @Entity
 @Table(name = "users")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User implements Person {
 
+    /* identifiant de l'utilisateur */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* Nom de l'utilisateur */
     @Column(nullable = false)
     private String nom;
 
+    /* Prénom de l'utilisateur */
     @Column(nullable = false)
     private String prenom;
 
+    /* Mail de l'utilisateur */
     @Column(unique = true, nullable = false)
     private String mail;
 
+    /* Mot de passe de l'utilisateur */
     @Column(nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password; // Stocké sous forme de hash (BCrypt par exemple)
+    private String password;
 
+    /* Adresse de l'utilisateur */
     private String adresse;
 
+    /* Age de l'utilisateur */
+    @Min(value = 10, message = "L'âge ne peut pas être inférieur à 10 ans")
+    @Max(value = 100, message = "L'âge ne peut pas être supérieur à 100 ans")
     private int age;
 
+    /* Niveau de l'utilisateur */
     @Enumerated(EnumType.STRING)
     private Level niveau;
 
+    /* Morphologie de l'utilisateur */
     @Enumerated(EnumType.STRING)
     private Morphology morphologie;
 
@@ -51,7 +59,6 @@ public class User implements Person {
 
     public User() {}
 
-    /** Constructeur complet (sans ID car géré par la BDD) */
     public User(String nom, String prenom, String mail, String password, String adresse,
                 int age, Level niveau, Morphology morphologie) {
         this.nom = nom;
@@ -64,7 +71,7 @@ public class User implements Person {
         this.morphologie = morphologie;
     }
 
-    // --- Implémentation de l'interface Person ---
+    // --- Implémentation de l'interface ---
 
     @Override
     public String getPrenom() { return prenom; }
@@ -82,35 +89,24 @@ public class User implements Person {
     }
 
     @Override
+    public void setAge(int age) { this.age = age; }
+
+    @Override
     public Level getNiveau() {
         return this.niveau;
     }
+
+    @Override
+    public void setNiveau(Level niveau) { this.niveau = niveau; }
 
     @Override
     public Morphology getMorphologie() {
         return this.morphologie;
     }
 
-    // --- Overrides Standards ---
-
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        // L'email est unique en base, c'est notre identifiant métier le plus fiable
-        return Objects.equals(mail, user.mail);
-    }
+    public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(mail);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("User[id=%d, mail='%s', nom='%s']", id, mail, nom);
-    }
 
     // --- Getters et Setters ---
 
@@ -126,9 +122,5 @@ public class User implements Person {
     public String getAdresse() { return adresse; }
     public void setAdresse(String adresse) { this.adresse = adresse; }
 
-    public void setAge(int age) { this.age = age; }
 
-    public void setNiveau(Level niveau) { this.niveau = niveau; }
-
-    public void setMorphologie(Morphology morphologie) { this.morphologie = morphologie; }
 }

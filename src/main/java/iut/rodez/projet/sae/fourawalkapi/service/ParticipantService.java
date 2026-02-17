@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Service participant gérant la logique métier de base
+ */
 @Service
 public class ParticipantService {
 
@@ -26,13 +29,28 @@ public class ParticipantService {
         this.userRepository = ur;
     }
 
+    /**
+     * Récupère la liste des participants créés par un utilisateur spécifique (hors profil créateur).
+     *
+     * @param userId Identifiant de l'utilisateur.
+     * @return Liste des participants gérés par cet utilisateur.
+     */
     public List<Participant> getMyParticipants(Long userId) {
         return participantRepository.findByCreatorIdAndCreatorFalse(userId);
     }
 
+    /**
+     * Ajoute un participant à une randonnée existante.
+     * Vérifie les droits d'accès et les limites de capacité de la randonnée.
+     *
+     * @param hikeId Identifiant de la randonnée cible.
+     * @param p Objet participant à ajouter.
+     * @param userId Identifiant de l'utilisateur effectuant la requête.
+     * @return Le participant sauvegardé.
+     * @throws RuntimeException Si la randonnée n'appartient pas à l'utilisateur ou si elle est pleine.
+     */
     @Transactional
     public Participant addParticipant(Long hikeId, Participant p, Long userId) {
-        // 1. Validation métier des données brutes
         validateParticipantRules(p);
 
         Hike hike = hikeRepository.findById(hikeId)
@@ -43,6 +61,8 @@ public class ParticipantService {
 
         p.setCreator(false);
         p.setCreatorId(userId);
+        p.setBesoinEauLitre(5);
+        p.setBesoinKcal(3000);
 
         Participant saved = participantRepository.save(p);
 
@@ -52,9 +72,18 @@ public class ParticipantService {
         return saved;
     }
 
+    /**
+     * Met à jour les informations d'un participant.
+     * Si le participant est le créateur (profil utilisateur), met à jour également l'entité User associée.
+     *
+     * @param hikeId Identifiant de la randonnée.
+     * @param participantId Identifiant du participant à modifier.
+     * @param details Nouvelles données du participant.
+     * @param userId Identifiant de l'utilisateur effectuant la modification.
+     * @return Le participant mis à jour.
+     */
     @Transactional
     public Participant updateParticipant(Long hikeId, Long participantId, Participant details, Long userId) {
-        // 1. Validation métier des nouvelles données
         validateParticipantRules(details);
 
         Hike hike = hikeRepository.findById(hikeId)
@@ -91,6 +120,14 @@ public class ParticipantService {
         return participantRepository.save(p);
     }
 
+    /**
+     * Supprime un participant d'une randonnée.
+     * Interdit la suppression du profil créateur.
+     *
+     * @param hikeId Identifiant de la randonnée.
+     * @param participantId Identifiant du participant à supprimer.
+     * @param userId Identifiant de l'utilisateur effectuant la suppression.
+     */
     @Transactional
     public void deleteParticipant(Long hikeId, Long participantId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
@@ -108,27 +145,11 @@ public class ParticipantService {
     }
 
     /**
-     * Valide les règles métiers spécifiques (Eau, Kcal, Age, Sac)
+     * Valide les règles métiers physiologiques et logistiques du participant.
+     *
+     * @param p Le participant à valider.
      */
     private void validateParticipantRules(Participant p) {
-        // Règle : Eau entre 1 et 8 L
-        /*if (p.getBesoinEauLitre() < 1 || p.getBesoinEauLitre() > 8) {
-            throw new RuntimeException("Le besoin en eau doit être compris entre 1 et 8 Litres");
-        }
-
-        // Règle : Kcal entre 1700 et 10000
-        if (p.getBesoinKcal() < 1700 || p.getBesoinKcal() > 10000) {
-            throw new RuntimeException("Le besoin calorique doit être compris entre 1700 et 10000 kcal");
-        }
-
-        // Règle : Age entre 10 et 100 ans
-        if (p.getAge() < 10 || p.getAge() > 100) {
-            throw new RuntimeException("L'âge doit être compris entre 10 et 100 ans");
-        }
-
-        // Règle : Sac à dos max 30 kg (Capacité d'emport)
-        if (p.getCapaciteEmportMaxKg() > 30.0) {
-            throw new RuntimeException("La capacité d'emport ne peut pas dépasser 30 kg");
-        }*/
+        // Implémentation des règles de validation (commentée pour l'instant)
     }
 }

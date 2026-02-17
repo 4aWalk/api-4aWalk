@@ -6,9 +6,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Gestion des dialogues bd pour les utilisateurs
+ */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    // Spring Data génère automatiquement le code SQL : SELECT * FROM users WHERE mail = ?
+    /**
+     * Obtient un utilisateur à partir d'un email
+     * @param mail mail recherché
+     * @return l'utilisateur trouvé
+     */
     Optional<User> findByMail(String mail);
 }

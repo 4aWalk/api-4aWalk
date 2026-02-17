@@ -5,8 +5,15 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
+/**
+ * Gestion des dialogues bd pour les parcours
+ */
 @Repository
 public interface CourseRepository extends MongoRepository<Course, String> {
-    // Tu peux ajouter des méthodes de recherche personnalisées
+    /**
+     * Récupération des parcours d'une même randonnée
+     * @param hikeId identifiant de la randonnée
+     * @return liste des parcours trouvée
+     */
     List<Course> findByHikeId(Long hikeId);
 }
