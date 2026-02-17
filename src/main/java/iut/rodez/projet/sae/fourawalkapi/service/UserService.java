@@ -1,6 +1,8 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
+import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,8 +10,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -29,10 +33,13 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ParticipantRepository participantRepository;
 
-    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder,
+                       ParticipantRepository participantRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.participantRepository = participantRepository;
     }
 
     /**
@@ -81,6 +88,7 @@ public class UserService implements UserDetailsService {
      * @param user L'utilisateur avec les nouvelles données.
      * @return L'utilisateur mis à jour.
      */
+    @Transactional
     public User updateUser(User user) {
         if (user.getId() == null) {
             throw new IllegalArgumentException("Impossible de mettre à jour un utilisateur sans ID.");
@@ -88,16 +96,33 @@ public class UserService implements UserDetailsService {
 
         validateUserData(user);
 
+        // Vérification unicité email
         Optional<User> existingUserWithEmail = userRepository.findByMail(user.getMail());
-
         if (existingUserWithEmail.isPresent() && !existingUserWithEmail.get().getId().equals(user.getId())) {
             throw new IllegalArgumentException("L'adresse email est déjà utilisée par un autre utilisateur.");
         }
 
+        // Hachage mot de passe
         String hashedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
 
-        return userRepository.save(user);
+        // Sauvegarde de l'utilisateur
+        User savedUser = userRepository.save(user);
+
+        // Update des particpants impactés
+        List<Participant> userAppearances = participantRepository.findByCreatorIdAndCreatorTrue(savedUser.getId());
+
+        for (Participant p : userAppearances) {
+            p.setNom(savedUser.getNom());
+            p.setPrenom(savedUser.getPrenom());
+            p.setAge(savedUser.getAge());
+            p.setNiveau(savedUser.getNiveau());
+            p.setMorphologie(savedUser.getMorphologie());
+        }
+
+        participantRepository.saveAll(userAppearances);
+
+        return savedUser;
     }
 
     /**

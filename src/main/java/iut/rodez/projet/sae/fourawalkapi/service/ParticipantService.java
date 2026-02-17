@@ -61,8 +61,6 @@ public class ParticipantService {
 
         p.setCreator(false);
         p.setCreatorId(userId);
-        p.setBesoinEauLitre(5);
-        p.setBesoinKcal(3000);
 
         Participant saved = participantRepository.save(p);
 
@@ -93,6 +91,9 @@ public class ParticipantService {
         Participant p = participantRepository.findById(participantId)
                 .orElseThrow(() -> new RuntimeException("Participant introuvable"));
 
+        if (!hike.getParticipants().contains(p)) {
+            throw new RuntimeException("Ce participant n'appartient pas à la randonnée spécifiée !");
+        }
         p.setNom(details.getNom());
         p.setPrenom(details.getPrenom());
         p.setAge(details.getAge());

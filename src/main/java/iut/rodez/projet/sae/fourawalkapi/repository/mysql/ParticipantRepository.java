@@ -17,4 +17,11 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
      * @return liste de tous les participants créer par l'utilisateur
      */
     List<Participant> findByCreatorIdAndCreatorFalse(Long creatorId);
+
+    /**
+     * Recherche de la liste de tous les participants créateur
+     * @param creatorId identifiant du créateur
+     * @return liste de tous les participants créateur
+     */
+    List<Participant> findByCreatorIdAndCreatorTrue(Long creatorId);
 }

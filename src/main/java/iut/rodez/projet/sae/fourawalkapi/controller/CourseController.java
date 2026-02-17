@@ -56,14 +56,15 @@ public class CourseController {
     }
 
     /**
-     * Création d'un parcours
-     * @param courseDto Object parcours devant être créer
-     * @return le parcours créer
+     * Crée un nouveau parcours.
+     * @param dto Les infos du parcours (doit contenir hikeId)
+     * @param auth Le token de sécurité
+     * @return Le parcours créé
      */
     @PostMapping
-    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody CourseResponseDto courseDto) {
-        CourseResponseDto created = courseService.createCourse(courseDto);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody CourseResponseDto dto, Authentication auth) {
+        CourseResponseDto created = courseService.createCourse(dto, getUserId(auth));
+        return ResponseEntity.ok(created);
     }
 
     /**
@@ -75,13 +76,10 @@ public class CourseController {
     @PutMapping("/{id}")
     public ResponseEntity<CourseResponseDto> addPointsToCourse(
             @PathVariable String id,
+            @RequestBody List<GeoCoordinateResponseDto> newPoints,
+            Authentication auth) {
 
-            @RequestBody List<GeoCoordinateResponseDto> newPoints) {
-
-        // Note : Idéalement, il faudrait vérifier ici que le parcours appartient bien à l'utilisateur connecté
-        // via getUserId(auth) avant d'autoriser la modification.
-
-        CourseResponseDto updated = courseService.addPointsToCourse(id, newPoints);
+        CourseResponseDto updated = courseService.addPointsToCourse(id, newPoints, getUserId(auth));
         return ResponseEntity.ok(updated);
     }
 

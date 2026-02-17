@@ -78,25 +78,45 @@ public class CourseService {
     /**
      * Initialise une nouvelle session de suivi (Course).
      * Vérifie l'intégrité référentielle avec MySQL avant de créer le document MongoDB.
+     * Règle métier : Le premier point du tracé devient automatiquement le Point de Départ.
      *
      * @param dto Les données initiales du parcours.
      * @return Le parcours créé avec son ID MongoDB généré.
      */
-    public CourseResponseDto createCourse(CourseResponseDto dto) {
-        // Validation d'existence : On ne peut pas suivre une randonnée qui n'existe pas en base SQL
-        if (dto.getHikeId() != null) {
-            hikeRepository.findById(dto.getHikeId())
-                    .orElseThrow(() -> new RuntimeException("Erreur intégrité : Randonnée introuvable avec l'ID " + dto.getHikeId()));
+    public CourseResponseDto createCourse(CourseResponseDto dto, Long userId) {
+
+        if (dto.getHikeId() == null) {
+            throw new IllegalArgumentException("Impossible de créer un parcours sans l'ID de la randonnée associée.");
+        }
+
+        Hike hike = hikeRepository.findById(dto.getHikeId())
+                .orElseThrow(() -> new RuntimeException("Erreur intégrité : Randonnée introuvable avec l'ID " + dto.getHikeId()));
+
+        if (!hike.getCreator().getId().equals(userId)) {
+            throw new SecurityException("Accès refusé : Vous ne pouvez pas démarrer un parcours sur une randonnée qui ne vous appartient pas.");
         }
 
         Course course = mapToEntity(dto);
+        course.setHikeId(hike.getId());
 
-        // Initialisation défensive de la liste de points pour éviter les NullPointerException
         if (course.getTrajetsRealises() == null) {
             course.setTrajetsRealises(new ArrayList<>());
         }
 
+        // Gestion du point de départ
+        if (course.getTrajetsRealises().isEmpty()) {
+            throw new IllegalArgumentException("Impossible de créer un parcours sans au moins un point de géolocalisation initial.");
+        }
+
+        // On récupère le premier point pour définir le départ
+        GeoCoordinate startCoord = course.getTrajetsRealises().get(0);
+        course.setDepart(createPoiFromGeo(startCoord, "Départ"));
+
+        course.setFinished(false);
+        course.setPaused(false);
+
         Course savedCourse = courseRepository.save(course);
+
         return mapToDto(savedCourse);
     }
 
@@ -108,9 +128,16 @@ public class CourseService {
      * @param newPointsDto La liste des nouveaux points capturés.
      * @return Le parcours mis à jour.
      */
-    public CourseResponseDto addPointsToCourse(String courseId, List<GeoCoordinateResponseDto> newPointsDto) {
+    public CourseResponseDto addPointsToCourse(String courseId, List<GeoCoordinateResponseDto> newPointsDto, Long userId) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Parcours introuvable pour ajout de points"));
+                .orElseThrow(() -> new RuntimeException("Parcours introuvable"));
+
+        Hike hike = hikeRepository.findById(course.getHikeId())
+                .orElseThrow(() -> new RuntimeException("Randonnée associée introuvable"));
+
+        if (!hike.getCreator().getId().equals(userId)) {
+            throw new RuntimeException("Accès refusé : Ce parcours ne vous appartient pas.");
+        }
 
         if (newPointsDto != null && !newPointsDto.isEmpty()) {
             // Transformation des DTOs légers en objets métier GeoCoordinate
@@ -132,6 +159,7 @@ public class CourseService {
 
     /**
      * Clôture définitivement une session de marche.
+     * Règle métier : Le dernier point du tracé devient automatiquement le Point d'Arrivée.
      * Une fois terminée, une course ne peut plus être modifiée ni mise en pause.
      */
     public Course finishCourse(String courseId) {
@@ -141,6 +169,14 @@ public class CourseService {
         // Règle métier : Idempotence et sécurité d'état
         if (course.isFinished()) {
             throw new RuntimeException("Action illégale : Cette course est déjà terminée.");
+        }
+
+        // Gestion du point d'arrivée
+        List<GeoCoordinate> path = course.getTrajetsRealises();
+        if (path != null && !path.isEmpty()) {
+            // On récupère le dernier point connu
+            GeoCoordinate lastPoint = path.get(path.size() - 1);
+            course.setArrivee(createPoiFromGeo(lastPoint, "Arrivée"));
         }
 
         course.setFinished(true);
@@ -171,39 +207,23 @@ public class CourseService {
 
     // --- MAPPERS (Conversion de Données) ---
 
-    /**
-     * Transforme l'Entité de persistance (MongoDB) en objet de transfert (DTO).
-     * Isole la structure interne de la base de données de l'API exposée.
-     * @param entity parcours à mapper
-     * @return parcours mappé
-     */
     private CourseResponseDto mapToDto(Course entity) {
         return new CourseResponseDto(entity);
     }
 
-    /**
-     * Transforme le DTO entrant en Entité métier pour la persistance.
-     * Gère le mapping manuel des champs complexes (listes, objets imbriqués) et les valeurs par défaut.
-     * @param dto parcours à mapper
-     * @return parcours mappé
-     */
     private Course mapToEntity(CourseResponseDto dto) {
         Course course = new Course();
 
-        // Mapping des identifiants et références clés
         course.setId(dto.getId());
         course.setHikeId(dto.getHikeId());
 
-        // Gestion de la temporalité : utilise la date fournie ou conserve null
         if (dto.getDateRealisation() != null) {
             course.setDateRealisation(dto.getDateRealisation());
         }
 
-        // Mapping des états (Booleans)
         course.setFinished(dto.getIsFinished());
         course.setPaused(dto.getIsPaused());
 
-        // Mapping des Points d'Intérêt (Conversion DTO -> Entité SQL/Mongo compatible)
         if (dto.getDepart() != null) {
             course.setDepart(mapPoiDtoToEntity(dto.getDepart()));
         }
@@ -211,7 +231,6 @@ public class CourseService {
             course.setArrivee(mapPoiDtoToEntity(dto.getArrivee()));
         }
 
-        // Reconstruction du chemin complet (Path)
         List<GeoCoordinate> coordinates = new ArrayList<>();
         if (dto.getPath() != null) {
             coordinates = dto.getPath().stream()
@@ -223,21 +242,30 @@ public class CourseService {
         return course;
     }
 
-    /**
-     * Helper de mapping pour les Points d'Intérêt (POI).
-     * Assure la conversion propre des données géographiques statiques.
-     * @param dto dto à convertir en entité
-     * @return entité poi construit
-     */
     private PointOfInterest mapPoiDtoToEntity(PointOfInterestResponseDto dto) {
-
         PointOfInterest poi = new PointOfInterest();
         poi.setId(dto.getId());
         poi.setName(dto.getNom());
         poi.setDescription(dto.getDescription());
         poi.setLatitude(dto.getLatitude());
         poi.setLongitude(dto.getLongitude());
+        return poi;
+    }
 
+    /**
+     * Méthode utilitaire pour créer un POI à partir d'une coordonnée GPS.
+     * Utilise l'objet GeoJSON interne pour récupérer X et Y.
+     */
+    private PointOfInterest createPoiFromGeo(GeoCoordinate geo, String defaultName) {
+        PointOfInterest poi = new PointOfInterest();
+
+        if (geo.getGeojson() != null) {
+            poi.setLatitude(geo.getGeojson().getX());
+            poi.setLongitude(geo.getGeojson().getY());
+        }
+
+        poi.setName(defaultName);
+        poi.setDescription("Point généré automatiquement lors du suivi.");
         return poi;
     }
 }

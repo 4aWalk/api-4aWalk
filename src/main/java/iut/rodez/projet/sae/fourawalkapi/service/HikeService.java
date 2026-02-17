@@ -90,17 +90,22 @@ public class HikeService {
 
         hike.setCreator(user);
 
+        // Ajout du créateur en tant que participant
         Participant pCreator = new Participant(
                 user.getPrenom(),
                 user.getNom(),
                 user.getAge(),
                 user.getNiveau(),
                 user.getMorphologie(),
-                true, user.getId(), 0, 0, 0.0
+                true,
+                user.getId(),
+                3000, 5, 0.0 // Valeur par défaut (méthodologie approuvée par le client)
         );
 
         hike.setParticipants(new HashSet<>());
+
         Participant savedCreator = participantRepository.save(pCreator);
+
         hike.getParticipants().add(savedCreator);
 
         resolvePois(hike);
