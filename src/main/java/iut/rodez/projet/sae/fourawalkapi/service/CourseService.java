@@ -68,7 +68,7 @@ public class CourseService {
             List<Course> coursesForHike = courseRepository.findByHikeId(hike.getId());
             userCourses.addAll(coursesForHike.stream()
                     .map(this::mapToDto)
-                    .collect(Collectors.toList()));
+                    .toList());
         }
         return userCourses;
     }
@@ -112,7 +112,7 @@ public class CourseService {
         }
 
         // On récupère le premier point pour définir le départ
-        GeoCoordinate startCoord = course.getTrajetsRealises().get(0);
+        GeoCoordinate startCoord = course.getTrajetsRealises().getFirst();
         course.setDepart(createPoiFromGeo(startCoord, "Départ"));
 
         course.setFinished(false);
@@ -147,7 +147,7 @@ public class CourseService {
             // Transformation des DTOs légers en objets métier GeoCoordinate
             List<GeoCoordinate> newCoordinates = newPointsDto.stream()
                     .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Ajout à la collection existante (append-only logic)
             if (course.getTrajetsRealises() == null) {
@@ -179,7 +179,7 @@ public class CourseService {
         List<GeoCoordinate> path = course.getTrajetsRealises();
         if (path != null && !path.isEmpty()) {
             // On récupère le dernier point connu
-            GeoCoordinate lastPoint = path.get(path.size() - 1);
+            GeoCoordinate lastPoint = path.getLast();
             course.setArrivee(createPoiFromGeo(lastPoint, "Arrivée"));
         }
 

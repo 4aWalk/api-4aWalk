@@ -34,7 +34,7 @@ public class FoodProductController {
     public List<FoodProductResponseDto> getAllFoods() {
         return foodService.getAllFoods().stream()
                 .map(FoodProductResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

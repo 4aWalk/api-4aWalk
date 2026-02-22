@@ -34,7 +34,7 @@ public class EquipmentItemController {
     public List<EquipmentResponseDto> getAllEquipment() {
         return equipmentService.getAllEquipment().stream()
                 .map(EquipmentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

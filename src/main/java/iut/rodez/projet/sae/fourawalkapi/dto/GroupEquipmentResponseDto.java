@@ -25,7 +25,7 @@ public class GroupEquipmentResponseDto {
         if (group.getItems() != null) {
             this.items = group.getItems().stream()
                     .map(EquipmentResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 

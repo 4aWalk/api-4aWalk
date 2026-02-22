@@ -13,9 +13,6 @@ import java.util.*;
  */
 @Service
 public class OptimizerService {
-
-    public OptimizerService() {}
-
     /**
      * Algorithme d'optimisation pour l'équipement.
      * Parcourt chaque catégorie d'équipement requise et sélectionne la combinaison
@@ -81,7 +78,7 @@ public class OptimizerService {
 
         // Cas de base : Échec, fin de la liste des candidats sans atteindre l'objectif
         if (index >= candidats.size()) {
-            return null;
+            return Collections.emptyList();
         }
 
         EquipmentItem item = candidats.get(index);
@@ -161,7 +158,7 @@ public class OptimizerService {
         }
 
         if (index >= candidats.size()) {
-            return null;
+            return Collections.emptyList();
         }
 
         FoodProduct item = candidats.get(index);

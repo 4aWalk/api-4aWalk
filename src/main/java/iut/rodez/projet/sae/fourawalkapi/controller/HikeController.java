@@ -57,7 +57,7 @@ public class HikeController {
 
         return hikes.stream()
                 .map(HikeResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

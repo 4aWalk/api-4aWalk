@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class UserService implements UserDetailsService {
 
     private static final String EMAIL_REGEX =
-            "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
+            "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*+@(?:[a-zA-Z0-9-]+\\.)++[a-zA-Z]{2,6}$";
     private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
     private static final String P_REGEX = "^(?=.*[A-Z])(?=.*[!@#$%^&*()]).{8,}$";

@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,11 +110,10 @@ public class HikeService {
         hike.getParticipants().add(savedCreator);
 
         resolvePois(hike);
-        //metierToolsService.validateHikeForOptimize(hike);
 
         hike.setOptionalPoints(new HashSet<>());
         hike.setFoodCatalogue(new ArrayList<>());
-        hike.setEquipmentGroups(new HashMap<>());
+        hike.setEquipmentGroups(new EnumMap<>(TypeEquipment.class));
 
         return hikeRepository.save(hike);
     }
@@ -139,7 +139,6 @@ public class HikeService {
         if (details.getArrivee() != null) hike.setArrivee(details.getArrivee());
 
         resolvePois(hike);
-        //metierToolsService.validateHikeForOptimize(hike);
 
         return hikeRepository.save(hike);
     }

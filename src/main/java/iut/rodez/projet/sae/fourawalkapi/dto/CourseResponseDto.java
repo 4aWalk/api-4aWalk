@@ -41,7 +41,7 @@ public class CourseResponseDto {
         if (course.getTrajetsRealises() != null) {
             this.path = course.getTrajetsRealises().stream()
                     .map(GeoCoordinateResponseDto::new) // Appelle le constructeur du DTO pour chaque point
-                    .collect(Collectors.toList());
+                    .toList();
         } else {
             this.path = new ArrayList<>();
         }

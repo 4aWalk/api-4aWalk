@@ -4,7 +4,6 @@ import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.service.CourseService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

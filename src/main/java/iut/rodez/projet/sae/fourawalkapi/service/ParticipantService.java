@@ -17,7 +17,8 @@ import java.util.List;
 @Service
 public class ParticipantService {
 
-    private final String MSG_ERROR_NOT_FOUND_HIKE = "Randonnée introuvable";
+    private static final String MSG_ERROR_NOT_FOUND_HIKE = "RandonneeIntrouvable";
+    private static final String REFUSED_ACCES = "Acces_refused";
 
     private final HikeRepository hikeRepository;
     private final ParticipantRepository participantRepository;
@@ -56,7 +57,7 @@ public class ParticipantService {
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
 
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
+        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException(REFUSED_ACCES);
         if (hike.getParticipants().size() >= 3) throw new RuntimeException("Hike complète (Max 3)");
 
         p.setCreator(false);
@@ -86,7 +87,7 @@ public class ParticipantService {
 
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
+        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException(REFUSED_ACCES);
 
         Participant p = participantRepository.findById(participantId)
                 .orElseThrow(() -> new RuntimeException("Participant introuvable"));
@@ -133,7 +134,7 @@ public class ParticipantService {
     public void deleteParticipant(Long hikeId, Long participantId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
+        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException(REFUSED_ACCES);
 
         Participant p = participantRepository.findById(participantId)
                 .orElseThrow(() -> new RuntimeException("Participant introuvable"));
@@ -149,8 +150,45 @@ public class ParticipantService {
      * Valide les règles métiers physiologiques et logistiques du participant.
      *
      * @param p Le participant à valider.
+     * @throws IllegalArgumentException si une des règles n'est pas respectée.
      */
     private void validateParticipantRules(Participant p) {
-        // Implémentation des règles de validation (commentée pour l'instant)
+
+        // Vérification de la présence des informations obligatoires
+        if (p.getNom() == null || p.getNom().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le nom du participant est obligatoire");
+        }
+
+        if (p.getPrenom() == null || p.getPrenom().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le prénom du participant est obligatoire");
+        }
+
+        if (p.getNiveau() == null) {
+            throw new IllegalArgumentException("Le niveau est obligatoire");
+        }
+
+        if (p.getMorphologie() == null) {
+            throw new IllegalArgumentException("La morphologie est obligatoire");
+        }
+
+        // Validation des limites d'âge
+        if (p.getAge() < 10 || p.getAge() > 100) {
+            throw new IllegalArgumentException("L'âge doit être compris entre 10 et 100 ans");
+        }
+
+        // Validation des besoins caloriques
+        if (p.getBesoinKcal() < 1700 || p.getBesoinKcal() > 10000) {
+            throw new IllegalArgumentException("Le besoin calorique doit être compris entre 1700 et 10000 kcal");
+        }
+
+        // Validation des besoins en eau
+        if (p.getBesoinEauLitre() < 1 || p.getBesoinEauLitre() > 8) {
+            throw new IllegalArgumentException("Le besoin en eau doit être compris entre 1 et 8 Litres");
+        }
+
+        // Validation de la capacité d'emport
+        if (p.getCapaciteEmportMaxKg() < 0 || p.getCapaciteEmportMaxKg() > 30.0) {
+            throw new IllegalArgumentException("La capacité d'emport doit être positive et ne peut pas dépasser 30 kg");
+        }
     }
 }

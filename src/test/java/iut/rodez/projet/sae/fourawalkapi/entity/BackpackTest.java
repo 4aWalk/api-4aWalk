@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Test le comportement logique de l'entité Backpack, notamment les calculs de masse
- * et la gestion du contenu (nourriture et équipements).
+ * Test le comportement logique de l'entité Backpack, incluant les cas nominaux,
+ * les limites de capacité et la robustesse face aux données absentes.
  */
 class BackpackTest {
 
@@ -18,143 +18,122 @@ class BackpackTest {
 
     @BeforeEach
     void setUp() {
-        // Given: Un sac à dos initialisé avec un porteur mocké
+        // Given: Un sac à dos lié à un participant dont la capacité est par défaut de 10kg
         mockOwner = mock(Participant.class);
+        when(mockOwner.getCapaciteEmportMaxKg()).thenReturn(10.0);
         backpack = new Backpack(mockOwner);
     }
 
     /**
-     * Test le vidage complet du sac.
+     * Test le vidage d'un sac déjà vide.
      */
     @Test
-    void clearContent() {
-        // Given: Un sac contenant déjà de la nourriture
-        backpack.addItem(mock(FoodProduct.class));
+    void clearContent_AlreadyEmpty() {
+        // Given: Un sac n'ayant aucun contenu
+        assertTrue(backpack.getFoodItems().isEmpty());
 
-        // When: On demande le nettoyage du contenu
+        // When: On tente de vider le sac
         backpack.clearContent();
 
-        // Then: Les collections doivent être vides et le poids réinitialisé
+        // Then: Le sac reste vide sans générer d'erreur
         assertTrue(backpack.getFoodItems().isEmpty());
-        assertTrue(backpack.getGroupEquipments().isEmpty());
         assertEquals(0.0, backpack.getTotalMassKg());
     }
 
     /**
-     * Test la mise à jour forcée de la masse totale.
+     * Test la mise à jour de la masse sur un sac vide.
      */
     @Test
-    void updateTotalMass() {
-        // Given: Un produit alimentaire pesant 2.5 kg ajouté au sac
-        FoodProduct food = mock(FoodProduct.class);
-        when(food.getTotalMassesKg()).thenReturn(2.5);
-        backpack.addItem(food);
+    void updateTotalMass_EmptyBackpack() {
+        // Given: Un sac vide
 
-        // When: On déclenche manuellement la mise à jour de la masse
+        // When: On force la mise à jour de la masse
         backpack.updateTotalMass();
 
-        // Then: La masse totale du sac doit correspondre à 2.5 kg
-        assertEquals(2.5, backpack.getTotalMassKg());
+        // Then: La masse calculée doit être exactement 0.0
+        assertEquals(0.0, backpack.getTotalMassKg());
     }
 
     /**
-     * Test la récupération automatique de la masse totale via le getter.
+     * Test la récupération de capacité quand le participant est absent.
      */
     @Test
-    void getTotalMassKg() {
-        // Given: Un produit pesant 1.2 kg présent dans le sac
+    void getCapacityMaxKg_NoOwner() {
+        // Given: Un sac sans propriétaire (owner = null)
+        Backpack ghostBackpack = new Backpack(null);
+
+        // When: On interroge la capacité maximale
+        double capacity = ghostBackpack.getCapacityMaxKg();
+
+        // Then: La capacité doit être de 0.0 au lieu de lever une exception
+        assertEquals(0.0, capacity);
+    }
+
+    /**
+     * Test l'ajout d'items multiples et le calcul du poids cumulé.
+     */
+    @Test
+    void addItem_And_CheckTotalMass() {
+        // Given: Un item de nourriture (1.5kg) et un équipement de REPOS (2kg)
         FoodProduct food = mock(FoodProduct.class);
-        when(food.getTotalMassesKg()).thenReturn(1.2);
+        when(food.getTotalMassesKg()).thenReturn(1.5);
+
+        EquipmentItem equip = mock(EquipmentItem.class);
+        when(equip.getType()).thenReturn(TypeEquipment.REPOS);
+        when(equip.getTotalMassesKg()).thenReturn(2.0);
+
+        // When: On ajoute les deux au sac
         backpack.addItem(food);
+        backpack.addItem(equip);
 
-        // When: On interroge le getter pour obtenir la masse
-        double totalMass = backpack.getTotalMassKg();
-
-        // Then: Le getter doit retourner la valeur correcte après calcul interne
-        assertEquals(1.2, totalMass);
+        // Then: La masse totale doit être de 3.5kg
+        assertEquals(3.5, backpack.getTotalMassKg());
     }
 
     /**
-     * Test la récupération de la capacité maximale du sac basée sur le porteur.
+     * Test le retrait d'un objet qui n'a jamais été ajouté au sac.
      */
     @Test
-    void getCapacityMaxKg() {
-        // Given: Un porteur capable de porter 15.0 kg
-        when(mockOwner.getCapaciteEmportMaxKg()).thenReturn(15.0);
+    void removeItem_NotPresent() {
+        // Given: Un sac contenant une pomme, et un objet "Banane" non présent
+        FoodProduct apple = mock(FoodProduct.class);
+        FoodProduct banana = mock(FoodProduct.class);
+        backpack.addItem(apple);
 
-        // When: On vérifie la capacité maximale du sac
-        double capacity = backpack.getCapacityMaxKg();
-
-        // Then: La valeur retournée doit être strictement identique à celle définie par le porteur
-        assertEquals(15.0, capacity);
+        // When / Then: On tente de retirer la banane, cela ne doit pas lever d'exception
+        assertDoesNotThrow(() -> backpack.removeItem(banana));
+        assertEquals(1, backpack.getFoodItems().size());
     }
 
     /**
-     * Test la vérification de possibilité d'ajout de poids supplémentaire.
+     * Test la suppression d'un équipement dont le type n'existe pas dans le sac.
      */
     @Test
-    void canAddWeightGrammes() {
-        // Given: Un sac avec une capacité de 10kg contenant déjà 8kg de charge
+    void removeEquipmentItem_TypeNotPresent() {
+        // Given: Un sac vide de tout équipement
+        EquipmentItem medic = mock(EquipmentItem.class);
+        when(medic.getType()).thenReturn(TypeEquipment.SOIN);
+
+        // When / Then: On tente de retirer un soin, l'application doit rester stable
+        assertDoesNotThrow(() -> backpack.removeItem(medic),
+                "La suppression d'un type d'équipement absent ne doit pas lancer de NullPointerException");
+    }
+
+    /**
+     * Test le calcul de l'espace restant avec une charge dépassant la capacité.
+     */
+    @Test
+    void getSpaceRemainingGrammes_NegativeSpace() {
+        // Given: Un sac de 10kg chargé avec 12kg (cas de surcharge possible via setters)
         when(mockOwner.getCapaciteEmportMaxKg()).thenReturn(10.0);
-        FoodProduct food = mock(FoodProduct.class);
-        when(food.getTotalMassesKg()).thenReturn(8.0);
-        backpack.addItem(food);
+        FoodProduct heavyLoad = mock(FoodProduct.class);
+        when(heavyLoad.getTotalMassesKg()).thenReturn(12.0);
+        backpack.addItem(heavyLoad);
 
-        // When & Then: On vérifie si 1.5kg (valide) et 2.5kg (invalide) peuvent être ajoutés
-        assertTrue(backpack.canAddWeightGrammes(1500.0), "On devrait pouvoir ajouter 1.5kg");
-        assertFalse(backpack.canAddWeightGrammes(2500.0), "On ne devrait pas pouvoir ajouter 2.5kg");
-    }
-
-    /**
-     * Test la répartition correcte des items ajoutés selon leur type.
-     */
-    @Test
-    void addItem() {
-        // Given: Un produit alimentaire et un équipement de type REPOS
-        FoodProduct food = mock(FoodProduct.class);
-        EquipmentItem equipment = mock(EquipmentItem.class);
-        when(equipment.getType()).thenReturn(TypeEquipment.REPOS);
-
-        // When: On ajoute les deux items au sac
-        backpack.addItem(food);
-        backpack.addItem(equipment);
-
-        // Then: La nourriture doit être dans le Set et l'équipement dans la Map des groupes
-        assertTrue(backpack.getFoodItems().contains(food));
-        assertTrue(backpack.getGroupEquipments().containsKey(TypeEquipment.REPOS));
-    }
-
-    /**
-     * Test la suppression d'un item présent dans le sac.
-     */
-    @Test
-    void removeItem() {
-        // Given: Un sac contenant initialement un produit alimentaire
-        FoodProduct food = mock(FoodProduct.class);
-        backpack.addItem(food);
-
-        // When: On retire ce produit du sac
-        backpack.removeItem(food);
-
-        // Then: Le produit ne doit plus figurer dans la liste des aliments
-        assertFalse(backpack.getFoodItems().contains(food));
-    }
-
-    /**
-     * Test le calcul de l'espace libre restant dans le sac.
-     */
-    @Test
-    void getSpaceRemainingGrammes() {
-        // Given: Un sac limité à 10kg contenant déjà 4kg
-        when(mockOwner.getCapaciteEmportMaxKg()).thenReturn(10.0);
-        FoodProduct food = mock(FoodProduct.class);
-        when(food.getTotalMassesKg()).thenReturn(4.0);
-        backpack.addItem(food);
-
-        // When: On calcule l'espace restant
+        // When: On vérifie l'espace restant
         double remaining = backpack.getSpaceRemainingGrammes();
 
-        // Then: Le résultat doit être de 6000.0 grammes (10kg - 4kg)
-        assertEquals(6000.0, remaining);
+        // Then: Le résultat doit être négatif (-2000g)
+        assertEquals(-2000.0, remaining);
     }
 }

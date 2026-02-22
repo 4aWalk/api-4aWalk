@@ -280,17 +280,20 @@ public class MetierToolsService {
         int nbParticipants = hike.getParticipants().size();
 
         for (TypeEquipment type : TypeEquipment.values()) {
-            if (type == TypeEquipment.AUTRE) continue;
+            // Ignore les équipement autre pour la V2
+            boolean isNotAutre = type != TypeEquipment.AUTRE;
             // Pas besoin de tente/sac de couchage pour une randonnée à la journée
-            if (type == TypeEquipment.REPOS && hike.getDureeJours() < 2) continue;
+            boolean needsRepos = !(type == TypeEquipment.REPOS && hike.getDureeJours() < 2);
 
-            GroupEquipment group = hike.getEquipmentGroups().get(type);
+            if (isNotAutre && needsRepos) {
+                GroupEquipment group = hike.getEquipmentGroups().get(type);
 
-            // Somme des quantités disponibles dans le groupe d'équipement
-            int totalItems = (group != null) ? group.getItems().stream().mapToInt(EquipmentItem::getNbItem).sum() : 0;
+                // Somme des quantités disponibles dans le groupe d'équipement
+                int totalItems = (group != null) ? group.getItems().stream().mapToInt(EquipmentItem::getNbItem).sum() : 0;
 
-            if (totalItems < nbParticipants) {
-                throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
+                if (totalItems < nbParticipants) {
+                    throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
+                }
             }
         }
     }

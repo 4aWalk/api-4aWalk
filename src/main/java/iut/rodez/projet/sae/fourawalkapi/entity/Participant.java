@@ -47,7 +47,7 @@ public class Participant implements Person {
     private Morphology morphologie;
 
     /* Le participant est créateur de la randonné */
-    private boolean creator = false;
+    private boolean creator;
 
     /* Identifiant du createur du participant */
     @Column(name="creator_id")

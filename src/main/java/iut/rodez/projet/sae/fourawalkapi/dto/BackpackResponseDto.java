@@ -34,14 +34,14 @@ public class BackpackResponseDto {
         if (backpack.getGroupEquipments() != null) {
             this.equipements = backpack.getGroupEquipments().values().stream()
                     .map(GroupEquipmentResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         this.nourriture = new ArrayList<>();
         if (backpack.getFoodItems() != null) {
             this.nourriture = backpack.getFoodItems().stream()
                     .map(FoodProductResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 
