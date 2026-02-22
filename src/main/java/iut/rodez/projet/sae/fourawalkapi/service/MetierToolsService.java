@@ -145,8 +145,8 @@ public class MetierToolsService {
                 -5, 0, -5, -10 // Malus selon l'âge
         );
 
-        // Bonus spécifique pour les experts
-        if (referent.getNiveau() == Level.ENTRAINE) distanceTheorique += 5;
+        // Conversion km en m
+        distanceTheorique *= 1000;
 
         checkAbberation(distanceMoyenneJour, distanceTheorique,
                 "La distance quotidienne de la randonnée est aberrante");

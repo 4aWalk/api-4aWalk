@@ -86,7 +86,7 @@ public class HikeService {
         User user = userRepository.findById(creatorId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        checkLibelleUniqueness(creatorId, hike.getLibelle());
+        checkLibelleUniqueness(creatorId, hike.getLibelle(), -1L);
 
         hike.setCreator(user);
 
@@ -130,7 +130,7 @@ public class HikeService {
         Hike hike = getHikeById(hikeId, userId);
 
         if (details.getLibelle() != null && !details.getLibelle().equals(hike.getLibelle())) {
-            checkLibelleUniqueness(userId, details.getLibelle());
+            checkLibelleUniqueness(userId, details.getLibelle(), hikeId);
             hike.setLibelle(details.getLibelle());
         }
 
@@ -168,9 +168,13 @@ public class HikeService {
      * @param libelle Nom de la randonnée à tester.
      * @throws RuntimeException Si le libellé est déjà utilisé par ce même utilisateur.
      */
-    private void checkLibelleUniqueness(Long userId, String libelle) {
+    private void checkLibelleUniqueness(Long userId, String libelle, Long excludeHikeId) {
         if (libelle == null || libelle.trim().isEmpty()) return;
-        if (hikeRepository.existsByCreatorIdAndLibelle(userId, libelle)) {
+
+        // On cherche si un AUTRE enregistrement (IdNot) a le même nom
+        boolean exists = hikeRepository.existsByCreatorIdAndLibelleAndIdNot(userId, libelle, excludeHikeId);
+
+        if (exists) {
             throw new RuntimeException("Vous avez déjà une randonnée nommée : " + libelle);
         }
     }

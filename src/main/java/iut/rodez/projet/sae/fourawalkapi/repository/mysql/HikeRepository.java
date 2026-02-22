@@ -22,9 +22,11 @@ public interface HikeRepository extends JpaRepository<Hike, Long> {
     /**
      * Recherche si il exite déjà un nom de randonné pour un utilisateur
      * pour assuré l'unicité du libellé pour l'utilisateur
-     * @param creatorId identifiant de l'utilisateur
-     * @param libelle libellé à vérifier
+     *
+     * @param creatorId     identifiant de l'utilisateur
+     * @param libelle       libellé à vérifier
+     * @param excludeHikeId identifiant de la randonné dans le cas d'un update
      * @return true si le libellé est déjà utilisé, false sinon
      */
-    boolean existsByCreatorIdAndLibelle(Long creatorId, String libelle);
+    boolean existsByCreatorIdAndLibelleAndIdNot(Long creatorId, String libelle, Long excludeHikeId);
 }
