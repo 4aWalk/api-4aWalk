@@ -159,7 +159,7 @@ public class MetierToolsService {
     private void validateKcalParticipant(Participant p, double distance) {
         if (p.getBesoinKcal() <= 0) throw new RuntimeException("Besoin Kcal non défini pour " + p.getPrenom());
 
-        double base = 2400 + (distance * 50);
+        double base = 2400 + (distance * 0.001 * 50);
         double target = base + calculateProfileModifier(p,
                 200, -200,
                 -200, 200,
