@@ -109,7 +109,7 @@ public class HikeService {
         hike.getParticipants().add(savedCreator);
 
         resolvePois(hike);
-        metierToolsService.validateHikeForOptimize(hike);
+        //metierToolsService.validateHikeForOptimize(hike);
 
         hike.setOptionalPoints(new HashSet<>());
         hike.setFoodCatalogue(new ArrayList<>());
@@ -139,7 +139,7 @@ public class HikeService {
         if (details.getArrivee() != null) hike.setArrivee(details.getArrivee());
 
         resolvePois(hike);
-        metierToolsService.validateHikeForOptimize(hike);
+        //metierToolsService.validateHikeForOptimize(hike);
 
         return hikeRepository.save(hike);
     }
