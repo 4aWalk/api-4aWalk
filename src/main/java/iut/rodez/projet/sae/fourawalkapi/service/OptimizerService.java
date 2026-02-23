@@ -78,7 +78,7 @@ public class OptimizerService {
 
         // Cas de base : Échec, fin de la liste des candidats sans atteindre l'objectif
         if (index >= candidats.size()) {
-            return Collections.emptyList();
+            return null;
         }
 
         EquipmentItem item = candidats.get(index);
@@ -88,7 +88,7 @@ public class OptimizerService {
         List<EquipmentItem> solutionTake = sortBestEquipmentV2(candidats, currentSelection, nbParticipant, index + 1);
 
         // Backtrack : Retrait de l'item pour explorer l'autre branche
-        currentSelection.remove(currentSelection.size() - 1);
+        currentSelection.removeLast();
 
         // Exploration de la branche : Exclusion de l'item
         List<EquipmentItem> solutionSkip = sortBestEquipmentV2(candidats, currentSelection, nbParticipant, index + 1);
@@ -158,7 +158,7 @@ public class OptimizerService {
         }
 
         if (index >= candidats.size()) {
-            return Collections.emptyList();
+            return null;
         }
 
         FoodProduct item = candidats.get(index);
@@ -166,7 +166,7 @@ public class OptimizerService {
         // Branche inclusion
         currentSelection.add(item);
         List<FoodProduct> solutionTake = sortBestFoodRecursive(candidats, currentSelection, targetKcal, index + 1);
-        currentSelection.remove(currentSelection.size() - 1);
+        currentSelection.removeLast();
 
         // Branche exclusion
         List<FoodProduct> solutionSkip = sortBestFoodRecursive(candidats, currentSelection, targetKcal, index + 1);
