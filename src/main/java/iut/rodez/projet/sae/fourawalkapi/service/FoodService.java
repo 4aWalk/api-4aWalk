@@ -122,12 +122,12 @@ public class FoodService {
      * @throws RuntimeException Si le poids ou les calories sont hors des bornes autorisées.
      */
     private void validateFoodRules(FoodProduct f) {
-        // Règle 1 : Poids réaliste pour un item de randonnée (50g - 5kg)
+        // Poids réaliste pour un item de randonnée (50g - 5kg)
         if (f.getMasseGrammes() < 50 || f.getMasseGrammes() > 5000) {
             throw new RuntimeException("La masse de la nourriture doit être comprise entre 50g et 5kg");
         }
 
-        // Règle 2 : Apport calorique cohérent (50 kcal - 3000 kcal)
+        // Apport calorique cohérent (50 kcal - 3000 kcal)
         if (f.getApportNutritionnelKcal() < 50 || f.getApportNutritionnelKcal() > 3000) {
             throw new RuntimeException("L'apport calorique doit être compris entre 50 et 3000 kcal");
         }
