@@ -178,7 +178,7 @@ class LogisticsValidationServiceTest {
         food.setAppellationCourante(nom);
         food.setNom(nom);
         food.setApportNutritionnelKcal(kcalUnitaire);
-        food.setNbItem(nbItem); // Assure-toi que cette méthode existe bien dans Item/FoodProduct
+        food.setNbItem(nbItem);
         return food;
     }
 

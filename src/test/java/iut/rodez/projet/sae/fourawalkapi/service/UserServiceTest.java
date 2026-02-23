@@ -47,7 +47,6 @@ class UserServiceTest {
         user.setPrenom("John");
         user.setAdresse("1 rue de la Paix");
         user.setAge(25);
-        // Assure-toi que ces setters correspondent à tes enums réelles
         user.setNiveau(mock(Level.class));
         user.setMorphologie(mock(Morphology.class));
         return user;

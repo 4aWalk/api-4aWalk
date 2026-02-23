@@ -4,8 +4,7 @@ FROM eclipse-temurin:21-jre-jammy
 # Dossier de travail dans le container
 WORKDIR /app
 
-# On copie le JAR généré par Maven (dans le dossier target/) vers le container
-# Assure-toi d'avoir lancé .\mvnw clean package avant
+# Copie le JAR généré par Maven (dans le dossier target/) vers le container
 COPY target/*.jar app.jar
 
 # Port exposé par l'API

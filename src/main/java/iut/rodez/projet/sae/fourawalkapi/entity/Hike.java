@@ -98,7 +98,6 @@ public class Hike {
                 k -> {
                     GroupEquipment newGroup = new GroupEquipment();
                     newGroup.setType(k);
-                    // Important : Assure-toi que GroupEquipment utilise aussi une List<Item> !
                     return newGroup;
                 });
 

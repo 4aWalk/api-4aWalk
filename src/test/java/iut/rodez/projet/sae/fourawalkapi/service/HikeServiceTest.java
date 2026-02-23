@@ -251,4 +251,123 @@ class HikeServiceTest {
         // THEN
         assertEquals(10.0, totalDistance, 0.001);
     }
+
+    /**
+     * Test de la récupération des randonnées par rapport à un identifiant créateur
+     */
+    @Test
+    void getHikesByCreator_ShouldReturnList() {
+        // GIVEN
+        when(hikeRepository.findByCreatorId(1L)).thenReturn(List.of(testHike));
+
+        // WHEN
+        List<Hike> result = hikeService.getHikesByCreator(1L);
+
+        // THEN
+        assertEquals(1, result.size());
+        assertEquals(100L, result.getFirst().getId());
+    }
+
+    /**
+     * Test sur une randonnée avec un nombre de jours négatif
+     */
+    @Test
+    void validateHike_DurationNegative_ShouldThrowException() {
+        // GIVEN : Une randonnée avec un nombre de jours négatif
+        testHike.setDureeJours(-1);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        // WHEN & THEN : Doit planter
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> hikeService.createHike(testHike, 1L));
+        assertTrue(ex.getMessage().contains("compris entre 0 e 3"));
+    }
+
+    /**
+     * Test de la mise à jour d'une randonné
+     */
+    @Test
+    void updateHike_NominalCase_ShouldUpdateFieldsAndResolvePois() {
+        // GIVEN : Randonnée existante
+        when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
+        // On simule que le nouveau nom n'est pas pris
+        when(hikeRepository.existsByCreatorIdAndLibelleAndIdNot(1L, "Nouveau Titre", 100L)).thenReturn(false);
+        // On mock le repository pour qu'il renvoie l'objet sauvegardé
+        when(hikeRepository.save(any(Hike.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Préparation des nouveaux détails (avec des POIs qui ont des IDs pour déclencher le if)
+        Hike details = new Hike();
+        details.setLibelle("Nouveau Titre");
+        details.setDureeJours(3);
+
+        PointOfInterest newDepart = new PointOfInterest();
+        newDepart.setId(88L);
+        details.setDepart(newDepart);
+
+        PointOfInterest newArrivee = new PointOfInterest();
+        newArrivee.setId(99L);
+        details.setArrivee(newArrivee);
+
+        when(poiRepository.findById(88L)).thenReturn(Optional.of(newDepart));
+        when(poiRepository.findById(99L)).thenReturn(Optional.of(newArrivee));
+
+        // WHEN
+        Hike result = hikeService.updateHike(100L, details, 1L);
+
+        // THEN : Les champs ont bien été mis à jour
+        assertEquals("Nouveau Titre", result.getLibelle());
+        assertEquals(3, result.getDureeJours());
+        assertEquals(88L, result.getDepart().getId());
+        assertEquals(99L, result.getArrivee().getId());
+    }
+
+    /**
+     * Test d'un hike avec un libellé de poi null
+     */
+    @Test
+    void updateHike_EmptyLibelleAndNullPois_ShouldSkipChecks() {
+        // GIVEN
+        when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
+        when(hikeRepository.save(any(Hike.class))).thenAnswer(i -> i.getArgument(0));
+
+        Hike details = new Hike();
+        details.setLibelle("   "); // Espaces vides -> doit zapper le check d'unicité
+        details.setDureeJours(1);
+        details.setDepart(new PointOfInterest());
+        details.setArrivee(new PointOfInterest());
+
+        // WHEN
+        Hike result = hikeService.updateHike(100L, details, 1L);
+
+        // THEN
+        // 1. On vérifie que le libellé n'a PAS été changé (car "   " est considéré comme vide)
+        verify(hikeRepository, never()).existsByCreatorIdAndLibelleAndIdNot(anyLong(), anyString(), anyLong());
+
+        // 2. On vérifie qu'il n'a pas cherché en base les POIs car les IDs étaient null
+        verify(poiRepository, never()).findById(anyLong());
+    }
+
+    /**
+     * Test de suppression d'une randonnée
+     */
+    @Test
+    void deleteHike_ShouldClearCollectionsAndDestroy() {
+        // GIVEN
+        when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
+
+        // On ajoute quelques données factices pour s'assurer qu'elles sont bien vidées
+        testHike.setParticipants(new HashSet<>(List.of(new Participant())));
+        testHike.setFoodCatalogue(new ArrayList<>(List.of(new FoodProduct())));
+
+        // WHEN
+        hikeService.deleteHike(100L, 1L);
+
+        // THEN
+        assertTrue(testHike.getParticipants().isEmpty(), "Les participants doivent être vidés");
+        assertTrue(testHike.getFoodCatalogue().isEmpty(), "Le catalogue de nourriture doit être vidé");
+
+        // Vérifie que l'entité a bien été sauvegardée (avec listes vides) puis supprimée
+        verify(hikeRepository).save(testHike);
+        verify(hikeRepository).delete(testHike);
+    }
 }
