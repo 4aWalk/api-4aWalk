@@ -4,7 +4,6 @@ import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Data transfert object utilisé dans les communications d'objet parcours avec le client

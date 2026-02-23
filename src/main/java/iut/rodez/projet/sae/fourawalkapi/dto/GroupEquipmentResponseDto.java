@@ -2,7 +2,6 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Data transfert object utilisé dans les communications d'objet groupe équipement avec le client

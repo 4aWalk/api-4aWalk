@@ -3,7 +3,6 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Data transfert object utilisé dans les communications d'objet sac à dos avec le client
