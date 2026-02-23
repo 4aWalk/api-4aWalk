@@ -246,6 +246,11 @@ public class CourseService {
         return course;
     }
 
+    /**
+     * Mappage d'un poi dto en entité poi
+     * @param dto poi dto à convertir
+     * @return entité poi
+     */
     private PointOfInterest mapPoiDtoToEntity(PointOfInterestResponseDto dto) {
         PointOfInterest poi = new PointOfInterest();
         poi.setId(dto.getId());
