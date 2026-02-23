@@ -1,5 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.config;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Utilise le contexte Spring Boot complet pour éviter les erreurs de beans manquants.
  * Nécessite de lancer le docker en local pour faire fonctionner la sécurité
  */
+@Disabled("Ne permet pas d'être directement tester depuis le git workflow, doit être commenter pour tester localement")
 @SpringBootTest
 @AutoConfigureMockMvc
 class SecurityConfigTest {
