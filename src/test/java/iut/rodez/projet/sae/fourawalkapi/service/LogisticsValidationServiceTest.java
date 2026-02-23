@@ -32,7 +32,7 @@ class LogisticsValidationServiceTest {
         Participant p1 = new Participant();
         p1.setPrenom("Alice");
         p1.setBesoinKcal(2000);
-        p1.setBesoinEauLitre(2); // C'est bien un Integer dans ton entité
+        p1.setBesoinEauLitre(2);
 
         Participant p2 = new Participant();
         p2.setPrenom("Bob");
