@@ -86,7 +86,7 @@ public class HikeService {
     public Hike createHike(Hike hike, Long creatorId) {
         User user = userRepository.findById(creatorId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
-
+        validateHike(hike);
         checkLibelleUniqueness(creatorId, hike.getLibelle(), -1L);
 
         hike.setCreator(user);
@@ -119,6 +119,16 @@ public class HikeService {
     }
 
     /**
+     * Validateur des règles métiers d'une randonnée
+     * @param hike randonnée à contrôler
+     */
+    private void validateHike(Hike hike) {
+        if(hike.getDureeJours() < 0 || hike.getDureeJours() > 3){
+            throw new RuntimeException("Le nombre de jour doit être compris entre 0 e 3");
+        }
+    }
+
+    /**
      * Met à jour les informations d'une randonnée existante.
      * @param hikeId Identifiant de la randonnée à modifier.
      * @param details Objet contenant les nouvelles valeurs.
@@ -127,6 +137,7 @@ public class HikeService {
      */
     @Transactional
     public Hike updateHike(Long hikeId, Hike details, Long userId) {
+        validateHike(details);
         Hike hike = getHikeById(hikeId, userId);
 
         if (details.getLibelle() != null && !details.getLibelle().equals(hike.getLibelle())) {
