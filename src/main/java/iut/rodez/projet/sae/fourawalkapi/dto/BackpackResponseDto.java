@@ -3,7 +3,6 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Data transfert object utilisé dans les communications d'objet sac à dos avec le client
@@ -34,14 +33,14 @@ public class BackpackResponseDto {
         if (backpack.getGroupEquipments() != null) {
             this.equipements = backpack.getGroupEquipments().values().stream()
                     .map(GroupEquipmentResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         this.nourriture = new ArrayList<>();
         if (backpack.getFoodItems() != null) {
             this.nourriture = backpack.getFoodItems().stream()
                     .map(FoodProductResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 

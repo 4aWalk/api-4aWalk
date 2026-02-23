@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Controlleur gérant tous les endpoints d'équipements
@@ -34,7 +33,7 @@ public class EquipmentItemController {
     public List<EquipmentResponseDto> getAllEquipment() {
         return equipmentService.getAllEquipment().stream()
                 .map(EquipmentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

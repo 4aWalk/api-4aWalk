@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Service métier responsable de la gestion des parcours (sessions de marche).
@@ -68,7 +67,7 @@ public class CourseService {
             List<Course> coursesForHike = courseRepository.findByHikeId(hike.getId());
             userCourses.addAll(coursesForHike.stream()
                     .map(this::mapToDto)
-                    .collect(Collectors.toList()));
+                    .toList());
         }
         return userCourses;
     }
@@ -98,21 +97,28 @@ public class CourseService {
                     " qui ne vous appartient pas.");
         }
 
-        Course course = mapToEntity(dto);
+        Course course = new Course();
         course.setHikeId(hike.getId());
 
-        if (course.getTrajetsRealises() == null) {
-            course.setTrajetsRealises(new ArrayList<>());
+        if (dto.getDateRealisation() != null) {
+            course.setDateRealisation(dto.getDateRealisation());
         }
 
-        // Gestion du point de départ
+        // Extraction de la trace GPS initiale
+        List<GeoCoordinate> coordinates = new ArrayList<>();
+        if (dto.getPath() != null && !dto.getPath().isEmpty()) {
+            coordinates = dto.getPath().stream()
+                    .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
+                    .toList();
+        }
+        course.setTrajetsRealises(coordinates);
+
         if (course.getTrajetsRealises().isEmpty()) {
             throw new IllegalArgumentException("Impossible de créer un parcours " +
                     "sans au moins un point de géolocalisation initial.");
         }
 
-        // On récupère le premier point pour définir le départ
-        GeoCoordinate startCoord = course.getTrajetsRealises().get(0);
+        GeoCoordinate startCoord = course.getTrajetsRealises().getFirst();
         course.setDepart(createPoiFromGeo(startCoord, "Départ"));
 
         course.setFinished(false);
@@ -147,7 +153,7 @@ public class CourseService {
             // Transformation des DTOs légers en objets métier GeoCoordinate
             List<GeoCoordinate> newCoordinates = newPointsDto.stream()
                     .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Ajout à la collection existante (append-only logic)
             if (course.getTrajetsRealises() == null) {
@@ -179,7 +185,7 @@ public class CourseService {
         List<GeoCoordinate> path = course.getTrajetsRealises();
         if (path != null && !path.isEmpty()) {
             // On récupère le dernier point connu
-            GeoCoordinate lastPoint = path.get(path.size() - 1);
+            GeoCoordinate lastPoint = path.getLast();
             course.setArrivee(createPoiFromGeo(lastPoint, "Arrivée"));
         }
 
@@ -210,50 +216,8 @@ public class CourseService {
     }
 
     // --- MAPPERS (Conversion de Données) ---
-
     private CourseResponseDto mapToDto(Course entity) {
         return new CourseResponseDto(entity);
-    }
-
-    private Course mapToEntity(CourseResponseDto dto) {
-        Course course = new Course();
-
-        course.setId(dto.getId());
-        course.setHikeId(dto.getHikeId());
-
-        if (dto.getDateRealisation() != null) {
-            course.setDateRealisation(dto.getDateRealisation());
-        }
-
-        course.setFinished(dto.getIsFinished());
-        course.setPaused(dto.getIsPaused());
-
-        if (dto.getDepart() != null) {
-            course.setDepart(mapPoiDtoToEntity(dto.getDepart()));
-        }
-        if (dto.getArrivee() != null) {
-            course.setArrivee(mapPoiDtoToEntity(dto.getArrivee()));
-        }
-
-        List<GeoCoordinate> coordinates = new ArrayList<>();
-        if (dto.getPath() != null) {
-            coordinates = dto.getPath().stream()
-                    .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
-                    .collect(Collectors.toList());
-        }
-        course.setTrajetsRealises(coordinates);
-
-        return course;
-    }
-
-    private PointOfInterest mapPoiDtoToEntity(PointOfInterestResponseDto dto) {
-        PointOfInterest poi = new PointOfInterest();
-        poi.setId(dto.getId());
-        poi.setName(dto.getNom());
-        poi.setDescription(dto.getDescription());
-        poi.setLatitude(dto.getLatitude());
-        poi.setLongitude(dto.getLongitude());
-        return poi;
     }
 
     /**

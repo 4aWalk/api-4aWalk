@@ -4,7 +4,6 @@ import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Data transfert object utilisé dans les communications d'objet parcours avec le client
@@ -41,7 +40,7 @@ public class CourseResponseDto {
         if (course.getTrajetsRealises() != null) {
             this.path = course.getTrajetsRealises().stream()
                     .map(GeoCoordinateResponseDto::new) // Appelle le constructeur du DTO pour chaque point
-                    .collect(Collectors.toList());
+                    .toList();
         } else {
             this.path = new ArrayList<>();
         }

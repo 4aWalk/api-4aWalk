@@ -1,0 +1,100 @@
+package iut.rodez.projet.sae.fourawalkapi.service;
+
+import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
+import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
+import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
+import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Service
+public class LogisticsValidationService {
+
+    /**
+     * Valide le stock de nourriture :
+     * 1. Pas de doublons de types (Variété).
+     * 2. Pas d'item individuel excessivement calorique (Distribution).
+     * 3. Le stock total couvre les besoins du groupe.
+     */
+    public void validateHikeFood(Hike hike, int besoinCalorieTotal) {
+        // Seuil arbitraire : un aliment ne doit pas représenter plus de 25% des besoins totaux
+        double maxCaloriePerItem = hike.getCaloriesForAllParticipants() / 4.0;
+        Set<String> processedFoods = new HashSet<>();
+
+        for (FoodProduct food : hike.getFoodCatalogue()) {
+            // Vérification de l'unicité via l'appellation courante
+            if (!processedFoods.add(food.getAppellationCourante())) {
+                throw new RuntimeException("Doublon de type de nourriture détecté : " + food.getAppellationCourante());
+            }
+            if (food.getApportNutritionnelKcal() > maxCaloriePerItem) {
+                throw new RuntimeException("Nourriture trop calorique : " + food.getNom());
+            }
+        }
+
+        // Vérification de la suffisance globale
+        if (hike.getCalorieRandonne() < besoinCalorieTotal) {
+            throw new RuntimeException("Nourriture insuffisante pour la randonnée (" +
+                    hike.getCalorieRandonne() + " vs " + besoinCalorieTotal + " requis).");
+        }
+    }
+
+    /**
+     * Valide la couverture en équipement.
+     * S'assure qu'il y a au moins 1 item par participant pour chaque catégorie obligatoire.
+     * Ignore les catégories optionnelles (AUTRE) ou conditionnelles (REPOS si < 2 jours).
+     */
+    public void validateHikeEquipment(Hike hike) {
+        if (hike.getEquipmentGroups() == null) return;
+
+        int nbParticipants = hike.getParticipants().size();
+
+        for (TypeEquipment type : TypeEquipment.values()) {
+            // Ignore les équipement autre pour la V2
+            boolean isNotAutre = type != TypeEquipment.AUTRE;
+            // Pas besoin de tente/sac de couchage pour une randonnée à la journée
+            boolean needsRepos = !(type == TypeEquipment.REPOS && hike.getDureeJours() < 2);
+
+            if (isNotAutre && needsRepos) {
+                GroupEquipment group = hike.getEquipmentGroups().get(type);
+
+                // Somme des quantités disponibles dans le groupe d'équipement
+                int totalItems = (group != null) ? group.getItems().stream().mapToInt(EquipmentItem::getNbItem).sum() : 0;
+
+                if (totalItems < nbParticipants) {
+                    throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
+                }
+            }
+        }
+    }
+
+    /**
+     * Vérifie si le groupe dispose d'assez de contenants (gourdes, camelbaks)
+     * pour transporter la quantité d'eau requise calculée précédemment.
+     * Utilise le delta (Masse Pleine - Masse Vide) pour déduire la capacité en volume.
+     */
+    public void validateCapaciteEmportEauLitre(Hike hike) {
+        double besoinTotal = hike.getParticipants().stream()
+                .mapToDouble(Participant::getBesoinEauLitre)
+                .sum();
+
+        GroupEquipment groupeEau = hike.getEquipmentGroups().get(TypeEquipment.EAU);
+        double capaciteEmport = 0.0;
+
+        if (groupeEau != null) {
+            // Calcul : Volume = (Poids total - Poids à vide) / 1000 [Conversion g -> L d'eau]
+            capaciteEmport = groupeEau.getItems().stream()
+                    .mapToDouble(item -> ((item.getMasseGrammes() - item.getMasseAVide()) / 1000.0) *
+                            item.getNbItem())
+                    .sum();
+        }
+
+        if (capaciteEmport < besoinTotal) {
+            throw new RuntimeException("Pas assez de gourdes pour couvrir les besoins en eau (Stock: " +
+                    capaciteEmport + "L, Besoin: " + besoinTotal + "L).");
+        }
+    }
+}

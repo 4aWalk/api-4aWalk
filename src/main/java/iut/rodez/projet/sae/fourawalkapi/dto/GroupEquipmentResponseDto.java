@@ -2,7 +2,6 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Data transfert object utilisé dans les communications d'objet groupe équipement avec le client
@@ -25,7 +24,7 @@ public class GroupEquipmentResponseDto {
         if (group.getItems() != null) {
             this.items = group.getItems().stream()
                     .map(EquipmentResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 

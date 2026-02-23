@@ -43,6 +43,10 @@ public class GroupEquipment {
         this.items.add(item);
     }
 
+    public void removeItem(EquipmentItem item) {
+        this.items.remove(item);
+    }
+
     // --- Getters & Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

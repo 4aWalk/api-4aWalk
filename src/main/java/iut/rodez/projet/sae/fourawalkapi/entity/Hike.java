@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -97,7 +98,6 @@ public class Hike {
                 k -> {
                     GroupEquipment newGroup = new GroupEquipment();
                     newGroup.setType(k);
-                    // Important : Assure-toi que GroupEquipment utilise aussi une List<Item> !
                     return newGroup;
                 });
 
@@ -105,9 +105,7 @@ public class Hike {
 
         // Tri du groupe spécifique
         if (group.getItems() != null) {
-            group.getItems().sort(Comparator.comparingDouble(i -> {
-                return i.getMasseGrammes();
-            }));
+            group.getItems().sort(Comparator.comparingDouble(Item::getMasseGrammes));
         }
     }
 
@@ -126,8 +124,8 @@ public class Hike {
             double mass1 = f1.getTotalMasses() > 0 ? f1.getTotalMasses() : 1.0;
             double mass2 = f2.getTotalMasses() > 0 ? f2.getTotalMasses() : 1.0;
 
-            double density1 = (double) f1.getTotalKcals() / mass1;
-            double density2 = (double) f2.getTotalKcals() / mass2;
+            double density1 = f1.getTotalKcals() / mass1;
+            double density2 = f2.getTotalKcals() / mass2;
 
             // Compare f2 à f1 pour avoir l'ordre décroissant (plus grand en premier)
             return Double.compare(density2, density1);

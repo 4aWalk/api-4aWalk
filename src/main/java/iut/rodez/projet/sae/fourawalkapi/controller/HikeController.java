@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static iut.rodez.projet.sae.fourawalkapi.security.SecurityUtils.getUserId;
 
@@ -57,7 +56,7 @@ public class HikeController {
 
         return hikes.stream()
                 .map(HikeResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

@@ -11,9 +11,10 @@ import org.springframework.web.server.ResponseStatusException;
  */
 public class SecurityUtils {
 
+    private SecurityUtils(){}
     /**
      * Extraction sécurisée de l'identifiant (ID) de l'utilisateur courant depuis le contexte de sécurité.
-     * Cette méthode fait le lien entre l'objet générique Authentication de Spring et ton besoin métier (ID Long).
+     * Cette méthode fait le lien entre l'objet générique Authentication de Spring et le besoin métier (ID Long).
      *
      * @param auth L'objet Authentication injecté automatiquement par Spring Security dans les méthodes du contrôleur.
      * @return L'ID (Long) de l'utilisateur authentifié.

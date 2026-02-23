@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,7 @@ public class HikeService {
 
     private final HikeRepository hikeRepository;
     private final BackpackDistributorService backpackDistributor;
-    private final MetierToolsService metierToolsService;
+    private final HikeValidationOrchestrator hikeValidatorService;
     private final OptimizerService optimizerService;
     private final UserRepository userRepository;
     private final PointOfInterestRepository poiRepository;
@@ -27,7 +28,7 @@ public class HikeService {
      * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
      * @param hr Repository pour l'accès aux données des randonnées.
      * @param bds Service de distribution des items dans les sacs à dos.
-     * @param mts Service d'outils de validation métier.
+     * @param hvo Service d'outils de validation métier.
      * @param os Service de sélection optimisée du matériel et de la nourriture.
      * @param ur Repository pour l'accès aux données utilisateurs.
      * @param poiRepo Repository pour la gestion des points d'intérêt.
@@ -35,13 +36,13 @@ public class HikeService {
      */
     public HikeService(HikeRepository hr,
                        BackpackDistributorService bds,
-                       MetierToolsService mts,
+                       HikeValidationOrchestrator hvo,
                        OptimizerService os, UserRepository ur,
                        PointOfInterestRepository poiRepo,
                        ParticipantRepository pr) {
         this.hikeRepository = hr;
         this.backpackDistributor = bds;
-        this.metierToolsService = mts;
+        this.hikeValidatorService = hvo;
         this.optimizerService = os;
         this.userRepository = ur;
         this.poiRepository = poiRepo;
@@ -85,7 +86,7 @@ public class HikeService {
     public Hike createHike(Hike hike, Long creatorId) {
         User user = userRepository.findById(creatorId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
-
+        validateHike(hike);
         checkLibelleUniqueness(creatorId, hike.getLibelle(), -1L);
 
         hike.setCreator(user);
@@ -109,13 +110,22 @@ public class HikeService {
         hike.getParticipants().add(savedCreator);
 
         resolvePois(hike);
-        //metierToolsService.validateHikeForOptimize(hike);
 
         hike.setOptionalPoints(new HashSet<>());
         hike.setFoodCatalogue(new ArrayList<>());
-        hike.setEquipmentGroups(new HashMap<>());
+        hike.setEquipmentGroups(new EnumMap<>(TypeEquipment.class));
 
         return hikeRepository.save(hike);
+    }
+
+    /**
+     * Validateur des règles métiers d'une randonnée
+     * @param hike randonnée à contrôler
+     */
+    private void validateHike(Hike hike) {
+        if(hike.getDureeJours() < 0 || hike.getDureeJours() > 3){
+            throw new RuntimeException("Le nombre de jour doit être compris entre 0 e 3");
+        }
     }
 
     /**
@@ -127,6 +137,7 @@ public class HikeService {
      */
     @Transactional
     public Hike updateHike(Long hikeId, Hike details, Long userId) {
+        validateHike(details);
         Hike hike = getHikeById(hikeId, userId);
 
         if (details.getLibelle() != null && !details.getLibelle().equals(hike.getLibelle())) {
@@ -134,12 +145,11 @@ public class HikeService {
             hike.setLibelle(details.getLibelle());
         }
 
-        if (details.getDureeJours() > 0) hike.setDureeJours(details.getDureeJours());
+        hike.setDureeJours(details.getDureeJours());
         if (details.getDepart() != null) hike.setDepart(details.getDepart());
         if (details.getArrivee() != null) hike.setArrivee(details.getArrivee());
 
         resolvePois(hike);
-        //metierToolsService.validateHikeForOptimize(hike);
 
         return hikeRepository.save(hike);
     }
@@ -204,7 +214,7 @@ public class HikeService {
     public void optimizeBackpack(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
-        metierToolsService.validateHikeForOptimize(hike);
+        hikeValidatorService.validateHikeForOptimize(hike);
 
         List<EquipmentItem> optimizedEquipment = optimizerService.getOptimizeAllEquipmentV2(hike);
         List<FoodProduct> optimizedFood = optimizerService.getOptimizeAllFoodV2(hike);

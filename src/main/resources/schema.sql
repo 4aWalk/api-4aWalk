@@ -48,7 +48,7 @@ CREATE TABLE points_of_interest (
                                     latitude DOUBLE NOT NULL,
                                     longitude DOUBLE NOT NULL,
                                     hike_id BIGINT,
-                                    sequence INT -- J'ai ajouté sequence car il manquait par rapport à ton code Java précédent
+                                    sequence INT
 );
 
 CREATE TABLE hikes (

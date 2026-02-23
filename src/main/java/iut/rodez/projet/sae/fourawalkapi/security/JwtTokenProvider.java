@@ -5,6 +5,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,8 @@ import java.util.Date;
  */
 @Component
 public class JwtTokenProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
     /* Clé secrète utilisée pour signer les tokens (définie dans application.properties) */
     @Value("${app.jwt-secret}")
@@ -111,15 +115,15 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (MalformedJwtException e) {
-            System.err.println("Token JWT invalide : " + e.getMessage());
+            logger.error("Token JWT invalide : " + e.getMessage());
         } catch (ExpiredJwtException e) {
-            System.err.println("Token JWT expiré : " + e.getMessage());
+            logger.error("Token JWT expiré : " + e.getMessage());
         } catch (UnsupportedJwtException e) {
-            System.err.println("Token JWT non supporté : " + e.getMessage());
+            logger.error("Token JWT non supporté : " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.err.println("La chaîne claims JWT est vide : " + e.getMessage());
+            logger.error("La chaîne claims JWT est vide : " + e.getMessage());
         } catch (io.jsonwebtoken.security.SignatureException e) {
-            System.err.println("Signature JWT invalide : " + e.getMessage());
+            logger.error("Signature JWT invalide : " + e.getMessage());
         }
         return false;
     }

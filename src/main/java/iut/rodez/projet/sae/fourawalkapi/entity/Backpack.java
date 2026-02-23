@@ -4,10 +4,7 @@ import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Sac à dos rattacher à un participant. Contient l'ensemble de la nourriture et des équipements
@@ -46,7 +43,7 @@ public class Backpack {
             joinColumns = @JoinColumn(name = "backpack_id"),
             inverseJoinColumns = @JoinColumn(name = "group_equipment_id"))
     @MapKey(name = "type")
-    private Map<TypeEquipment, GroupEquipment> groupEquipments = new HashMap<>();
+    private Map<TypeEquipment, GroupEquipment> groupEquipments = new EnumMap<>(TypeEquipment.class);
 
     // --- Constructeurs ---
 
@@ -161,7 +158,12 @@ public class Backpack {
             this.foodItems.remove(item);
         } else if (item instanceof EquipmentItem equip) {
             GroupEquipment groupEquipment = this.groupEquipments.get(equip.getType());
-            groupEquipment.getItems().remove(equip);
+            if (groupEquipment != null) {
+                groupEquipment.getItems().remove(equip);
+                if (groupEquipment.getItems().isEmpty()) {
+                    this.groupEquipments.remove(equip.getType());
+                }
+            }
         }
     }
 
