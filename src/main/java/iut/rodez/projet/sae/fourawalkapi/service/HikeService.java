@@ -145,7 +145,7 @@ public class HikeService {
             hike.setLibelle(details.getLibelle());
         }
 
-        if (details.getDureeJours() > 0) hike.setDureeJours(details.getDureeJours());
+        hike.setDureeJours(details.getDureeJours());
         if (details.getDepart() != null) hike.setDepart(details.getDepart());
         if (details.getArrivee() != null) hike.setArrivee(details.getArrivee());
 

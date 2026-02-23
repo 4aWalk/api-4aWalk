@@ -3,7 +3,6 @@ package iut.rodez.projet.sae.fourawalkapi.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import iut.rodez.projet.sae.fourawalkapi.advice.GlobalExceptionHandler;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.slf4j.Logger;

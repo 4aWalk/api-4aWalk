@@ -97,11 +97,11 @@ public class OptimizerService {
         if (solutionTake == null) return solutionSkip;
         if (solutionSkip == null) return solutionTake;
 
-        // Priorité à la solution comportant le moins d'items distincts
+        // Priorité à la solution comportant le plus d'items distincts
         if (solutionTake.size() < solutionSkip.size()) {
-            return solutionTake;
-        } else if (solutionSkip.size() < solutionTake.size()) {
             return solutionSkip;
+        } else if (solutionSkip.size() < solutionTake.size()) {
+            return solutionTake;
         }
 
         return solutionTake;

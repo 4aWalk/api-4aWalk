@@ -305,4 +305,157 @@ class ParticipantServiceTest {
         // Sécurité maximale : On vérifie que la méthode delete n'a absolument pas été appelée
         verify(participantRepository, never()).delete(any());
     }
+
+    /**
+     * Vérifie que le nom du participant est strictement obligatoire.
+     * Le système doit rejeter les valeurs nulles ainsi que les chaînes vides
+     * ou composées uniquement d'espaces.
+     */
+    @Test
+    void validateParticipantRules_NullOrEmptyNom_ThrowsException() {
+        Participant p = createValidParticipant();
+
+        // Test Nom null
+        p.setNom(null);
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le nom du participant est obligatoire", ex1.getMessage());
+
+        // Test Nom vide (espaces)
+        p.setNom("   ");
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le nom du participant est obligatoire", ex2.getMessage());
+    }
+
+    /**
+     * Vérifie que le prénom du participant est strictement obligatoire.
+     * Le système doit rejeter les valeurs nulles ainsi que les chaînes vides.
+     */
+    @Test
+    void validateParticipantRules_NullOrEmptyPrenom_ThrowsException() {
+        Participant p = createValidParticipant();
+
+        // Test Prénom null
+        p.setPrenom(null);
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le prénom du participant est obligatoire", ex1.getMessage());
+
+        // Test Prénom vide (espaces)
+        p.setPrenom("   ");
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le prénom du participant est obligatoire", ex2.getMessage());
+    }
+
+    /**
+     * Vérifie que le niveau d'expérience du participant est obligatoirement renseigné.
+     */
+    @Test
+    void validateParticipantRules_NullNiveau_ThrowsException() {
+        Participant p = createValidParticipant();
+        p.setNiveau(null);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le niveau est obligatoire", ex.getMessage());
+    }
+
+    /**
+     * Vérifie que la morphologie du participant est obligatoirement renseignée.
+     */
+    @Test
+    void validateParticipantRules_NullMorphologie_ThrowsException() {
+        Participant p = createValidParticipant();
+        p.setMorphologie(null);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("La morphologie est obligatoire", ex.getMessage());
+    }
+
+    /**
+     * Vérifie le respect des bornes d'âge autorisées pour un participant.
+     * Le système doit rejeter les participants de moins de 10 ans ou de plus de 100 ans.
+     */
+    @Test
+    void validateParticipantRules_InvalidAge_ThrowsException() {
+        Participant p = createValidParticipant();
+
+        // Test de la borne inférieure (trop jeune)
+        p.setAge(9);
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("L'âge doit être compris entre 10 et 100 ans", ex1.getMessage());
+
+        // Test de la borne supérieure (trop âgé)
+        p.setAge(101);
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("L'âge doit être compris entre 10 et 100 ans", ex2.getMessage());
+    }
+
+    /**
+     * Vérifie le respect des limites physiologiques pour les besoins caloriques.
+     * Le système doit rejeter les valeurs irréalistes (moins de 1700 kcal ou plus de 10000 kcal).
+     */
+    @Test
+    void validateParticipantRules_InvalidBesoinKcal_ThrowsException() {
+        Participant p = createValidParticipant();
+
+        // Test de la borne inférieure (carence)
+        p.setBesoinKcal(1699);
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le besoin calorique doit être compris entre 1700 et 10000 kcal", ex1.getMessage());
+
+        // Test de la borne supérieure (excès irréaliste)
+        p.setBesoinKcal(10001);
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le besoin calorique doit être compris entre 1700 et 10000 kcal", ex2.getMessage());
+    }
+
+    /**
+     * Vérifie le respect des limites pour les besoins en eau par jour.
+     * Le système doit rejeter les valeurs inférieures à 1L ou supérieures à 8L.
+     */
+    @Test
+    void validateParticipantRules_InvalidBesoinEau_ThrowsException() {
+        Participant p = createValidParticipant();
+
+        // Test de la borne inférieure (déshydratation)
+        p.setBesoinEauLitre(0);
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le besoin en eau doit être compris entre 1 et 8 Litres", ex1.getMessage());
+
+        // Test de la borne supérieure (quantité excessive)
+        p.setBesoinEauLitre(9);
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("Le besoin en eau doit être compris entre 1 et 8 Litres", ex2.getMessage());
+    }
+
+    /**
+     * Vérifie les contraintes physiques liées à la capacité d'emport du sac à dos.
+     * Le système doit rejeter un poids négatif ou un poids dépassant la limite de sécurité (30 kg).
+     */
+    @Test
+    void validateParticipantRules_InvalidCapaciteEmport_ThrowsException() {
+        Participant p = createValidParticipant();
+
+        // Test de la borne inférieure (poids impossible)
+        p.setCapaciteEmportMaxKg(-1.0);
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("La capacité d'emport doit être positive et ne peut pas dépasser 30 kg", ex1.getMessage());
+
+        // Test de la borne supérieure (dépassement de la capacité humaine standard)
+        p.setCapaciteEmportMaxKg(30.1);
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> participantService.addParticipant(100L, p, 10L));
+        assertEquals("La capacité d'emport doit être positive et ne peut pas dépasser 30 kg", ex2.getMessage());
+    }
 }
