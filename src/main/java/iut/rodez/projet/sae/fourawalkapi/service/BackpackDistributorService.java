@@ -84,7 +84,7 @@ public class BackpackDistributorService {
 
                 // Backtracking (Annulation) :
                 // Si l'appel récursif a renvoyé false, cela signifie que ce choix menait à une impasse.
-                // On retire l'objet du sac pour tester le sac suivant dans la boucle.
+                // retire l'objet du sac pour tester le sac suivant dans la boucle.
                 backpack.removeItem(currentItem);
             }
         }
