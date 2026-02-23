@@ -18,7 +18,7 @@ public class HikeService {
 
     private final HikeRepository hikeRepository;
     private final BackpackDistributorService backpackDistributor;
-    private final MetierToolsService metierToolsService;
+    private final HikeValidationOrchestrator hikeValidatorService;
     private final OptimizerService optimizerService;
     private final UserRepository userRepository;
     private final PointOfInterestRepository poiRepository;
@@ -28,7 +28,7 @@ public class HikeService {
      * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
      * @param hr Repository pour l'accès aux données des randonnées.
      * @param bds Service de distribution des items dans les sacs à dos.
-     * @param mts Service d'outils de validation métier.
+     * @param hvo Service d'outils de validation métier.
      * @param os Service de sélection optimisée du matériel et de la nourriture.
      * @param ur Repository pour l'accès aux données utilisateurs.
      * @param poiRepo Repository pour la gestion des points d'intérêt.
@@ -36,13 +36,13 @@ public class HikeService {
      */
     public HikeService(HikeRepository hr,
                        BackpackDistributorService bds,
-                       MetierToolsService mts,
+                       HikeValidationOrchestrator hvo,
                        OptimizerService os, UserRepository ur,
                        PointOfInterestRepository poiRepo,
                        ParticipantRepository pr) {
         this.hikeRepository = hr;
         this.backpackDistributor = bds;
-        this.metierToolsService = mts;
+        this.hikeValidatorService = hvo;
         this.optimizerService = os;
         this.userRepository = ur;
         this.poiRepository = poiRepo;
@@ -214,7 +214,7 @@ public class HikeService {
     public void optimizeBackpack(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
-        metierToolsService.validateHikeForOptimize(hike);
+        hikeValidatorService.validateHikeForOptimize(hike);
 
         List<EquipmentItem> optimizedEquipment = optimizerService.getOptimizeAllEquipmentV2(hike);
         List<FoodProduct> optimizedFood = optimizerService.getOptimizeAllFoodV2(hike);

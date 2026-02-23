@@ -29,7 +29,6 @@ class CourseServiceTest {
     private HikeRepository hikeRepository;
     private CourseService courseService;
 
-    private User creatorUser;
     private Hike mockHike;
     private Course mockCourse;
     private CourseResponseDto mockDto;
@@ -44,7 +43,7 @@ class CourseServiceTest {
         courseService = new CourseService(courseRepository, hikeRepository);
 
         // --- Données factices pour les tests ---
-        creatorUser = new User();
+        User creatorUser = new User();
         creatorUser.setId(10L);
 
         mockHike = new Hike();
