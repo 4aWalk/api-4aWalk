@@ -1,4 +1,4 @@
-name: CI/CD Docker API
+name: CI/CD Docker API & Quality
 
 on:
   push:
@@ -13,7 +13,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0  # Important pour SonarQube afin d'analyser tout l'historique Git
+
       # 1. Configuration Java JDK 21
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -22,19 +24,29 @@ jobs:
           java-version: '21' 
           cache: 'maven'
 
-      # 2. Compilation et Tests
-      - name: Build with Maven
-        run: mvn clean install
+      # 2. Cache pour SonarQube (accélère les analyses futures)
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-      # 3. Connexion à Docker Hub
+      # 3. Compilation, Tests et Métriques Qualité (SonarQube/SonarCloud)
+      - name: Build, Test and Analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Fourni nativement par GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # À configurer dans tes secrets GitHub
+        run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=TON_PROJECT_KEY
+
+      # 4. Connexion à Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          # Ici on utilise les noms exacts de tes secrets GitHub
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      # 4. Build et Push de l'image
+      # 5. Build et Push de l'image
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -42,7 +54,7 @@ jobs:
           push: true
           tags: alexandrebrouzes/sae-5-01-iut-api:latest
 
-      # 5. DÉPLOIEMENT SUR AWS (Le chaînon manquant)
+      # 6. DÉPLOIEMENT SUR AWS
       - name: Deploy to AWS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
