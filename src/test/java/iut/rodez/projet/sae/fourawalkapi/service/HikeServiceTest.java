@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class HikeServiceTest {
 
     @Mock private HikeRepository hikeRepository;
-    @Mock private BackpackDistributorService backpackDistributor;
+    @Mock private BackpackDistributorServiceV2 backpackDistributor;
     @Mock private HikeValidationOrchestrator hikeValidatorService;
     @Mock private OptimizerService optimizerService;
     @Mock private UserRepository userRepository;
