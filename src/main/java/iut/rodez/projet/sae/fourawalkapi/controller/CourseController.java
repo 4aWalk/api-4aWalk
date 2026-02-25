@@ -2,7 +2,6 @@ package iut.rodez.projet.sae.fourawalkapi.controller;
 
 import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
-import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.service.CourseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -75,7 +74,7 @@ public class CourseController {
     @PutMapping("/{id}")
     public ResponseEntity<CourseResponseDto> addPointsToCourse(
             @PathVariable String id,
-            @RequestBody List<GeoCoordinateResponseDto> newPoints,
+            @RequestBody List<CourseResponseDto.CoordinateDto> newPoints,
             Authentication auth) {
 
         CourseResponseDto updated = courseService.addPointsToCourse(id, newPoints, getUserId(auth));

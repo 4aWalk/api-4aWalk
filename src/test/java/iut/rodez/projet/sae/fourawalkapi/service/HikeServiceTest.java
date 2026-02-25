@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,14 +18,20 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests unitaires du HikeService avec Mockito.
- * Valide l'orchestration, la sécurité (propriété des entités), les validations métier
- * et la délégation aux algorithmes.
+ * Suite de tests unitaires dédiée au {@link HikeService}.
+ * <p>
+ * Cette classe valide l'intégralité du cycle de vie d'une randonnée :
+ * <ul>
+ * <li><b>Sécurité :</b> Vérification de la propriété des entités (un utilisateur ne modifie que ses randonnées).</li>
+ * <li><b>Orchestration :</b> Délégation correcte aux algorithmes d'optimisation et de répartition.</li>
+ * <li><b>Persistance Hybride :</b> Synchronisation des suppressions entre MySQL (Hike) et MongoDB (Course).</li>
+ * </ul>
  */
 @ExtendWith(MockitoExtension.class)
 class HikeServiceTest {
 
     @Mock private HikeRepository hikeRepository;
+    @Mock private CourseRepository courseRepository; // Mock pour les opérations MongoDB en cascade
     @Mock private BackpackDistributorService backpackDistributor;
     @Mock private HikeValidationOrchestrator hikeValidatorService;
     @Mock private OptimizerService optimizerService;
@@ -40,22 +47,24 @@ class HikeServiceTest {
     private PointOfInterest poiDepart;
     private PointOfInterest poiArrivee;
 
+    /**
+     * Initialisation du contexte de test.
+     * Met en place un jeu de données "bouchonné" (mocks) standard avec un utilisateur,
+     * des points de départ/arrivée et une randonnée valide.
+     */
     @BeforeEach
     void setUp() {
-        // Initialisation d'un utilisateur de test
         testUser = new User();
         testUser.setId(1L);
         testUser.setPrenom("John");
         testUser.setNom("Doe");
 
-        // Initialisation de POIs de test
         poiDepart = new PointOfInterest();
         poiDepart.setId(10L);
 
         poiArrivee = new PointOfInterest();
         poiArrivee.setId(20L);
 
-        // Initialisation d'une randonnée de base
         testHike = new Hike();
         testHike.setId(100L);
         testHike.setLibelle("Rando Montagne");
@@ -69,36 +78,48 @@ class HikeServiceTest {
     // TESTS : SÉCURITÉ ET RÉCUPÉRATION
     // ==========================================
 
+    /**
+     * Vérifie qu'un utilisateur légitime (le créateur) peut récupérer avec succès
+     * les détails de sa propre randonnée.
+     */
     @Test
     void getHikeById_UserIsCreator_ShouldReturnHike() {
-        // GIVEN : La randonnée existe et l'utilisateur 1 en est le créateur
+        // GIVEN : La randonnée est présente en base et appartient à l'utilisateur effectuant la requête.
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
 
-        // WHEN : L'utilisateur 1 demande sa randonnée
+        // WHEN : L'utilisateur tente de consulter la randonnée.
         Hike result = hikeService.getHikeById(100L, 1L);
 
-        // THEN : La randonnée est retournée avec succès
+        // THEN : Le système autorise l'accès et retourne la bonne entité.
         assertNotNull(result);
         assertEquals(100L, result.getId());
     }
 
+    /**
+     * Vérifie la politique de cloisonnement des données (Multi-Tenant conceptuel).
+     * Un utilisateur ne doit pas pouvoir accéder aux données générées par un autre.
+     */
     @Test
     void getHikeById_UserIsNotCreator_ShouldThrowSecurityException() {
-        // GIVEN : La randonnée appartient à l'utilisateur 1
+        // GIVEN : La randonnée existe, mais elle est la propriété de l'utilisateur ayant l'ID 1.
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
 
-        // WHEN & THEN : L'utilisateur 2 essaie d'y accéder -> Erreur d'accès refusé
+        // WHEN & THEN : Une tentative d'accès par l'utilisateur ID 2 doit être bloquée immédiatement.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> hikeService.getHikeById(100L, 2L));
-        assertTrue(ex.getMessage().contains("Accès refusé"));
+        assertTrue(ex.getMessage().contains("Accès refusé"),
+                "Le message d'erreur doit explicitement mentionner le refus d'accès.");
     }
 
+    /**
+     * Valide le comportement du service face à un identifiant inexistant.
+     */
     @Test
     void getHikeById_HikeNotFound_ShouldThrowException() {
-        // GIVEN : La randonnée n'existe pas en base
+        // GIVEN : L'identifiant fourni ne correspond à aucune entrée en base.
         when(hikeRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // WHEN & THEN : Erreur introuvable
+        // WHEN & THEN : Le système lève une exception signalant l'absence de la ressource.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> hikeService.getHikeById(999L, 1L));
         assertTrue(ex.getMessage().contains("introuvable"));
@@ -108,40 +129,46 @@ class HikeServiceTest {
     // TESTS : CRÉATION DE RANDONNÉE
     // ==========================================
 
+    /**
+     * Valide le flux nominal de création d'une randonnée.
+     * S'assure notamment que le créateur est automatiquement ajouté à la liste
+     * des participants lors de l'initialisation de l'événement.
+     */
     @Test
     void createHike_NominalCase_ShouldCreateHikeAndAddCreatorAsParticipant() {
-        // GIVEN : Un utilisateur valide, des POIs valides, un nom unique
+        // GIVEN : Les entités référencées (Utilisateur, POIs) existent, et le nom de la randonnée est disponible.
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(hikeRepository.existsByCreatorIdAndLibelleAndIdNot(1L, "Rando Montagne", -1L)).thenReturn(false);
         when(poiRepository.findById(10L)).thenReturn(Optional.of(poiDepart));
         when(poiRepository.findById(20L)).thenReturn(Optional.of(poiArrivee));
 
-        // On simule la sauvegarde du participant (le créateur)
         Participant savedParticipant = new Participant();
         savedParticipant.setId(50L);
         when(participantRepository.save(any(Participant.class))).thenReturn(savedParticipant);
-
-        // On simule la sauvegarde finale de la rando
         when(hikeRepository.save(any(Hike.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // WHEN : On crée la randonnée
+        // WHEN : On procède à l'enregistrement de la nouvelle randonnée.
         Hike result = hikeService.createHike(testHike, 1L);
 
-        // THEN : La rando est sauvegardée, initialisée, et le créateur est dans les participants
+        // THEN : La randonnée est créée, l'utilisateur en est le créateur, et il y figure comme premier participant.
         assertNotNull(result);
         assertEquals(testUser, result.getCreator());
-        assertEquals(1, result.getParticipants().size());
+        assertEquals(1, result.getParticipants().size(), "Le créateur doit être automatiquement ajouté aux participants.");
         assertTrue(result.getParticipants().contains(savedParticipant));
-        verify(hikeRepository).save(result); // Vérifie que le save a bien été appelé
+        verify(hikeRepository).save(result);
     }
 
+    /**
+     * Vérifie le respect de la règle d'unicité métier : un utilisateur ne peut pas
+     * posséder deux randonnées actives portant exactement le même nom.
+     */
     @Test
     void createHike_LibelleAlreadyExists_ShouldThrowException() {
-        // GIVEN : L'utilisateur existe, mais il a déjà une rando avec ce nom
+        // GIVEN : L'utilisateur possède déjà une randonnée nommée "Rando Montagne".
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(hikeRepository.existsByCreatorIdAndLibelleAndIdNot(1L, "Rando Montagne", -1L)).thenReturn(true);
 
-        // WHEN & THEN : La création échoue sur la règle d'unicité
+        // WHEN & THEN : La sauvegarde est interrompue pour éviter les doublons.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> hikeService.createHike(testHike, 1L));
         assertTrue(ex.getMessage().contains("déjà une randonnée nommée"));
@@ -151,13 +178,31 @@ class HikeServiceTest {
     // TESTS : CAS LIMITES ET VALIDATION MÉTIER
     // ==========================================
 
+    /**
+     * Valide les contraintes de limite temporelle imposées par l'application (max 3 jours).
+     */
     @Test
     void validateHike_DurationTooLong_ShouldThrowException() {
-        // GIVEN : Une randonnée de 4 jours (Limites = 0 à 3 selon validateHike)
+        // GIVEN : L'objet en entrée spécifie une durée hors périmètre (4 jours).
         testHike.setDureeJours(4);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        // WHEN & THEN : La validation échoue dès la création
+        // WHEN & THEN : L'orchestrateur de validation rejette la demande avant toute insertion.
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> hikeService.createHike(testHike, 1L));
+        assertTrue(ex.getMessage().contains("compris entre 0 e 3"));
+    }
+
+    /**
+     * Valide que l'application ne tolère pas les voyages temporels négatifs.
+     */
+    @Test
+    void validateHike_DurationNegative_ShouldThrowException() {
+        // GIVEN : Une tentative d'injection avec un nombre de jours invalide.
+        testHike.setDureeJours(-1);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        // WHEN & THEN : Le validateur bloque l'opération.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> hikeService.createHike(testHike, 1L));
         assertTrue(ex.getMessage().contains("compris entre 0 e 3"));
@@ -167,36 +212,44 @@ class HikeServiceTest {
     // TESTS : ORCHESTRATION DE L'OPTIMISATION
     // ==========================================
 
+    /**
+     * Teste le processus complexe d'optimisation des sacs à dos.
+     * S'assure que le service orchestre correctement les différentes étapes :
+     * Validation -> Génération de l'équipement -> Génération de la nourriture -> Bin Packing.
+     */
     @Test
     void optimizeBackpack_NominalCase_ShouldCallAllServices() {
-        // GIVEN : Une randonnée valide appartenant à l'utilisateur
+        // GIVEN : Une randonnée existante à optimiser.
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
 
-        // On prépare des fausses listes optimisées renvoyées par l'Optimizer
         List<EquipmentItem> dummyEquip = List.of(new EquipmentItem());
         List<FoodProduct> dummyFood = List.of(new FoodProduct());
         when(optimizerService.getOptimizeAllEquipmentV2(testHike)).thenReturn(dummyEquip);
         when(optimizerService.getOptimizeAllFoodV2(testHike)).thenReturn(dummyFood);
 
-        // WHEN : On lance l'optimisation
+        // WHEN : L'ordre d'optimisation est lancé.
         hikeService.optimizeBackpack(100L, 1L);
 
-        // THEN : Tous les sous-services doivent avoir été appelés dans le bon ordre
-        verify(hikeValidatorService).validateHikeForOptimize(testHike); // 1. Validation
-        verify(optimizerService).getOptimizeAllEquipmentV2(testHike);   // 2. Opti Equip
-        verify(optimizerService).getOptimizeAllFoodV2(testHike);        // 3. Opti Food
-        // 4. Distribution (anyList() car la liste est instanciée dans la méthode)
-        verify(backpackDistributor).distributeBatchesToBackpacks(anyList(), eq(testHike.getBackpacks()));
-        verify(hikeRepository).save(testHike);                          // 5. Sauvegarde finale
+        // THEN : Les collaborateurs (services externes) sont appelés de manière séquentielle et cohérente.
+        verify(hikeValidatorService).validateHikeForOptimize(testHike); // Vérification de l'état
+        verify(optimizerService).getOptimizeAllEquipmentV2(testHike);   // Récupération équipement
+        verify(optimizerService).getOptimizeAllFoodV2(testHike);        // Récupération nourriture
+        verify(backpackDistributor).distributeBatchesToBackpacks(anyList(), eq(testHike.getBackpacks())); // Répartition algorithmique
+        verify(hikeRepository).save(testHike);                          // Persistance du résultat
     }
 
     // ==========================================
     // TESTS : CALCUL DE DISTANCE (Méthode Statique)
     // ==========================================
 
+    /**
+     * Valide l'algorithme de calcul de la distance totale d'un parcours.
+     * Le test s'assure que l'ordre des étapes (sequence) est bien respecté
+     * pour additionner les segments géographiques dans le bon sens.
+     */
     @Test
     void getAllDistance_WithOptionalPois_ShouldCalculateCorrectly() {
-        // GIVEN : On crée nos mocks
+        // GIVEN : Un parcours composé de 4 points (Départ, Étape 2, Étape 1, Arrivée) dont l'ordre interne est désordonné.
         PointOfInterest mockDepart = mock(PointOfInterest.class);
         PointOfInterest mockEtape1 = mock(PointOfInterest.class);
         PointOfInterest mockEtape2 = mock(PointOfInterest.class);
@@ -206,96 +259,73 @@ class HikeServiceTest {
         distanceHike.setDepart(mockDepart);
         distanceHike.setArrivee(mockArrivee);
 
-        // séquences inversées pour forcer le tri
-        when(mockEtape1.getSequence()).thenReturn(2);
-        when(mockEtape2.getSequence()).thenReturn(1);
+        when(mockEtape1.getSequence()).thenReturn(2); // Étape censée être en 2ème
+        when(mockEtape2.getSequence()).thenReturn(1); // Étape censée être en 1ère
 
         distanceHike.setOptionalPoints(Set.of(mockEtape1, mockEtape2));
 
-        // L'ordre calculé doit être :
-        // Depart -> Etape 2 -> Etape 1 -> Arrivee
+        // Définition des distances de chaque segment dans l'ordre de passage attendu :
+        when(mockDepart.distanceTo(anyDouble(), anyDouble())).thenReturn(2.0); // Départ -> Étape 2
+        when(mockEtape2.distanceTo(anyDouble(), anyDouble())).thenReturn(3.0); // Étape 2 -> Étape 1
+        when(mockEtape1.distanceTo(anyDouble(), anyDouble())).thenReturn(5.0); // Étape 1 -> Arrivée
 
-        // 1. Depart -> Etape 2
-        when(mockDepart.distanceTo(anyDouble(), anyDouble())).thenReturn(2.0);
-
-        // 2. Etape 2 -> Etape 1
-        when(mockEtape2.distanceTo(anyDouble(), anyDouble())).thenReturn(3.0);
-
-        // 3. Etape 1 -> Arrivee
-        when(mockEtape1.distanceTo(anyDouble(), anyDouble())).thenReturn(5.0);
-
-        // WHEN
+        // WHEN : On calcule le cheminement complet.
         double totalDistance = HikeService.getAllDistance(distanceHike);
 
-        // THEN : 2.0 + 3.0 + 5.0 = 10.0
+        // THEN : La distance totale est la somme exacte des segments parcourus dans l'ordre (2 + 3 + 5).
         assertEquals(10.0, totalDistance, 0.001);
     }
 
+    /**
+     * Vérifie le calcul de distance simple pour une randonnée "directe" (point A vers point B) sans étapes.
+     */
     @Test
     void getAllDistance_NoOptionalPois_ShouldCalculateDirectDistance() {
-        // GIVEN : Uniquement un départ et une arrivée
+        // GIVEN : Une randonnée sans aucun point d'intérêt intermédiaire.
         PointOfInterest mockDepart = mock(PointOfInterest.class);
         PointOfInterest mockArrivee = mock(PointOfInterest.class);
 
         Hike distanceHike = new Hike();
         distanceHike.setDepart(mockDepart);
         distanceHike.setArrivee(mockArrivee);
-        distanceHike.setOptionalPoints(null); // Cas limite : la liste est null
+        distanceHike.setOptionalPoints(null);
 
-        // Distance directe = 10.0
         when(mockDepart.distanceTo(anyDouble(), anyDouble())).thenReturn(10.0);
 
-        // WHEN
+        // WHEN : Le calcul de la distance globale est déclenché.
         double totalDistance = HikeService.getAllDistance(distanceHike);
 
-        // THEN
+        // THEN : La distance correspond directement au segment unique Départ -> Arrivée.
         assertEquals(10.0, totalDistance, 0.001);
     }
 
     /**
-     * Test de la récupération des randonnées par rapport à un identifiant créateur
+     * Valide la récupération en lot des randonnées via l'identifiant de leur créateur.
      */
     @Test
     void getHikesByCreator_ShouldReturnList() {
-        // GIVEN
+        // GIVEN : La base SQL contient une liste de randonnées pour le créateur spécifié.
         when(hikeRepository.findByCreatorId(1L)).thenReturn(List.of(testHike));
 
-        // WHEN
+        // WHEN : On interroge le référentiel de l'utilisateur.
         List<Hike> result = hikeService.getHikesByCreator(1L);
 
-        // THEN
+        // THEN : La liste est correctement récupérée et renvoyée sans altération.
         assertEquals(1, result.size());
         assertEquals(100L, result.getFirst().getId());
     }
 
     /**
-     * Test sur une randonnée avec un nombre de jours négatif
-     */
-    @Test
-    void validateHike_DurationNegative_ShouldThrowException() {
-        // GIVEN : Une randonnée avec un nombre de jours négatif
-        testHike.setDureeJours(-1);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-
-        // WHEN & THEN : Doit planter
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> hikeService.createHike(testHike, 1L));
-        assertTrue(ex.getMessage().contains("compris entre 0 e 3"));
-    }
-
-    /**
-     * Test de la mise à jour d'une randonné
+     * Teste la mise à jour des informations de base d'une randonnée, en vérifiant
+     * notamment la résolution automatique des nouveaux Points d'Intérêt en base.
      */
     @Test
     void updateHike_NominalCase_ShouldUpdateFieldsAndResolvePois() {
-        // GIVEN : Randonnée existante
+        // GIVEN : Des modifications valides (nouveau nom, nouvelle durée, nouveaux POIs).
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
-        // On simule que le nouveau nom n'est pas pris
         when(hikeRepository.existsByCreatorIdAndLibelleAndIdNot(1L, "Nouveau Titre", 100L)).thenReturn(false);
-        // On mock le repository pour qu'il renvoie l'objet sauvegardé
         when(hikeRepository.save(any(Hike.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Préparation des nouveaux détails (avec des POIs qui ont des IDs pour déclencher le if)
         Hike details = new Hike();
         details.setLibelle("Nouveau Titre");
         details.setDureeJours(3);
@@ -311,10 +341,10 @@ class HikeServiceTest {
         when(poiRepository.findById(88L)).thenReturn(Optional.of(newDepart));
         when(poiRepository.findById(99L)).thenReturn(Optional.of(newArrivee));
 
-        // WHEN
+        // WHEN : La mise à jour est traitée par le service.
         Hike result = hikeService.updateHike(100L, details, 1L);
 
-        // THEN : Les champs ont bien été mis à jour
+        // THEN : Les champs simples sont modifiés et les entités liées (POIs) sont correctement rattachées.
         assertEquals("Nouveau Titre", result.getLibelle());
         assertEquals(3, result.getDureeJours());
         assertEquals(88L, result.getDepart().getId());
@@ -322,52 +352,58 @@ class HikeServiceTest {
     }
 
     /**
-     * Test d'un hike avec un libellé de poi null
+     * Vérifie que le processus de mise à jour ignore les vérifications lourdes
+     * (recherche en base) si les données d'entrée sont vides ou non fournies.
      */
     @Test
     void updateHike_EmptyLibelleAndNullPois_ShouldSkipChecks() {
-        // GIVEN
+        // GIVEN : Une requête de mise à jour avec des chaînes vides et des POIs non identifiés.
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
         when(hikeRepository.save(any(Hike.class))).thenAnswer(i -> i.getArgument(0));
 
         Hike details = new Hike();
-        details.setLibelle("   "); // Espaces vides -> doit zapper le check d'unicité
+        details.setLibelle("   ");
         details.setDureeJours(1);
-        details.setDepart(new PointOfInterest());
-        details.setArrivee(new PointOfInterest());
+        details.setDepart(new PointOfInterest()); // Pas d'ID défini
+        details.setArrivee(new PointOfInterest()); // Pas d'ID défini
 
-        // WHEN
-        Hike result = hikeService.updateHike(100L, details, 1L);
+        // WHEN : On lance l'actualisation.
+        hikeService.updateHike(100L, details, 1L);
 
-        // THEN
-        // 1. On vérifie que le libellé n'a PAS été changé (car "   " est considéré comme vide)
+        // THEN : Le service optimise le traitement en ignorant les vérifications inutiles d'unicité et de POI.
         verify(hikeRepository, never()).existsByCreatorIdAndLibelleAndIdNot(anyLong(), anyString(), anyLong());
-
-        // 2. On vérifie qu'il n'a pas cherché en base les POIs car les IDs étaient null
         verify(poiRepository, never()).findById(anyLong());
     }
 
+    // ==========================================
+    // TESTS : SUPPRESSION EN CASCADE (HYBRIDE)
+    // ==========================================
+
     /**
-     * Test de suppression d'une randonnée
+     * Vérifie la logique de suppression complète et hybride (SQL + NoSQL).
+     * S'assure de l'effacement préalable des collections relationnelles pour éviter
+     * les conflits de contraintes, et valide l'appel vers la base MongoDB.
      */
     @Test
     void deleteHike_ShouldClearCollectionsAndDestroy() {
-        // GIVEN
+        // GIVEN : Une randonnée qui possède des données liées (participants, nourriture).
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
 
-        // On ajoute quelques données factices pour s'assurer qu'elles sont bien vidées
         testHike.setParticipants(new HashSet<>(List.of(new Participant())));
         testHike.setFoodCatalogue(new ArrayList<>(List.of(new FoodProduct())));
 
-        // WHEN
+        // WHEN : On demande la suppression définitive de la randonnée.
         hikeService.deleteHike(100L, 1L);
 
-        // THEN
-        assertTrue(testHike.getParticipants().isEmpty(), "Les participants doivent être vidés");
-        assertTrue(testHike.getFoodCatalogue().isEmpty(), "Le catalogue de nourriture doit être vidé");
+        // THEN : Les relations Hibernate (MySQL) sont vidées pour libérer les Foreign Keys.
+        assertTrue(testHike.getParticipants().isEmpty(), "Les participants doivent être retirés de la liste avant suppression");
+        assertTrue(testHike.getFoodCatalogue().isEmpty(), "Le catalogue de nourriture doit être vidé avant suppression");
 
-        // Vérifie que l'entité a bien été sauvegardée (avec listes vides) puis supprimée
+        // 2. L'entité MySQL est mise à jour (vidée) puis détruite.
         verify(hikeRepository).save(testHike);
         verify(hikeRepository).delete(testHike);
+
+        // 3. Le dépôt MongoDB est averti pour supprimer le suivi GPS orphelin.
+        verify(courseRepository).deleteByHikeId(100L);
     }
 }

@@ -1,9 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.document.Course;
-import iut.rodez.projet.sae.fourawalkapi.document.GeoCoordinate;
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
-import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
@@ -55,14 +53,13 @@ class CourseServiceTest {
         mockCourse.setHikeId(100L);
         mockCourse.setFinished(false);
         mockCourse.setPaused(false);
-        mockCourse.setTrajetsRealises(new ArrayList<>(List.of(
-                new GeoCoordinate(44.35, 2.57) // Point initial (Départ)
-        )));
+
+        mockCourse.addCoordinate(44.35, 2.57); // Point initial (Départ)
 
         // DTO entrant simulé
         mockDto = mock(CourseResponseDto.class);
         when(mockDto.getHikeId()).thenReturn(100L);
-        GeoCoordinateResponseDto pointDto = mock(GeoCoordinateResponseDto.class);
+        CourseResponseDto.CoordinateDto pointDto = mock(CourseResponseDto.CoordinateDto.class);
         when(mockDto.getPath()).thenReturn(List.of(pointDto));
     }
 
@@ -183,14 +180,16 @@ class CourseServiceTest {
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
         when(courseRepository.save(any(Course.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        List<GeoCoordinateResponseDto> newPoints = List.of(mock(GeoCoordinateResponseDto.class));
+        List<CourseResponseDto.CoordinateDto> newPoints = List.of(mock(CourseResponseDto.CoordinateDto.class));
 
         // When : On ajoute les points au parcours
         CourseResponseDto result = courseService.addPointsToCourse("mongo-id-123", newPoints, 10L);
 
-        // Then : Le tracé s'est allongé (1 point initial + 1 nouveau = 2)
+        // Then : Le tracé s'est allongé.
+        // Rappel : la méthode addCoordinate initialise la ligne avec 2 points identiques.
+        // 2 points de base + 1 nouveau point ajouté = 3 points au total.
         assertNotNull(result);
-        assertEquals(2, mockCourse.getTrajetsRealises().size());
+        assertEquals(3, mockCourse.getTrajetsRealises().getCoordinates().size());
     }
 
     /**

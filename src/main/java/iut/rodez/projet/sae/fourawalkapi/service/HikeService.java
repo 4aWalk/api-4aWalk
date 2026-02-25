@@ -3,6 +3,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class HikeService {
     private final UserRepository userRepository;
     private final PointOfInterestRepository poiRepository;
     private final ParticipantRepository participantRepository;
+    private final CourseRepository courseRepository;
 
     /**
      * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
@@ -39,7 +41,8 @@ public class HikeService {
                        HikeValidationOrchestrator hvo,
                        OptimizerService os, UserRepository ur,
                        PointOfInterestRepository poiRepo,
-                       ParticipantRepository pr) {
+                       ParticipantRepository pr,
+                       CourseRepository cr) {
         this.hikeRepository = hr;
         this.backpackDistributor = bds;
         this.hikeValidatorService = hvo;
@@ -47,6 +50,7 @@ public class HikeService {
         this.userRepository = ur;
         this.poiRepository = poiRepo;
         this.participantRepository = pr;
+        this.courseRepository = cr;
     }
 
     /**
@@ -163,6 +167,7 @@ public class HikeService {
     public void deleteHike(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
+        // 1. Nettoyage des relations MySQL pour éviter les erreurs de contraintes
         hike.getFoodCatalogue().clear();
         hike.getEquipmentGroups().clear();
         hike.getOptionalPoints().clear();
@@ -170,6 +175,9 @@ public class HikeService {
 
         hikeRepository.save(hike);
         hikeRepository.delete(hike);
+
+        // 2. Suppression en "cascade" des traces GPS dans MongoDB
+        courseRepository.deleteByHikeId(hikeId);
     }
 
     /**

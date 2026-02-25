@@ -1,14 +1,12 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
-import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.document.Course;
-import iut.rodez.projet.sae.fourawalkapi.document.GeoCoordinate;
-import iut.rodez.projet.sae.fourawalkapi.dto.PointOfInterestResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
+import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -104,21 +102,19 @@ public class CourseService {
             course.setDateRealisation(dto.getDateRealisation());
         }
 
-        // Extraction de la trace GPS initiale
-        List<GeoCoordinate> coordinates = new ArrayList<>();
+        // Extraction de la trace GPS initiale et ajout via la méthode métier
         if (dto.getPath() != null && !dto.getPath().isEmpty()) {
-            coordinates = dto.getPath().stream()
-                    .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
-                    .toList();
+            for (CourseResponseDto.CoordinateDto p : dto.getPath()) {
+                course.addCoordinate(p.getLatitude(), p.getLongitude());
+            }
         }
-        course.setTrajetsRealises(coordinates);
 
-        if (course.getTrajetsRealises().isEmpty()) {
+        if (course.getTrajetsRealises() == null || course.getTrajetsRealises().getCoordinates().isEmpty()) {
             throw new IllegalArgumentException("Impossible de créer un parcours " +
                     "sans au moins un point de géolocalisation initial.");
         }
 
-        GeoCoordinate startCoord = course.getTrajetsRealises().getFirst();
+        Point startCoord = course.getTrajetsRealises().getCoordinates().getFirst();
         course.setDepart(createPoiFromGeo(startCoord, "Départ"));
 
         course.setFinished(false);
@@ -137,7 +133,7 @@ public class CourseService {
      * @param newPointsDto La liste des nouveaux points capturés.
      * @return Le parcours mis à jour.
      */
-    public CourseResponseDto addPointsToCourse(String courseId, List<GeoCoordinateResponseDto> newPointsDto,
+    public CourseResponseDto addPointsToCourse(String courseId, List<CourseResponseDto.CoordinateDto> newPointsDto,
                                                Long userId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Parcours introuvable"));
@@ -150,16 +146,10 @@ public class CourseService {
         }
 
         if (newPointsDto != null && !newPointsDto.isEmpty()) {
-            // Transformation des DTOs légers en objets métier GeoCoordinate
-            List<GeoCoordinate> newCoordinates = newPointsDto.stream()
-                    .map(p -> new GeoCoordinate(p.getLatitude(), p.getLongitude()))
-                    .toList();
-
-            // Ajout à la collection existante (append-only logic)
-            if (course.getTrajetsRealises() == null) {
-                course.setTrajetsRealises(new ArrayList<>());
+            // Ajout des points via la méthode métier de l'entité (append-only logic)
+            for (CourseResponseDto.CoordinateDto p : newPointsDto) {
+                course.addCoordinate(p.getLatitude(), p.getLongitude());
             }
-            course.getTrajetsRealises().addAll(newCoordinates);
 
             course = courseRepository.save(course);
         }
@@ -182,10 +172,9 @@ public class CourseService {
         }
 
         // Gestion du point d'arrivée
-        List<GeoCoordinate> path = course.getTrajetsRealises();
-        if (path != null && !path.isEmpty()) {
-            // On récupère le dernier point connu
-            GeoCoordinate lastPoint = path.getLast();
+        if (course.getTrajetsRealises() != null && !course.getTrajetsRealises().getCoordinates().isEmpty()) {
+            // On récupère le dernier point connu dans le LineString
+            Point lastPoint = course.getTrajetsRealises().getCoordinates().getLast();
             course.setArrivee(createPoiFromGeo(lastPoint, "Arrivée"));
         }
 
@@ -224,12 +213,12 @@ public class CourseService {
      * Méthode utilitaire pour créer un POI à partir d'une coordonnée GPS.
      * Utilise l'objet GeoJSON interne pour récupérer X et Y.
      */
-    private PointOfInterest createPoiFromGeo(GeoCoordinate geo, String defaultName) {
+    private PointOfInterest createPoiFromGeo(Point geo, String defaultName) {
         PointOfInterest poi = new PointOfInterest();
 
-        if (geo.getGeojson() != null) {
-            poi.setLatitude(geo.getGeojson().getX());
-            poi.setLongitude(geo.getGeojson().getY());
+        if (geo != null) {
+            poi.setLatitude(geo.getY());
+            poi.setLongitude(geo.getX());
         }
 
         poi.setName(defaultName);

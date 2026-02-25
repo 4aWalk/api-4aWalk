@@ -17,7 +17,9 @@ public class CourseResponseDto {
     private PointOfInterestResponseDto arrivee;
     private boolean isFinished;
     private boolean isPaused;
-    private List<GeoCoordinateResponseDto> path;
+
+    // Remplacement par la classe interne définie plus bas
+    private List<CoordinateDto> path;
 
     /**
      * Mapper entity to dto
@@ -38,8 +40,10 @@ public class CourseResponseDto {
         this.isPaused = course.isPaused();
 
         if (course.getTrajetsRealises() != null) {
-            this.path = course.getTrajetsRealises().stream()
-                    .map(GeoCoordinateResponseDto::new) // Appelle le constructeur du DTO pour chaque point
+            // On extrait les coordonnées du GeoJsonLineString et on les transforme
+            this.path = course.getTrajetsRealises().getCoordinates().stream()
+                    // Rappel : dans Spring Point, Y = Latitude et X = Longitude
+                    .map(p -> new CoordinateDto(p.getY(), p.getX()))
                     .toList();
         } else {
             this.path = new ArrayList<>();
@@ -61,5 +65,21 @@ public class CourseResponseDto {
 
     public boolean getIsPaused() { return isPaused; }
 
-    public List<GeoCoordinateResponseDto> getPath() { return path; }
+    public List<CoordinateDto> getPath() { return path; }
+
+    // ==========================================
+    // CLASSE INTERNE POUR LE FORMATTAGE JSON
+    // ==========================================
+    public static class CoordinateDto {
+        private double latitude;
+        private double longitude;
+
+        public CoordinateDto(double latitude, double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public double getLatitude() { return latitude; }
+        public double getLongitude() { return longitude; }
+    }
 }

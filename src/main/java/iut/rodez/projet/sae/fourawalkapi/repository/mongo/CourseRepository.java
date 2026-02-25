@@ -16,4 +16,10 @@ public interface CourseRepository extends MongoRepository<Course, String> {
      * @return liste des parcours trouvée
      */
     List<Course> findByHikeId(Long hikeId);
+
+    /**
+     * Supprime tout les parcours associé à la randonnée en cours de suppression
+     * @param hikeId identifiant de la randonnée supprimé
+     */
+    void deleteByHikeId(Long hikeId);
 }
