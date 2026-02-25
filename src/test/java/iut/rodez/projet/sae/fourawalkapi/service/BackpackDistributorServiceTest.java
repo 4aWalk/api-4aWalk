@@ -20,13 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class BackpackDistributorServiceTest {
 
-    private BackpackDistributorService distributorService;
+    private BackpackDistributorServiceV2 distributorService;
     private List<Backpack> backpacks;
     private List<Item> items;
 
     @BeforeEach
     void setUp() {
-        distributorService = new BackpackDistributorService();
+        distributorService = new BackpackDistributorServiceV2();
         backpacks = new ArrayList<>();
         items = new ArrayList<>();
     }

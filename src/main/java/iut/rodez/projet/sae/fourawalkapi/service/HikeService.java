@@ -17,7 +17,8 @@ import java.util.*;
 public class HikeService {
 
     private final HikeRepository hikeRepository;
-    private final BackpackDistributorService backpackDistributor;
+    private final BackpackDistributorServiceV2 backpackDistributorV2;
+    //private final BackpackDistributorServiceV3 backpackDistributorV3;
     private final HikeValidationOrchestrator hikeValidatorService;
     private final OptimizerService optimizerService;
     private final UserRepository userRepository;
@@ -27,7 +28,8 @@ public class HikeService {
     /**
      * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
      * @param hr Repository pour l'accès aux données des randonnées.
-     * @param bds Service de distribution des items dans les sacs à dos.
+     * @param bds2 Service de distribution des items dans les sacs à dos (algorithme v2).
+     //* @param bds3 Service de distribution des items dans les sacs à dos (algorithme v3).
      * @param hvo Service d'outils de validation métier.
      * @param os Service de sélection optimisée du matériel et de la nourriture.
      * @param ur Repository pour l'accès aux données utilisateurs.
@@ -35,13 +37,15 @@ public class HikeService {
      * @param pr Repository pour la gestion des participants.
      */
     public HikeService(HikeRepository hr,
-                       BackpackDistributorService bds,
+                       BackpackDistributorServiceV2 bds2,
+                       //BackpackDistributorServiceV3 bds3,
                        HikeValidationOrchestrator hvo,
                        OptimizerService os, UserRepository ur,
                        PointOfInterestRepository poiRepo,
                        ParticipantRepository pr) {
         this.hikeRepository = hr;
-        this.backpackDistributor = bds;
+        this.backpackDistributorV2 = bds2;
+        //this.backpackDistributorV3 = bds3;
         this.hikeValidatorService = hvo;
         this.optimizerService = os;
         this.userRepository = ur;
@@ -225,8 +229,8 @@ public class HikeService {
 
         List<Backpack> backpacks = hike.getBackpacks();
 
-        backpackDistributor.distributeBatchesToBackpacks(itemsToPack, backpacks);
-
+        backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks);
+        //backpackDistributorV3.distributeBatchesToBackpacks(itemsToPack, backpacks);
         hikeRepository.save(hike);
     }
 
