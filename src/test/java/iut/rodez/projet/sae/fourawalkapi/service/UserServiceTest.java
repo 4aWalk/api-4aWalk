@@ -295,7 +295,7 @@ class UserServiceTest {
         u2.setPassword(null);
         assertThrows(IllegalArgumentException.class, () -> userService.registerNewUser(u2));
 
-        u2.setPassword(""); // Pas de trim() sur le mot de passe dans ta logique
+        u2.setPassword(""); // Pas de trim() sur le mot de passe
         assertThrows(IllegalArgumentException.class, () -> userService.registerNewUser(u2));
 
         // Test Nom (null puis vide)

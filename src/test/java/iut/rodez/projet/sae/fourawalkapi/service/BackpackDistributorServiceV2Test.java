@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Adapté à la vraie logique de l'entité Backpack (Capacité liée au Participant,
  * tri automatique via addItem).
  */
-class BackpackDistributorServiceTest {
+class BackpackDistributorServiceV2Test {
 
     private BackpackDistributorServiceV2 distributorService;
     private List<Backpack> backpacks;
@@ -169,7 +169,7 @@ class BackpackDistributorServiceTest {
 
         // 2. Création du sac et liaison
         Backpack backpack = new Backpack();
-        backpack.setOwner(owner); // Le getCapacityMaxKg du sac tapera là-dedans !
+        backpack.setOwner(owner);
 
         return backpack;
     }
