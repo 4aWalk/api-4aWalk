@@ -35,9 +35,9 @@ jobs:
       # 3. Compilation, Tests et Métriques Qualité (SonarQube/SonarCloud)
       - name: Build, Test and Analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Fourni nativement par GitHub
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # À configurer dans tes secrets GitHub
-        run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=TON_PROJECT_KEY
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=4aWalk_api-4aWalk -Dsonar.organization=4awalk -Dsonar.host.url=https://sonarcloud.io
 
       # 4. Connexion à Docker Hub
       - name: Log in to Docker Hub
@@ -54,7 +54,7 @@ jobs:
           push: true
           tags: alexandrebrouzes/sae-5-01-iut-api:latest
 
-      # 6. DÉPLOIEMENT SUR AWS
+      # 6. Déploiement sur AWS
       - name: Deploy to AWS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
