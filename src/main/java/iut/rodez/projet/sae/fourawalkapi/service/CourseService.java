@@ -4,7 +4,6 @@ import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.dto.GeoCoordinateResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import iut.rodez.projet.sae.fourawalkapi.document.GeoCoordinate;
-import iut.rodez.projet.sae.fourawalkapi.dto.PointOfInterestResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
