@@ -2,7 +2,12 @@ package iut.rodez.projet.sae.fourawalkapi.document;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +41,13 @@ public class Course {
     private boolean isPaused;
 
     /** Liste coordonnée des relevés GPS */
-    private List<GeoCoordinate> trajetsRealises;
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
+    private GeoJsonLineString trajetsRealises;
 
     // --- Constructeurs ---
 
     public Course() {
-        this.trajetsRealises = new ArrayList<>();
+        // trajetsRealises n'est pas initialisé ici, il reste null jusqu'au premier relevé GPS
         this.dateRealisation = LocalDateTime.now();
         this.isFinished = false;
         this.isPaused = false;
@@ -57,6 +63,18 @@ public class Course {
 
     public void togglePause() {
         this.isPaused = !this.isPaused;
+    }
+
+    public void addCoordinate(double latitude, double longitude) {
+        Point newPoint = new Point(longitude, latitude);
+
+        if (this.trajetsRealises == null) {
+            this.trajetsRealises = new GeoJsonLineString(List.of(newPoint, newPoint));
+        } else {
+            List<Point> currentPoints = new ArrayList<>(this.trajetsRealises.getCoordinates());
+            currentPoints.add(newPoint);
+            this.trajetsRealises = new GeoJsonLineString(currentPoints);
+        }
     }
 
     // --- Getters et Setters ---
@@ -82,6 +100,6 @@ public class Course {
     public boolean isPaused() { return isPaused; }
     public void setPaused(boolean paused) { isPaused = paused; }
 
-    public List<GeoCoordinate> getTrajetsRealises() { return trajetsRealises; }
-    public void setTrajetsRealises(List<GeoCoordinate> trajetsRealises) { this.trajetsRealises = trajetsRealises; }
+    public GeoJsonLineString getTrajetsRealises() { return trajetsRealises; }
+    public void setTrajetsRealises(GeoJsonLineString trajetsRealises) { this.trajetsRealises = trajetsRealises; }
 }
