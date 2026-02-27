@@ -6,6 +6,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BroughtEquipmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -13,6 +14,13 @@ import java.util.Set;
 
 @Service
 public class LogisticsValidationService {
+
+    private final BroughtEquipmentRepository broughtEquipmentRepository;
+
+    // L'injection par le constructeur
+    public LogisticsValidationService(BroughtEquipmentRepository broughtEquipmentRepository) {
+        this.broughtEquipmentRepository = broughtEquipmentRepository;
+    }
 
     /**
      * Valide le stock de nourriture :
@@ -46,6 +54,7 @@ public class LogisticsValidationService {
      * Valide la couverture en équipement.
      * S'assure qu'il y a au moins 1 item par participant pour chaque catégorie obligatoire.
      * Ignore les catégories optionnelles (AUTRE) ou conditionnelles (REPOS si < 2 jours).
+     * @param hike randonnée contrôlée
      */
     public void validateHikeEquipment(Hike hike) {
         if (hike.getEquipmentGroups() == null) return;
@@ -53,12 +62,13 @@ public class LogisticsValidationService {
         int nbParticipants = hike.getParticipants().size();
 
         for (TypeEquipment type : TypeEquipment.values()) {
-            // Ignore les équipement autre pour la V2
-            boolean isNotAutre = type != TypeEquipment.AUTRE;
-            // Pas besoin de tente/sac de couchage pour une randonnée à la journée
+
+            // Pas de vérification de couverture portant sur les objet de type autre ou vêtement
+            boolean isNotAutreOrVetement = type != TypeEquipment.AUTRE && type != TypeEquipment.VETEMENT;
+            // Pas besoin de matériel pour le repos si la randonnée dure 1 jour
             boolean needsRepos = !(type == TypeEquipment.REPOS && hike.getDureeJours() < 2);
 
-            if (isNotAutre && needsRepos) {
+            if (isNotAutreOrVetement && needsRepos) {
                 GroupEquipment group = hike.getEquipmentGroups().get(type);
 
                 // Somme des quantités disponibles dans le groupe d'équipement
@@ -66,6 +76,17 @@ public class LogisticsValidationService {
 
                 if (totalItems < nbParticipants) {
                     throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
+                }
+            }
+
+            /* Vérification de la définition des apartenances d'équipement de type vêtement ou repos */
+            if(type == TypeEquipment.VETEMENT || (type == TypeEquipment.REPOS && needsRepos)) {
+                GroupEquipment group = hike.getEquipmentGroups().get(type);
+                for(EquipmentItem item : group.getItems()) {
+                    Long idparticipant = broughtEquipmentRepository.getIfExistParticipantForEquipmentAndHike(hike.getId(),item.getId());
+                    if(idparticipant == null) {
+                        throw new IllegalStateException("Un propriétaire n'a pas été définit pour l'objet" + item.getNom());
+                    }
                 }
             }
         }

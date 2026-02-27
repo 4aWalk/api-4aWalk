@@ -3,6 +3,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 1. Nettoyage
 DROP TABLE IF EXISTS group_equipment_items;
 DROP TABLE IF EXISTS group_equipments;
+DROP TABLE IF EXISTS brought_equipment;
 DROP TABLE IF EXISTS hike_food_products;
 DROP TABLE IF EXISTS hike_participants;
 DROP TABLE IF EXISTS backpack_equipment;
@@ -114,6 +115,16 @@ CREATE TABLE hike_food_products (
                                     PRIMARY KEY (hike_id, food_product_id),
                                     FOREIGN KEY (hike_id) REFERENCES hikes(id) ON DELETE CASCADE,
                                     FOREIGN KEY (food_product_id) REFERENCES food_products(id) ON DELETE CASCADE
+);
+
+CREATE TABLE brought_equipment (
+                                   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                   hike_id BIGINT NOT NULL,
+                                   participant_id BIGINT NOT NULL,
+                                   equipment_id BIGINT NOT NULL,
+                                   CONSTRAINT fk_be_hike FOREIGN KEY (hike_id) REFERENCES hikes(id) ON DELETE CASCADE,
+                                   CONSTRAINT fk_be_participant FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,
+                                   CONSTRAINT fk_be_equipment FOREIGN KEY (equipment_id) REFERENCES equipment_items(id) ON DELETE CASCADE
 );
 
 CREATE TABLE group_equipments (

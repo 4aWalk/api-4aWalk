@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BroughtEquipmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests unitaires du LogisticsValidationService.
@@ -18,12 +21,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class LogisticsValidationServiceTest {
 
     private LogisticsValidationService logisticsService;
+    private BroughtEquipmentRepository broughtEquipmentRepositoryMock;
     private Hike standardHike;
 
     @BeforeEach
     void setUp() {
-        logisticsService = new LogisticsValidationService();
+        // On passe le mock en attribut de classe pour pouvoir configurer ses retours dans les tests
+        broughtEquipmentRepositoryMock = mock(BroughtEquipmentRepository.class);
+        logisticsService = new LogisticsValidationService(broughtEquipmentRepositoryMock);
+
         standardHike = new Hike();
+        standardHike.setId(1L); // Important pour simuler les appels BDD
         standardHike.setParticipants(new HashSet<>());
         standardHike.setFoodCatalogue(new ArrayList<>());
         standardHike.setEquipmentGroups(new HashMap<>());
@@ -124,6 +132,52 @@ class LogisticsValidationServiceTest {
         assertTrue(ex.getMessage().contains("Couverture insuffisante pour le type : REPOS"));
     }
 
+    @Test
+    void validateHikeEquipment_VetementAndReposWithOwner_ShouldPass() {
+        // Given : Rando de 2 jours, l'équipement de base est présent
+        standardHike.setDureeJours(2);
+        populateEquipment(standardHike, 2, true);
+
+        // On assigne un ID à l'item REPOS créé par la méthode utilitaire
+        EquipmentItem reposItem = standardHike.getEquipmentGroups().get(TypeEquipment.REPOS).getItems().getFirst();
+        reposItem.setId(10L);
+
+        // On ajoute le groupe VETEMENT
+        GroupEquipment vetementGroup = createGroupEquipment(TypeEquipment.VETEMENT, 1, 500, 0);
+        EquipmentItem vetementItem = vetementGroup.getItems().getFirst();
+        vetementItem.setId(20L);
+        standardHike.getEquipmentGroups().put(TypeEquipment.VETEMENT, vetementGroup);
+
+        // On simule que la base de données trouve bien un propriétaire pour ces objets
+        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 10L)).thenReturn(99L); // Propriétaire 99
+        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 20L)).thenReturn(88L); // Propriétaire 88
+
+        // When & Then : La validation doit passer sans encombre
+        assertDoesNotThrow(() -> logisticsService.validateHikeEquipment(standardHike));
+    }
+
+    @Test
+    void validateHikeEquipment_VetementWithoutOwner_ShouldThrowException() {
+        // Given : Rando de 1 jour avec l'équipement de base
+        standardHike.setDureeJours(1);
+        populateEquipment(standardHike, 2, false);
+
+        // On ajoute un vêtement sans propriétaire
+        GroupEquipment vetementGroup = createGroupEquipment(TypeEquipment.VETEMENT, 1, 500, 0);
+        EquipmentItem vetementItem = vetementGroup.getItems().getFirst();
+        vetementItem.setId(30L);
+        vetementItem.setNom("Veste Imperméable");
+        standardHike.getEquipmentGroups().put(TypeEquipment.VETEMENT, vetementGroup);
+
+        // On simule que la BDD ne trouve aucun propriétaire (renvoie null)
+        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 30L)).thenReturn(null);
+
+        // When & Then : L'exception de propriétaire non défini doit sauter
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> logisticsService.validateHikeEquipment(standardHike));
+        assertTrue(ex.getMessage().contains("Un propriétaire n'a pas été définit pour l'objetVeste Imperméable"));
+    }
+
     // ==========================================
     // TESTS : CAPACITÉ D'EMPORT D'EAU
     // ==========================================
@@ -187,7 +241,7 @@ class LogisticsValidationServiceTest {
      */
     private void populateEquipment(Hike hike, int nbParticipants, boolean includeRepos) {
         for (TypeEquipment type : TypeEquipment.values()) {
-            if (type == TypeEquipment.AUTRE) continue;
+            if (type == TypeEquipment.AUTRE || type == TypeEquipment.VETEMENT) continue;
             if (type == TypeEquipment.REPOS && !includeRepos) continue;
 
             hike.getEquipmentGroups().put(type, createGroupEquipment(type, nbParticipants, 1000, 100));
@@ -204,10 +258,10 @@ class LogisticsValidationServiceTest {
         EquipmentItem item = new EquipmentItem();
         item.setType(type);
         item.setNbItem(nbItem);
-        item.setMasseGrammes(massePleine); // Poids total
-        item.setMasseAVide(masseVide);     // Tare
+        item.setMasseGrammes(massePleine);
+        item.setMasseAVide(masseVide);
 
-        group.setItems(new ArrayList<>(java.util.List.of(item))); // Utilisation d'une List comme demandé
+        group.setItems(new ArrayList<>(java.util.List.of(item)));
         return group;
     }
 }

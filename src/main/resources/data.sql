@@ -12,7 +12,6 @@ INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morpho
 
 -- ==========================================
 -- 2. FOOD PRODUCTS (50 items)
--- appellation_courante = 1 à 2 mots pour l'algo de variété
 -- ==========================================
 INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro, nb_item) VALUES
 -- SOLO (nb_item = 1)
@@ -72,7 +71,7 @@ INSERT INTO food_products (id, nom, description, masse_grammes, appellation_cour
 (50, 'Compote XXL 3P', 'Snack 3P', 240.0, 'Compote', 'Gourde', 400.0, 7.0, 3);
 
 -- ==========================================
--- 3. EQUIPMENT ITEMS (50 items)
+-- 3. EQUIPMENT ITEMS (60 items)
 -- ==========================================
 INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type, masse_a_vide) VALUES
 -- REPOS (1-10)
@@ -133,7 +132,19 @@ INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type,
 (47, 'Couteau Solo', '1P', 120.0, 1, 'AUTRE', 0.0),
 (48, 'Serviette Duo', '2P', 300.0, 2, 'AUTRE', 0.0),
 (49, 'Batterie Trio', '3P', 400.0, 3, 'AUTRE', 0.0),
-(50, 'Gaz Trio', '3P', 500.0, 3, 'AUTRE', 0.0);
+(50, 'Gaz Trio', '3P', 500.0, 3, 'AUTRE', 0.0),
+
+-- VÊTEMENT (51-60)
+(51, 'Veste Imperméable', 'Gore-Tex Légère', 400.0, 1, 'VETEMENT', 0.0),
+(52, 'Polaire Chaude', 'Isolation Thermique', 350.0, 1, 'VETEMENT', 0.0),
+(53, 'T-shirt Respirant', 'Séchage rapide', 150.0, 1, 'VETEMENT', 0.0),
+(54, 'Pantalon Trek', 'Pantalon Modulable', 450.0, 1, 'VETEMENT', 0.0),
+(55, 'Chaussettes Rando', 'Anti-ampoules', 80.0, 1, 'VETEMENT', 0.0),
+(56, 'Gants Froid', 'Paire Hiver', 100.0, 1, 'VETEMENT', 0.0),
+(57, 'Bonnet', 'Laine Mérinos', 80.0, 1, 'VETEMENT', 0.0),
+(58, 'Sous-vêtement Thermo', 'Couche de base', 200.0, 1, 'VETEMENT', 0.0),
+(59, 'Casquette Soleil', 'Anti-UV', 70.0, 1, 'VETEMENT', 0.0),
+(60, 'Poncho Pluie', 'Couvre-sac inclus', 300.0, 1, 'VETEMENT', 0.0);
 
 -- ==========================================
 -- 4. POI (20 Points)
@@ -170,30 +181,21 @@ INSERT INTO hikes (id, libelle, depart_id, arrivee_id, duree_jours, creator_id) 
 -- ==========================================
 INSERT INTO participants (id, prenom, nom, age, niveau, morphologie, creator, creator_id, besoin_kcal, besoin_eau_litre, capacite_emport_max_kg) VALUES
                                                                                                                                                      (1, 'Alex', 'M', 25, 'ENTRAINE', 'MOYENNE', TRUE, 1, 3000, 5, 0.0),
-
                                                                                                                                                      (2, 'Alex', 'M', 25, 'ENTRAINE', 'MOYENNE', TRUE, 1, 3000, 5, 0.0),
                                                                                                                                                      (3, 'Jean', 'D', 30, 'DEBUTANT', 'FORTE', FALSE, 1, 2000, 3, 12.0),
-
                                                                                                                                                      (4, 'Tony', 'S', 40, 'SPORTIF', 'LEGERE', TRUE, 2, 3000, 5, 0.0),
                                                                                                                                                      (5, 'Paul', 'D', 35, 'ENTRAINE', 'MOYENNE', FALSE, 2, 2000, 3, 15.0),
                                                                                                                                                      (6, 'Luc', 'B', 28, 'SPORTIF', 'LEGERE', FALSE, 2, 2200, 3, 16.0),
-
                                                                                                                                                      (7, 'Tony', 'S', 40, 'SPORTIF', 'LEGERE', TRUE, 2, 3000, 5, 0.0),
                                                                                                                                                      (8, 'Marc', 'N', 45, 'ENTRAINE', 'FORTE', FALSE, 2, 2400, 4, 14.0),
-
                                                                                                                                                      (9, 'Sarah', 'C', 60, 'DEBUTANT', 'FORTE', TRUE, 3, 3000, 5, 0.0),
-
                                                                                                                                                      (10, 'Sarah', 'C', 60, 'DEBUTANT', 'FORTE', TRUE, 3, 3000, 5, 0.0),
                                                                                                                                                      (11, 'Emma', 'G', 55, 'DEBUTANT', 'MOYENNE', FALSE, 3, 1800, 2, 10.0),
                                                                                                                                                      (12, 'Lea', 'R', 50, 'ENTRAINE', 'LEGERE', FALSE, 3, 2000, 3, 12.0),
-
                                                                                                                                                      (13, 'Frodo', 'B', 32, 'ENTRAINE', 'LEGERE', TRUE, 4, 3000, 5, 0.0),
-
                                                                                                                                                      (14, 'Frodo', 'B', 32, 'ENTRAINE', 'LEGERE', TRUE, 4, 3000, 5, 0.0),
                                                                                                                                                      (15, 'Sam', 'G', 33, 'SPORTIF', 'FORTE', FALSE, 4, 2500, 4, 20.0),
-
                                                                                                                                                      (16, 'Lara', 'C', 28, 'SPORTIF', 'MOYENNE', TRUE, 5, 3000, 5, 0.0),
-
                                                                                                                                                      (17, 'Lara', 'C', 28, 'SPORTIF', 'MOYENNE', TRUE, 5, 3000, 5, 0.0),
                                                                                                                                                      (18, 'Jon', 'S', 30, 'SPORTIF', 'MOYENNE', FALSE, 5, 2600, 4, 18.0),
                                                                                                                                                      (19, 'Arya', 'S', 20, 'ENTRAINE', 'LEGERE', FALSE, 5, 2000, 3, 14.0);
@@ -209,26 +211,25 @@ INSERT INTO hike_participants (hike_id, participant_id) VALUES
 -- 8. LIENS HIKES <-> FOOD PRODUCTS
 -- ==========================================
 INSERT INTO hike_food_products (hike_id, food_product_id) VALUES
--- On garde la même logique de calories validée précédemment
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
-(2, 21), (2, 22), (2, 23), (2, 24), (2, 11),
-(3, 36), (3, 37), (3, 38), (3, 39),
-(4, 25), (4, 26), (4, 27), (4, 28), (4, 31),
-(5, 6), (5, 7), (5, 8), (5, 9), (5, 10),
-(6, 40), (6, 41), (6, 42), (6, 46), (6, 12),
-(7, 1), (7, 2), (7, 3), (7, 4), (7, 5),
-(8, 21), (8, 22), (8, 23), (8, 24), (8, 32),
-(9, 6), (9, 7), (9, 8), (9, 9), (9, 10),
-(10, 43), (10, 44), (10, 45), (10, 46);
+                                                              (1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
+                                                              (2, 21), (2, 22), (2, 23), (2, 24), (2, 11),
+                                                              (3, 36), (3, 37), (3, 38), (3, 39),
+                                                              (4, 25), (4, 26), (4, 27), (4, 28), (4, 31),
+                                                              (5, 6), (5, 7), (5, 8), (5, 9), (5, 10),
+                                                              (6, 40), (6, 41), (6, 42), (6, 46), (6, 12),
+                                                              (7, 1), (7, 2), (7, 3), (7, 4), (7, 5),
+                                                              (8, 21), (8, 22), (8, 23), (8, 24), (8, 32),
+                                                              (9, 6), (9, 7), (9, 8), (9, 9), (9, 10),
+                                                              (10, 43), (10, 44), (10, 45), (10, 46);
 
 -- ==========================================
 -- 9. GROUP EQUIPMENTS & ITEMS
 -- ==========================================
 INSERT INTO group_equipments (id, type, hike_id) VALUES
-                                                     (1, 'SOIN', 1), (2, 'EAU', 1), (3, 'PROGRESSION', 1),
-                                                     (4, 'SOIN', 2), (5, 'EAU', 2), (6, 'PROGRESSION', 2), (7, 'REPOS', 2),
-                                                     (8, 'SOIN', 3), (9, 'EAU', 3), (10, 'PROGRESSION', 3),
-                                                     (11, 'SOIN', 4), (12, 'EAU', 4), (13, 'PROGRESSION', 4), (14, 'REPOS', 4),
+                                                     (1, 'SOIN', 1), (2, 'EAU', 1), (3, 'PROGRESSION', 1), (36, 'VETEMENT', 1), -- Ajout vêtement Hike 1
+                                                     (4, 'SOIN', 2), (5, 'EAU', 2), (6, 'PROGRESSION', 2), (7, 'REPOS', 2), (37, 'VETEMENT', 2), -- Ajout vêtement Hike 2
+                                                     (8, 'SOIN', 3), (9, 'EAU', 3), (10, 'PROGRESSION', 3), (38, 'VETEMENT', 3), -- Ajout vêtement Hike 3
+                                                     (11, 'SOIN', 4), (12, 'EAU', 4), (13, 'PROGRESSION', 4), (14, 'REPOS', 4), (39, 'VETEMENT', 4), -- Ajout vêtement Hike 4
                                                      (15, 'SOIN', 5), (16, 'EAU', 5), (17, 'PROGRESSION', 5),
                                                      (18, 'SOIN', 6), (19, 'EAU', 6), (20, 'PROGRESSION', 6), (21, 'REPOS', 6),
                                                      (22, 'SOIN', 7), (23, 'EAU', 7), (24, 'PROGRESSION', 7),
@@ -238,14 +239,35 @@ INSERT INTO group_equipments (id, type, hike_id) VALUES
 
 INSERT INTO group_equipment_items (group_id, equipment_id, item_order) VALUES
                                                                            (1, 11, 0), (2, 21, 0), (3, 31, 0),
+                                                                           (36, 51, 0), -- Hike 1 : Veste
                                                                            (4, 12, 0), (5, 23, 0), (5, 24, 1), (5, 30, 2), (6, 32, 0), (7, 2, 0),
+                                                                           (37, 51, 0), (37, 52, 1), -- Hike 2 : Veste + Polaire
                                                                            (8, 13, 0), (9, 25, 0), (9, 26, 1), (9, 24, 2), (10, 33, 0),
+                                                                           (38, 53, 0), (38, 54, 1), (38, 55, 2), -- Hike 3 : T-shirt + Pantalon + Chaussettes
                                                                            (11, 12, 0), (12, 23, 0), (12, 28, 1), (13, 32, 0), (14, 2, 0),
+                                                                           (39, 51, 0), (39, 54, 1), -- Hike 4 : Veste + Pantalon
                                                                            (15, 11, 0), (16, 21, 0), (17, 31, 0),
                                                                            (18, 13, 0), (19, 25, 0), (19, 26, 1), (19, 22, 2), (20, 33, 0), (21, 3, 0),
                                                                            (22, 11, 0), (23, 21, 0), (24, 31, 0),
                                                                            (25, 12, 0), (26, 23, 0), (26, 28, 1), (27, 32, 0), (28, 2, 0),
                                                                            (29, 11, 0), (30, 21, 0), (31, 31, 0),
                                                                            (32, 13, 0), (33, 25, 0), (33, 25, 1), (34, 33, 0), (35, 3, 0);
+
+-- ==========================================
+-- 10. BROUGHT EQUIPMENT
+-- ==========================================
+INSERT INTO brought_equipment (hike_id, participant_id, equipment_id) VALUES
+-- Randonnée 1 (Solo 1J, Participant: 1)
+(1, 1, 51),
+
+-- Randonnée 2 (Duo 2J, Participants: 2, 3)
+(2, 2, 2),
+(2, 2, 51),
+(2, 3, 52),
+
+-- Randonnée 4 (Duo 3J, Participants: 7, 8)
+(4, 7, 2),
+(4, 7, 51),
+(4, 8, 54);
 
 SET FOREIGN_KEY_CHECKS = 1;

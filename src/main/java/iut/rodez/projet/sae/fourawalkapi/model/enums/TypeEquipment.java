@@ -8,6 +8,7 @@ public enum TypeEquipment {
     PROGRESSION,
     EAU,
     REPOS,
+    VETEMENT,
     AUTRE
 
 }
