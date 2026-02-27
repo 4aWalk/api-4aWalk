@@ -13,7 +13,7 @@ import java.util.List;
  * gloutonne combinée à du backtracking pour garantir une solution valide si elle existe.
  */
 @Service
-public class BackpackDistributorService {
+public class BackpackDistributorServiceV2 {
 
     /**
      * Orchestre la distribution des objets dans les sacs à dos disponibles.
