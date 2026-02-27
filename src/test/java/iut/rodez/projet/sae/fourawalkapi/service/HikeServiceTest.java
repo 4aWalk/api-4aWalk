@@ -32,7 +32,7 @@ class HikeServiceTest {
 
     @Mock private HikeRepository hikeRepository;
     @Mock private CourseRepository courseRepository; // Mock pour les opérations MongoDB en cascade
-    @Mock private BackpackDistributorService backpackDistributor;
+    @Mock private BackpackDistributorServiceV2 backpackDistributor;
     @Mock private HikeValidationOrchestrator hikeValidatorService;
     @Mock private OptimizerService optimizerService;
     @Mock private UserRepository userRepository;
