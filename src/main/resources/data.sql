@@ -4,11 +4,11 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 1. USERS (5 Utilisateurs)
 -- ==========================================
 INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morphologie) VALUES
-                                                                                           (1, 'Martin', 'Alex', 'alex@4awalk.fr', '$2a$10$4yw...', '10 Rue A', 25, 'ENTRAINE', 'MOYENNE'),
-                                                                                           (2, 'Stark', 'Tony', 'tony@4awalk.fr', '$2a$10$4yw...', '12 Ave B', 40, 'SPORTIF', 'LEGERE'),
-                                                                                           (3, 'Connor', 'Sarah', 'sarah@4awalk.fr', '$2a$10$4yw...', '3 Chem C', 60, 'DEBUTANT', 'FORTE'),
-                                                                                           (4, 'Baggins', 'Frodo', 'frodo@4awalk.fr', '$2a$10$4yw...', 'Comté', 32, 'ENTRAINE', 'LEGERE'),
-                                                                                           (5, 'Croft', 'Lara', 'lara@4awalk.fr', '$2a$10$4yw...', 'Manoir', 28, 'SPORTIF', 'MOYENNE');
+                                                                                           (1, 'Martin', 'Alex', 'alex@4awalk.fr', '$2a$10$4yw3VmTFMRjKjs1utXDKIO/Zb7RpGXC/eaTT9Sw.JZqGtHtbMa5IS', '10 Rue A', 25, 'ENTRAINE', 'MOYENNE'),
+                                                                                           (2, 'Stark', 'Tony', 'tony@4awalk.fr', '$2a$10$4yw3VmTFMRjKjs1utXDKIO/Zb7RpGXC/eaTT9Sw.JZqGtHtbMa5IS', '12 Ave B', 40, 'SPORTIF', 'LEGERE'),
+                                                                                           (3, 'Connor', 'Sarah', 'sarah@4awalk.fr', '$2a$10$4yw3VmTFMRjKjs1utXDKIO/Zb7RpGXC/eaTT9Sw.JZqGtHtbMa5IS', '3 Chem C', 60, 'DEBUTANT', 'FORTE'),
+                                                                                           (4, 'Baggins', 'Frodo', 'frodo@4awalk.fr', '$2a$10$4yw3VmTFMRjKjs1utXDKIO/Zb7RpGXC/eaTT9Sw.JZqGtHtbMa5IS', 'Comté', 32, 'ENTRAINE', 'LEGERE'),
+                                                                                           (5, 'Croft', 'Lara', 'lara@4awalk.fr', '$2a$10$4yw3VmTFMRjKjs1utXDKIO/Zb7RpGXC/eaTT9Sw.JZqGtHtbMa5IS', 'Manoir', 28, 'SPORTIF', 'MOYENNE');
 
 -- ==========================================
 -- 2. FOOD PRODUCTS (50 items)
