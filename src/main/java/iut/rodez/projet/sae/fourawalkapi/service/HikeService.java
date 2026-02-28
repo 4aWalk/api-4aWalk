@@ -193,7 +193,7 @@ public class HikeService {
     private void checkLibelleUniqueness(Long userId, String libelle, Long excludeHikeId) {
         if (libelle == null || libelle.trim().isEmpty()) return;
 
-        // On cherche si un AUTRE enregistrement (IdNot) a le même nom
+        // On cherche si un autre enregistrement (IdNot) a le même nom
         boolean exists = hikeRepository.existsByCreatorIdAndLibelleAndIdNot(userId, libelle, excludeHikeId);
 
         if (exists) {
@@ -228,8 +228,8 @@ public class HikeService {
 
         hikeValidatorService.validateHikeForOptimize(hike);
 
-        List<EquipmentItem> optimizedEquipment = optimizerService.getOptimizeAllEquipmentV2(hike);
-        List<FoodProduct> optimizedFood = optimizerService.getOptimizeAllFoodV2(hike);
+        List<EquipmentItem> optimizedEquipment = optimizerService.getOptimizeAllEquipment(hike);
+        List<FoodProduct> optimizedFood = optimizerService.getOptimizeAllFood(hike);
 
         List<Item> itemsToPack = new ArrayList<>();
         itemsToPack.addAll(optimizedEquipment);
@@ -237,8 +237,8 @@ public class HikeService {
 
         List<Backpack> backpacks = hike.getBackpacks();
 
-        backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks);
-        //backpackDistributorV3.distributeBatchesToBackpacks(itemsToPack, backpacks);
+        backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
+        //backpackDistributorV3.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
         hikeRepository.save(hike);
     }
 

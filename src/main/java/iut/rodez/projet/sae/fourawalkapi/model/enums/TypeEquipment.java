@@ -10,5 +10,4 @@ public enum TypeEquipment {
     REPOS,
     VETEMENT,
     AUTRE
-
 }

@@ -7,8 +7,8 @@ import jakarta.persistence.*;
  * Représente le fait qu'un participant a un équipement qui lui appartient pour une randonnée spécifique.
  */
 @Entity
-@Table(name = "brought_equipment")
-public class BroughtEquipment {
+@Table(name = "belong_equipment")
+public class BelongEquipment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,11 +28,11 @@ public class BroughtEquipment {
 
     // --- Constructeurs ---
 
-    public BroughtEquipment() {
+    public BelongEquipment() {
         // Constructeur vide requis par JPA
     }
 
-    public BroughtEquipment(Hike hike, Participant participant, EquipmentItem equipment) {
+    public BelongEquipment(Hike hike, Participant participant, EquipmentItem equipment) {
         this.hike = hike;
         this.participant = participant;
         this.equipment = equipment;

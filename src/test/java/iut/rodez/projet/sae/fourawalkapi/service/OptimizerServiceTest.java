@@ -53,7 +53,7 @@ class OptimizerServiceTest {
         testHike.setEquipmentGroups(groups);
 
         // WHEN : On lance l'optimisation des équipements
-        List<EquipmentItem> result = optimizerService.getOptimizeAllEquipmentV2(testHike);
+        List<EquipmentItem> result = optimizerService.getOptimizeAllEquipment(testHike);
 
         // THEN : L'algorithme choisit l'Option 1 (la tente 3 places) pour minimiser la taille de la liste
         boolean hasTente3Places = result.stream().anyMatch(e -> e.getNbItem() == 3);
@@ -74,7 +74,7 @@ class OptimizerServiceTest {
 
         // WHEN : On lance l'optimisation
         // THEN : Pas d'exception levée, car la durée de 1 jour exclut le besoin de REPOS.
-        assertDoesNotThrow(() -> optimizerService.getOptimizeAllEquipmentV2(testHike));
+        assertDoesNotThrow(() -> optimizerService.getOptimizeAllEquipment(testHike));
     }
 
     @Test
@@ -93,7 +93,7 @@ class OptimizerServiceTest {
         // WHEN : On lance l'optimisation
         // THEN : L'algorithme échoue et remonte l'erreur demandée par le service.
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> optimizerService.getOptimizeAllEquipmentV2(testHike));
+                () -> optimizerService.getOptimizeAllEquipment(testHike));
         assertTrue(ex.getMessage().contains("Impossible de trouver une combinaison valide"));
     }
 
@@ -121,7 +121,7 @@ class OptimizerServiceTest {
         testHike.setFoodCatalogue(catalogue);
 
         // WHEN : On lance l'optimisation alimentaire
-        List<FoodProduct> result = optimizerService.getOptimizeAllFoodV2(testHike);
+        List<FoodProduct> result = optimizerService.getOptimizeAllFood(testHike);
 
         // THEN : L'algorithme a choisi la barre magique (400g) pour minimiser le poids
         assertEquals(1, result.size());
@@ -138,7 +138,7 @@ class OptimizerServiceTest {
         testHike.setFoodCatalogue(catalogue);
 
         // WHEN : On lance l'optimisation
-        List<FoodProduct> result = optimizerService.getOptimizeAllFoodV2(testHike);
+        List<FoodProduct> result = optimizerService.getOptimizeAllFood(testHike);
 
         // THEN : La liste est vide, pas besoin de s'encombrer pour 0 kcal
         assertTrue(result.isEmpty());
@@ -155,7 +155,7 @@ class OptimizerServiceTest {
         testHike.setFoodCatalogue(catalogue);
 
         // WHEN : L'algorithme cherche une solution
-        List<FoodProduct> result = optimizerService.getOptimizeAllFoodV2(testHike);
+        List<FoodProduct> result = optimizerService.getOptimizeAllFood(testHike);
 
         // THEN : Renvoie une liste vide suite à l'échec
         assertTrue(result.isEmpty());

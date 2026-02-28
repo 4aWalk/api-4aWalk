@@ -254,9 +254,9 @@ INSERT INTO group_equipment_items (group_id, equipment_id, item_order) VALUES
                                                                            (32, 13, 0), (33, 25, 0), (33, 25, 1), (34, 33, 0), (35, 3, 0);
 
 -- ==========================================
--- 10. BROUGHT EQUIPMENT
+-- 10. BELONG EQUIPMENT
 -- ==========================================
-INSERT INTO brought_equipment (hike_id, participant_id, equipment_id) VALUES
+INSERT INTO belong_equipment (hike_id, participant_id, equipment_id) VALUES
 -- Randonnée 1 (Solo 1J, Participant: 1)
 (1, 1, 51),
 

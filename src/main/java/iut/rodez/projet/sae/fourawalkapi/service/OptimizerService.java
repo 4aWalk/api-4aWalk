@@ -17,17 +17,17 @@ public class OptimizerService {
      * Algorithme d'optimisation pour l'équipement.
      * Parcourt chaque catégorie d'équipement requise et sélectionne la combinaison
      * la plus légère permettant de couvrir tous les participants.
+     * Point de vigilance, l'optimisation des vêtements ne présente pas de décisionnel ils sont tous ajouté
      *
      * @param hike La randonnée contenant les participants et le catalogue d'équipements.
      * @return Une liste plate des équipements optimisés à emporter.
      * @throws RuntimeException Si une catégorie obligatoire ne peut pas être satisfaite.
      */
-    public List<EquipmentItem> getOptimizeAllEquipmentV2(Hike hike) {
+    public List<EquipmentItem> getOptimizeAllEquipment(Hike hike) {
         List<TypeEquipment> typeList = new ArrayList<>(Arrays.asList(TypeEquipment.values()));
         List<EquipmentItem> equipmentOptimized = new ArrayList<>();
 
-        typeList.remove(TypeEquipment.AUTRE);
-
+        /* Skip de repos si non nécessaire */
         if (hike.getDureeJours() == 1) {
             typeList.remove(TypeEquipment.REPOS);
         }
@@ -35,8 +35,11 @@ public class OptimizerService {
         for (TypeEquipment type : typeList) {
             GroupEquipment group = hike.getEquipmentGroups().get(type);
             List<EquipmentItem> itemsDispo = (group != null) ? new ArrayList<>(group.getItems()) : new ArrayList<>();
-
-            List<EquipmentItem> bestItemsForType = sortBestEquipmentV2(
+            if(type == TypeEquipment.VETEMENT ||type == TypeEquipment.AUTRE) {
+                equipmentOptimized.addAll(itemsDispo);
+                continue;
+            }
+            List<EquipmentItem> bestItemsForType = sortBestEquipment(
                     itemsDispo,
                     new ArrayList<>(),
                     hike.getParticipants().size(),
@@ -63,7 +66,7 @@ public class OptimizerService {
      * @param index Index de l'item en cours d'évaluation.
      * @return La liste d'équipements optimale (la plus petite taille) ou null si aucune solution n'est trouvée.
      */
-    private List<EquipmentItem> sortBestEquipmentV2(
+    public List<EquipmentItem> sortBestEquipment(
             List<EquipmentItem> candidats,
             List<EquipmentItem> currentSelection,
             int nbParticipant,
@@ -85,13 +88,13 @@ public class OptimizerService {
 
         // Exploration de la branche : Inclusion de l'item
         currentSelection.add(item);
-        List<EquipmentItem> solutionTake = sortBestEquipmentV2(candidats, currentSelection, nbParticipant, index + 1);
+        List<EquipmentItem> solutionTake = sortBestEquipment(candidats, currentSelection, nbParticipant, index + 1);
 
         // Backtrack : Retrait de l'item pour explorer l'autre branche
         currentSelection.removeLast();
 
         // Exploration de la branche : Exclusion de l'item
-        List<EquipmentItem> solutionSkip = sortBestEquipmentV2(candidats, currentSelection, nbParticipant, index + 1);
+        List<EquipmentItem> solutionSkip = sortBestEquipment(candidats, currentSelection, nbParticipant, index + 1);
 
         // Comparaison des résultats des deux branches
         if (solutionTake == null) return solutionSkip;
@@ -114,7 +117,7 @@ public class OptimizerService {
      * @param hike La randonnée contenant le catalogue de nourriture et les besoins caloriques.
      * @return La liste des aliments sélectionnés pour le voyage.
      */
-    public List<FoodProduct> getOptimizeAllFoodV2(Hike hike) {
+    public List<FoodProduct> getOptimizeAllFood(Hike hike) {
         int targetKcal = hike.getCaloriesForAllParticipants();
 
         if (targetKcal == 0) return new ArrayList<>();

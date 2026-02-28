@@ -68,6 +68,9 @@ public class EquipmentItem implements Item {
     // Override de l'interface
 
     @Override
+    public Long getId() { return id; }
+
+    @Override
     public String getNom() { return nom; }
 
     @Override
@@ -75,6 +78,9 @@ public class EquipmentItem implements Item {
 
     @Override
     public int getNbItem() { return nbItem; }
+
+    @Override
+    public void setId(Long id) { this.id = id; }
 
     @Override
     public void setNom(String nom) { this.nom = nom; }
@@ -87,9 +93,6 @@ public class EquipmentItem implements Item {
 
 
     // --- Getters et Setters ---
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

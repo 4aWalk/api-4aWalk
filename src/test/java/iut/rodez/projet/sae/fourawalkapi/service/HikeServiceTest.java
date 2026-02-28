@@ -224,17 +224,18 @@ class HikeServiceTest {
 
         List<EquipmentItem> dummyEquip = List.of(new EquipmentItem());
         List<FoodProduct> dummyFood = List.of(new FoodProduct());
-        when(optimizerService.getOptimizeAllEquipmentV2(testHike)).thenReturn(dummyEquip);
-        when(optimizerService.getOptimizeAllFoodV2(testHike)).thenReturn(dummyFood);
+        when(optimizerService.getOptimizeAllEquipment(testHike)).thenReturn(dummyEquip);
+        when(optimizerService.getOptimizeAllFood(testHike)).thenReturn(dummyFood);
 
         // WHEN : L'ordre d'optimisation est lancé.
         hikeService.optimizeBackpack(100L, 1L);
 
         // THEN : Les collaborateurs (services externes) sont appelés de manière séquentielle et cohérente.
         verify(hikeValidatorService).validateHikeForOptimize(testHike); // Vérification de l'état
-        verify(optimizerService).getOptimizeAllEquipmentV2(testHike);   // Récupération équipement
-        verify(optimizerService).getOptimizeAllFoodV2(testHike);        // Récupération nourriture
-        verify(backpackDistributor).distributeBatchesToBackpacks(anyList(), eq(testHike.getBackpacks())); // Répartition algorithmique
+        verify(optimizerService).getOptimizeAllEquipment(testHike);   // Récupération équipement
+        verify(optimizerService).getOptimizeAllFood(testHike);        // Récupération nourriture
+        verify(backpackDistributor).distributeBatchesToBackpacks(
+                anyList(), eq(testHike.getBackpacks()), eq(testHike.getId())); // Répartition algorithmique
         verify(hikeRepository).save(testHike);                          // Persistance du résultat
     }
 

@@ -5,11 +5,12 @@ package iut.rodez.projet.sae.fourawalkapi.model;
  */
 public interface Item {
 
-
+    Long getId();
     String getNom();
     double getMasseGrammes();
     int getNbItem();
 
+    void setId(Long id);
     void setNom(String nom);
     void setMasseGrammes(double masseGrammes);
     void setNbItem(int nbItem);

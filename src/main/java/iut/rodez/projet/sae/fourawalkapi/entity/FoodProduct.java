@@ -64,6 +64,9 @@ public class FoodProduct implements Item {
     // Override de l'interface
 
     @Override
+    public Long getId() { return id; }
+
+    @Override
     public String getNom() { return nom; }
 
     @Override
@@ -71,6 +74,9 @@ public class FoodProduct implements Item {
 
     @Override
     public int getNbItem() { return nbItem; }
+
+    @Override
+    public void setId(Long id) { this.id = id; }
 
     @Override
     public void setNom(String nom) { this.nom = nom; }
@@ -82,9 +88,6 @@ public class FoodProduct implements Item {
     public void setNbItem(int nbItem) { this.nbItem = nbItem; }
 
     // --- Getters et Setters ---
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getAppellationCourante() { return appellationCourante; }
     public void setAppellationCourante(String appellationCourante) { this.appellationCourante = appellationCourante; }
