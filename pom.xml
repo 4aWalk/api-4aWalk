@@ -26,6 +26,8 @@
             **/dto/**,
             **/document/**,
             **/model/**,
+            **/controller/**,
+            **/config/MongoDataInitializer.java**,
             **/Application.java,
             **/entity/User.java,
             **/entity/Participant.java,
@@ -121,6 +123,8 @@
                         <exclude>**/dto/**</exclude>
                         <exclude>**/document/**</exclude>
                         <exclude>**/model/**</exclude>
+                        <exclude>**/controller/**</exclude>
+                        <exclude>**/config/MongoDataInitializer.class</exclude>
                         <exclude>**/Application.class</exclude>
                         <exclude>**/entity/User.class</exclude>
                         <exclude>**/entity/Participant.class</exclude>

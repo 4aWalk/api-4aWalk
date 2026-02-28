@@ -5,7 +5,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BroughtEquipmentRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,16 +24,16 @@ import static org.mockito.Mockito.when;
  */
 class BackpackDistributorServiceV2Test {
 
+    private BackpackService backpackServiceMock;
     private BackpackDistributorServiceV2 distributorService;
-    private BroughtEquipmentRepository broughtEquipmentRepositoryMock;
     private List<Backpack> backpacks;
     private List<Item> items;
     private long idCounter = 1L; // Compteur pour générer des IDs uniques
 
     @BeforeEach
     void setUp() {
-        broughtEquipmentRepositoryMock = mock(BroughtEquipmentRepository.class);
-        distributorService = new BackpackDistributorServiceV2(broughtEquipmentRepositoryMock);
+        backpackServiceMock = mock(BackpackService.class);
+        distributorService = new BackpackDistributorServiceV2(backpackServiceMock);
         backpacks = new ArrayList<>();
         items = new ArrayList<>();
         idCounter = 1L; // Réinitialisation à chaque test
@@ -195,9 +196,8 @@ class BackpackDistributorServiceV2Test {
         veste.setId(99L);
         items.add(veste);
 
-        // Mock du repository : La veste (ID 99) appartient à Bob (ID 102) sur la rando 1
-        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(1L, 99L))
-                .thenReturn(102L);
+        when(backpackServiceMock.getPreferredOwnerBackpack(eq(veste), eq(backpacks), eq(1L)))
+                .thenReturn(bobBackpack);
 
         // When
         assertDoesNotThrow(() -> distributorService.distributeBatchesToBackpacks(items, backpacks, 1L));

@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BroughtEquipmentRepository extends JpaRepository<BelongEquipment, Long> {
+public interface BelongEquipmentRepository extends JpaRepository<BelongEquipment, Long> {
 
     /**
      * Récupère l'ID du participant propriétaire d'un équipement pour une randonnée donnée.

@@ -53,7 +53,7 @@ public class MongoDataInitializer implements CommandLineRunner {
             logger.info("Création du jeu de données de test MongoDB en cours...");
 
             // --- 1. Parcours TERMINÉ (hike_id = 1) ---
-            Course course1 = new Course(1L, createPoi("D A", "Point de départ", 44.1, 2.1));
+            Course course1 = new Course(1L, createPoi("D A", "Point de départ 1", 44.1, 2.1));
             course1.setArrivee(createPoi("A A", "Point d'arrivée", 44.2, 2.2));
             course1.setDateRealisation(LocalDateTime.now().minusDays(5));
             course1.setFinished(true);
@@ -65,7 +65,7 @@ public class MongoDataInitializer implements CommandLineRunner {
             )));
 
             // --- 2. Parcours EN COURS (hike_id = 2) ---
-            Course course2 = new Course(2L, createPoi("D B", "Point de départ", 45.1, 3.1));
+            Course course2 = new Course(2L, createPoi("D B", "Point de départ 2", 45.1, 3.1));
             course2.setDateRealisation(LocalDateTime.now().minusHours(2));
             course2.setFinished(false);
             course2.setPaused(false);
@@ -76,7 +76,7 @@ public class MongoDataInitializer implements CommandLineRunner {
             )));
 
             // --- 3. Parcours EN PAUSE (hike_id = 1) ---
-            Course course3 = new Course(1L, createPoi("D C", "Point de départ", 46.1, 4.1));
+            Course course3 = new Course(1L, createPoi("D C", "Point de départ 3", 46.1, 4.1));
             course3.setDateRealisation(LocalDateTime.now().minusHours(5));
             course3.setFinished(false);
             course3.setPaused(true);

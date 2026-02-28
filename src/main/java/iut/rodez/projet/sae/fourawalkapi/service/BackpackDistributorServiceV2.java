@@ -1,10 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
-import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
-import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BroughtEquipmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,10 +16,14 @@ import java.util.List;
 @Service
 public class BackpackDistributorServiceV2 {
 
-    private final BroughtEquipmentRepository broughtEquipmentRepository;
+    private final BackpackService backpackService;
 
-    public BackpackDistributorServiceV2(BroughtEquipmentRepository broughtEquipmentRepository) {
-        this.broughtEquipmentRepository = broughtEquipmentRepository;
+    /**
+     * Injection de dépendance
+     * @param backpackService service sac à dos
+     */
+    public BackpackDistributorServiceV2(BackpackService backpackService) {
+        this.backpackService = backpackService;
     }
 
     /**
@@ -68,7 +69,7 @@ public class BackpackDistributorServiceV2 {
         double batchWeightGrammes = currentItem.getMasseGrammes() * currentItem.getNbItem();
 
         // 1. Chercher le sac prioritaire (propriétaire) si VETEMENT ou REPOS
-        Backpack preferredBackpack = getPreferredOwnerBackpack(currentItem, backpacks, hikeId);
+        Backpack preferredBackpack = backpackService.getPreferredOwnerBackpack(currentItem, backpacks, hikeId);
 
         // 2. Créer une liste de candidats triée par espace disponible (Optimisation gloutonne)
         List<Backpack> candidateBackpacks = new ArrayList<>(backpacks);
@@ -102,26 +103,5 @@ public class BackpackDistributorServiceV2 {
         return false;
     }
 
-    /**
-     * Détermine si l'objet a un propriétaire et retourne son sac.
-     * Restreint aux équipements de type VETEMENT et REPOS.
-     */
-    private Backpack getPreferredOwnerBackpack(Item item, List<Backpack> backpacks, Long hikeId) {
-        // On vérifie que c'est bien un équipement (et non de la nourriture)
-        if (item instanceof EquipmentItem equipmentItem) {
-            TypeEquipment type = equipmentItem.getType();
 
-            // Si c'est un vêtement ou du repos
-            if (type == TypeEquipment.VETEMENT || type == TypeEquipment.REPOS) {
-                Long ownerId = broughtEquipmentRepository.getIfExistParticipantForEquipmentAndHike(hikeId, item.getId());
-
-                if (ownerId != null) {
-                    for(Backpack backpack : backpacks) {
-                        if(backpack.getOwner().getId().equals(ownerId)) {return backpack;}
-                    }
-                }
-            }
-        }
-        return null; // Aucun propriétaire ou type non éligible
-    }
 }

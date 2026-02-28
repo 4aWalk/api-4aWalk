@@ -1,7 +1,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 1. Nettoyage
-DROP TABLE IF EXISTS brought_equipment;
+DROP TABLE IF EXISTS belong_equipment;
 DROP TABLE IF EXISTS group_equipment_items;
 DROP TABLE IF EXISTS group_equipments;
 DROP TABLE IF EXISTS hike_food_products;

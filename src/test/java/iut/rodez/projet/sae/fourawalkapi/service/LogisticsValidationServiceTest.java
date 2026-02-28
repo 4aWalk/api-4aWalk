@@ -2,7 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BroughtEquipmentRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,14 +21,14 @@ import static org.mockito.Mockito.when;
 class LogisticsValidationServiceTest {
 
     private LogisticsValidationService logisticsService;
-    private BroughtEquipmentRepository broughtEquipmentRepositoryMock;
+    private BelongEquipmentRepository belongEquipmentRepositoryMock;
     private Hike standardHike;
 
     @BeforeEach
     void setUp() {
         // On passe le mock en attribut de classe pour pouvoir configurer ses retours dans les tests
-        broughtEquipmentRepositoryMock = mock(BroughtEquipmentRepository.class);
-        logisticsService = new LogisticsValidationService(broughtEquipmentRepositoryMock);
+        belongEquipmentRepositoryMock = mock(BelongEquipmentRepository.class);
+        logisticsService = new LogisticsValidationService(belongEquipmentRepositoryMock);
 
         standardHike = new Hike();
         standardHike.setId(1L); // Important pour simuler les appels BDD
@@ -149,8 +149,8 @@ class LogisticsValidationServiceTest {
         standardHike.getEquipmentGroups().put(TypeEquipment.VETEMENT, vetementGroup);
 
         // On simule que la base de données trouve bien un propriétaire pour ces objets
-        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 10L)).thenReturn(99L); // Propriétaire 99
-        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 20L)).thenReturn(88L); // Propriétaire 88
+        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 10L)).thenReturn(99L); // Propriétaire 99
+        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 20L)).thenReturn(88L); // Propriétaire 88
 
         // When & Then : La validation doit passer sans encombre
         assertDoesNotThrow(() -> logisticsService.validateHikeEquipment(standardHike));
@@ -170,7 +170,7 @@ class LogisticsValidationServiceTest {
         standardHike.getEquipmentGroups().put(TypeEquipment.VETEMENT, vetementGroup);
 
         // On simule que la BDD ne trouve aucun propriétaire (renvoie null)
-        when(broughtEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 30L)).thenReturn(null);
+        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 30L)).thenReturn(null);
 
         // When & Then : L'exception de propriétaire non défini doit sauter
         IllegalStateException ex = assertThrows(IllegalStateException.class,

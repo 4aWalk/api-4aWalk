@@ -6,7 +6,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BroughtEquipmentRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -15,11 +15,11 @@ import java.util.Set;
 @Service
 public class LogisticsValidationService {
 
-    private final BroughtEquipmentRepository broughtEquipmentRepository;
+    private final BelongEquipmentRepository belongEquipmentRepository;
 
     // L'injection par le constructeur
-    public LogisticsValidationService(BroughtEquipmentRepository broughtEquipmentRepository) {
-        this.broughtEquipmentRepository = broughtEquipmentRepository;
+    public LogisticsValidationService(BelongEquipmentRepository belongEquipmentRepository) {
+        this.belongEquipmentRepository = belongEquipmentRepository;
     }
 
     /**
@@ -83,7 +83,7 @@ public class LogisticsValidationService {
             if(type == TypeEquipment.VETEMENT || (type == TypeEquipment.REPOS && needsRepos)) {
                 GroupEquipment group = hike.getEquipmentGroups().get(type);
                 for(EquipmentItem item : group.getItems()) {
-                    Long idparticipant = broughtEquipmentRepository.getIfExistParticipantForEquipmentAndHike(hike.getId(),item.getId());
+                    Long idparticipant = belongEquipmentRepository.getIfExistParticipantForEquipmentAndHike(hike.getId(),item.getId());
                     if(idparticipant == null) {
                         throw new IllegalStateException("Un propriétaire n'a pas été définit pour l'objet" + item.getNom());
                     }
