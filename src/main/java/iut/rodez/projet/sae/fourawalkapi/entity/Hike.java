@@ -57,7 +57,7 @@ public class Hike {
 
     /* Liste de tous les points d'intêrets à visiter pendant la randonnée */
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "hike_id")
+    @JoinColumn(name="hike_id")
     private Set<PointOfInterest> optionalPoints = new HashSet<>();
 
     /* Liste de la nourriture ajouté à la randonnée */
@@ -75,16 +75,21 @@ public class Hike {
     @MapKey(name = "type")
     private Map<TypeEquipment, GroupEquipment> equipmentGroups = new EnumMap<>(TypeEquipment.class);
 
+    /* État de l'optimisation de la randonnée */
+    @Column(name = "is_optimize")
+    private boolean optimize;
+
     // --- Constructeurs ---
 
     public Hike() {}
 
-    public Hike(String libelle, PointOfInterest depart, PointOfInterest arrivee, int dureeJours, User creator) {
+    public Hike(String libelle, PointOfInterest depart, PointOfInterest arrivee, int dureeJours, User creator, boolean optimize) {
         this.libelle = libelle;
         this.depart = depart;
         this.arrivee = arrivee;
         setDureeJours(dureeJours);
         this.creator = creator;
+        this.optimize = optimize;
     }
 
     /**
@@ -229,4 +234,7 @@ public class Hike {
     public void setEquipmentGroups(Map<TypeEquipment, GroupEquipment> equipmentGroups) {
         this.equipmentGroups = equipmentGroups;
     }
+
+    public boolean getOptimize() { return optimize; }
+    public void setOptimize(boolean optimize) { this.optimize = optimize; }
 }

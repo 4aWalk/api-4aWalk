@@ -164,17 +164,17 @@ INSERT INTO points_of_interest (id, nom, description, latitude, longitude, hike_
 -- ==========================================
 -- 5. HIKES (10 Randonnées)
 -- ==========================================
-INSERT INTO hikes (id, libelle, depart_id, arrivee_id, duree_jours, creator_id) VALUES
-                                                                                    (1, 'Rando Solo 1 J', 1, 2, 1, 1),
-                                                                                    (2, 'Week-end Duo', 3, 4, 2, 1),
-                                                                                    (3, 'Balade Trio', 5, 6, 2, 2),
-                                                                                    (4, 'Trek Duo 3 J', 7, 8, 3, 2),
-                                                                                    (5, 'Boucle Solo', 9, 10, 1, 3),
-                                                                                    (6, 'Littoral Trio', 11, 12, 2, 3),
-                                                                                    (7, 'Marche Solo', 13, 14, 3, 4),
-                                                                                    (8, 'Grotte Duo', 15, 16, 2, 4),
-                                                                                    (9, 'Château Solo', 17, 18, 1, 5),
-                                                                                    (10, 'Survie Trio', 19, 20, 3, 5);
+INSERT INTO hikes (id, libelle, depart_id, arrivee_id, duree_jours, creator_id, is_optimize) VALUES
+                                                                                    (1, 'Rando Solo 1 J', 1, 2, 1, 1, TRUE),
+                                                                                    (2, 'Week-end Duo', 3, 4, 2, 1, TRUE),
+                                                                                    (3, 'Balade Trio', 5, 6, 2, 2, FALSE),
+                                                                                    (4, 'Trek Duo 3 J', 7, 8, 3, 2, FALSE),
+                                                                                    (5, 'Boucle Solo', 9, 10, 1, 3, FALSE),
+                                                                                    (6, 'Littoral Trio', 11, 12, 2, 3, FALSE),
+                                                                                    (7, 'Marche Solo', 13, 14, 3, 4, FALSE),
+                                                                                    (8, 'Grotte Duo', 15, 16, 2, 4, FALSE),
+                                                                                    (9, 'Château Solo', 17, 18, 1, 5, FALSE),
+                                                                                    (10, 'Survie Trio', 19, 20, 3, 5, FALSE);
 
 -- ==========================================
 -- 6. PARTICIPANTS (20 Participants)

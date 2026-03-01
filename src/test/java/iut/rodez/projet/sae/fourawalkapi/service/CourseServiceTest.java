@@ -107,20 +107,48 @@ class CourseServiceTest {
     // ==========================================
 
     /**
-     * Teste la création d'une nouvelle session de marche avec des données valides.
+     * Teste la création d'une nouvelle session de marche avec succès.
+     * Vérifie que le parcours est bien créé et sauvegardé lorsque la randonnée
+     * associée a déjà été optimisée (le flag optimize est à false).
      */
     @Test
-    void createCourse_Success() {
-        // Given : La randonnée cible existe et appartient à l'utilisateur effectuant la requête
+    void createCourse_Success_WhenHikeIsOptimized() {
+        // Given : La randonnée ne requiert pas d'optimisation (getOptimize == false)
+        mockHike.setOptimize(false); // Utilisation du setter classique
+
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
         when(courseRepository.save(any(Course.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // When : On initialise le parcours
+        // When
         CourseResponseDto result = courseService.createCourse(mockDto, 10L);
 
-        // Then : Le parcours est créé avec succès
+        // Then
         assertNotNull(result);
         verify(courseRepository).save(any(Course.class));
+    }
+
+    /**
+     * Teste l'échec de la création d'une session de marche.
+     * Vérifie qu'une SecurityException est levée et qu'aucune sauvegarde n'est
+     * effectuée en base de données si la randonnée n'a pas encore été optimisée
+     * (le flag optimize est à true).
+     */
+    @Test
+    void createCourse_ThrowsException_WhenHikeIsNotOptimized() {
+        // Given : La randonnée n'est pas optimisée (getOptimize == true)
+        mockHike.setOptimize(true); // Utilisation du setter classique
+
+        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
+
+        // When & Then
+        SecurityException ex = assertThrows(SecurityException.class,
+                () -> courseService.createCourse(mockDto, 10L)
+        );
+
+        assertTrue(ex.getMessage().contains("Vous devez d'abord vérifier et optimiser les sacs"));
+
+        // On s'assure qu'aucune sauvegarde n'a été tentée en base de données
+        verify(courseRepository, never()).save(any(Course.class));
     }
 
     /**

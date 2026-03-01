@@ -59,6 +59,7 @@ CREATE TABLE hikes (
                        creator_id BIGINT,
                        depart_id BIGINT,
                        arrivee_id BIGINT,
+                       is_optimize BOOLEAN,
                        CONSTRAINT fk_hike_creator FOREIGN KEY (creator_id) REFERENCES users(id),
                        CONSTRAINT fk_hike_depart FOREIGN KEY (depart_id) REFERENCES points_of_interest(id),
                        CONSTRAINT fk_hike_arrivee FOREIGN KEY (arrivee_id) REFERENCES points_of_interest(id)
