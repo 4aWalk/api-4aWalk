@@ -231,7 +231,7 @@ public class CourseService {
             poi.setLongitude(geo.getX());
         }
 
-        poi.setName(defaultName);
+        poi.setNom(defaultName);
         poi.setDescription("Point généré automatiquement lors du suivi.");
         return poi;
     }

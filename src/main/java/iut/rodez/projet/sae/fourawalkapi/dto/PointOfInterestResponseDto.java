@@ -20,7 +20,7 @@ public class PointOfInterestResponseDto {
     public PointOfInterestResponseDto(PointOfInterest poi) {
         if (poi != null) {
             this.id = poi.getId();
-            this.nom = poi.getName();
+            this.nom = poi.getNom();
             this.description = poi.getDescription();
             this.latitude = poi.getLatitude();
             this.longitude = poi.getLongitude();

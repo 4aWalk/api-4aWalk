@@ -74,8 +74,8 @@ public class PointOfInterest {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getName() { return nom; }
-    public void setName(String name) { this.nom = name; }
+    public String getNom() { return nom; }
+    public void setNom(String name) { this.nom = name; }
 
     public double getLatitude() { return latitude; }
     public void setLatitude(double latitude) { this.latitude = latitude; }

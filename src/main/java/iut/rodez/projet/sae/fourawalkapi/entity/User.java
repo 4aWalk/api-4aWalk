@@ -44,7 +44,7 @@ public class User implements Person {
 
     /* Age de l'utilisateur */
     @Min(value = 10, message = "L'âge ne peut pas être inférieur à 10 ans")
-    @Max(value = 100, message = "L'âge ne peut pas être supérieur à 100 ans")
+    @Max(value = 99, message = "L'âge ne peut pas être supérieur à 99 ans")
     private int age;
 
     /* Niveau de l'utilisateur */

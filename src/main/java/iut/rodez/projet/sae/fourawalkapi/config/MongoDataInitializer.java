@@ -99,7 +99,7 @@ public class MongoDataInitializer implements CommandLineRunner {
      */
     private PointOfInterest createPoi(String nom, String description, double latitude, double longitude) {
         PointOfInterest poi = new PointOfInterest();
-        poi.setName(nom);
+        poi.setNom(nom);
         poi.setDescription(description);
         poi.setLatitude(latitude);
         poi.setLongitude(longitude);
