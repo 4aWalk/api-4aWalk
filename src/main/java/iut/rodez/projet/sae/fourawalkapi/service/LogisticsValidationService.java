@@ -29,7 +29,7 @@ public class LogisticsValidationService {
      * 3. Le stock total couvre les besoins du groupe.
      */
     public void validateHikeFood(Hike hike, int besoinCalorieTotal) {
-        // Seuil arbitraire : un aliment ne doit pas représenter plus de 25% des besoins totaux
+        // Seuil arbitraire : un lot d'aliment ne doit pas représenter plus de 25% des besoins totaux
         double maxCaloriePerItem = hike.getCaloriesForAllParticipants() / 4.0;
         Set<String> processedFoods = new HashSet<>();
 
@@ -38,7 +38,7 @@ public class LogisticsValidationService {
             if (!processedFoods.add(food.getAppellationCourante())) {
                 throw new RuntimeException("Doublon de type de nourriture détecté : " + food.getAppellationCourante());
             }
-            if (food.getApportNutritionnelKcal() > maxCaloriePerItem) {
+            if (food.getApportNutritionnelKcal() * food.getNbItem() > maxCaloriePerItem) {
                 throw new RuntimeException("Nourriture trop calorique : " + food.getNom());
             }
         }

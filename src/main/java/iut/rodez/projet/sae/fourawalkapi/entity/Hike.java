@@ -68,6 +68,7 @@ public class Hike {
             inverseJoinColumns = @JoinColumn(name = "food_product_id")
     )
     private List<FoodProduct> foodCatalogue = new ArrayList<>();
+
     /* Liste de l'ensemble des équipements rajoutés à la randonnée */
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "hike_id", nullable = false)

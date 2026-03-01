@@ -61,22 +61,25 @@ class LogisticsValidationServiceTest {
 
     @Test
     void validateHikeFood_ValidFood_ShouldPass() {
-        // Given : 4000 kcal requises (2000 + 2000). Max par item = 1000 kcal.
-        // On ajoute pour 4500 kcal de nourriture valide
-        standardHike.getFoodCatalogue().add(createFood("Pomme", 500, 3)); // 1500 kcal
-        standardHike.getFoodCatalogue().add(createFood("Pates", 1000, 3)); // 3000 kcal (pile à la limite des 25%)
+        // Given : 4000 kcal requises. Max par lot = 1000 kcal.
+        // On ajoute 5 lots différents pour atteindre 4500 kcal sans dépasser le plafond
+        standardHike.getFoodCatalogue().add(createFood("Pomme", 200, 5));     // 1000 kcal
+        standardHike.getFoodCatalogue().add(createFood("Pates", 250, 4));     // 1000 kcal
+        standardHike.getFoodCatalogue().add(createFood("Riz", 200, 5));       // 1000 kcal
+        standardHike.getFoodCatalogue().add(createFood("Amandes", 500, 2));   // 1000 kcal
+        standardHike.getFoodCatalogue().add(createFood("Chocolat", 250, 2));  // 500 kcal
 
-        // When & Then : La randonnée couvre les 4000 kcal sans dépasser le seuil par item
+        // When & Then
         assertDoesNotThrow(() -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
     }
 
     @Test
     void validateHikeFood_DuplicateFood_ShouldThrowException() {
-        // Given : Deux objets FoodProduct différents mais avec la même appellation courante
-        standardHike.getFoodCatalogue().add(createFood("Riz", 500, 5)); // 2500 kcal
-        standardHike.getFoodCatalogue().add(createFood("Riz", 500, 5)); // Doublon !
+        // Given : Deux objets sous la limite des 1000 kcal, mais avec le même nom
+        standardHike.getFoodCatalogue().add(createFood("Riz", 200, 4)); // 800 kcal
+        standardHike.getFoodCatalogue().add(createFood("Riz", 200, 4)); // Doublon (800 kcal) !
 
-        // When & Then : L'exception de variété (Set processedFoods) est déclenchée
+        // When & Then
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
         assertTrue(ex.getMessage().contains("Doublon de type de nourriture détecté"));
@@ -96,10 +99,10 @@ class LogisticsValidationServiceTest {
 
     @Test
     void validateHikeFood_TotalCaloriesInsufficient_ShouldThrowException() {
-        // Given : 4000 kcal requises. On ne fournit que 3000 kcal.
-        standardHike.getFoodCatalogue().add(createFood("Barre Céréale", 500, 6)); // 3000 kcal au total
+        // Given : 4000 kcal requises. On ne fournit que 800 kcal au total.
+        standardHike.getFoodCatalogue().add(createFood("Barre Céréale", 200, 4)); // 800 kcal au total
 
-        // When & Then : La rando manque de nourriture
+        // When & Then
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
         assertTrue(ex.getMessage().contains("Nourriture insuffisante"));
