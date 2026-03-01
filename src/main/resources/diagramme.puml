@@ -87,7 +87,7 @@ class EquipmentItem {
 
 class PointOfInterest {
   Long id
-  String name
+  String nom
   double latitude
   double longitude
 }

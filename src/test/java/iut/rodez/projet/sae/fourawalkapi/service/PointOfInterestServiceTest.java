@@ -54,7 +54,7 @@ class PointOfInterestServiceTest {
         // --- Point d'Intérêt (POI) à manipuler ---
         validPoi = new PointOfInterest();
         validPoi.setId(50L);
-        validPoi.setName("Cascade de Salles-la-Source");
+        validPoi.setNom("Cascade de Salles-la-Source");
     }
 
     // ==========================================
