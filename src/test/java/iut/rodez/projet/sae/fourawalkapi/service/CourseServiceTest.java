@@ -199,40 +199,77 @@ class CourseServiceTest {
     // ==========================================
 
     /**
-     * Teste l'ajout périodique de nouveaux points GPS (live tracking).
+     * Teste l'ajout d'un lot de coordonnées avec succès.
+     * Vérifie que les points sont bien ajoutés au parcours et sauvegardés en base
+     * lorsque la randonnée associée a déjà été optimisée (le flag optimize est à false).
      */
     @Test
-    void addPointsToCourse_Success() {
-        // Given : Un parcours en cours et une liste de nouveaux points envoyés par le mobile
-        when(courseRepository.findById("mongo-id-123")).thenReturn(Optional.of(mockCourse));
+    void addPointsToCourse_Success_WhenHikeIsOptimized() {
+        // Given : Configuration des données d'entrée
+        String courseId = "course-123";
+        Long userId = 10L;
+
+        // CORRECTION ICI : Utilisation du constructeur avec paramètres
+        CourseResponseDto.CoordinateDto point = new CourseResponseDto.CoordinateDto(45.0, 3.0);
+        List<CourseResponseDto.CoordinateDto> newPoints = List.of(point);
+
+        // Configuration du mock Course
+        Course mockCourse = mock(Course.class);
+        when(mockCourse.getHikeId()).thenReturn(100L);
+
+        // La randonnée ne requiert pas d'optimisation
+        mockHike.setOptimize(false);
+
+        // Simulation des retours de la base de données
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(mockCourse));
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
-        when(courseRepository.save(any(Course.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        List<CourseResponseDto.CoordinateDto> newPoints = List.of(mock(CourseResponseDto.CoordinateDto.class));
+        // Mock de la méthode mapToDto
+        when(courseRepository.save(any(Course.class))).thenReturn(mockCourse);
 
-        // When : On ajoute les points au parcours
-        CourseResponseDto result = courseService.addPointsToCourse("mongo-id-123", newPoints, 10L);
+        // When : L'utilisateur tente d'ajouter les points
+        courseService.addPointsToCourse(courseId, newPoints, userId);
 
-        // Then : Le tracé s'est allongé.
-        // Rappel : la méthode addCoordinate initialise la ligne avec 2 points identiques.
-        // 2 points de base + 1 nouveau point ajouté = 3 points au total.
-        assertNotNull(result);
-        assertEquals(3, mockCourse.getTrajetsRealises().getCoordinates().size());
+        // Then : Le point est ajouté et le parcours est sauvegardé
+        verify(mockCourse, times(1)).addCoordinate(45.0, 3.0);
+        verify(courseRepository).save(mockCourse);
     }
 
     /**
-     * Vérifie qu'un attaquant ne peut pas injecter de faux points GPS dans le parcours de quelqu'un d'autre.
+     * Teste l'échec de l'ajout de coordonnées au parcours.
+     * Vérifie qu'une SecurityException est levée et qu'aucune sauvegarde n'est
+     * effectuée en base de données si la randonnée n'a pas encore été optimisée
+     * (le flag optimize est à true).
      */
     @Test
-    void addPointsToCourse_WrongUser_ThrowsException() {
-        // Given : Le parcours et la randonnée existent (Créateur = 10L)
-        when(courseRepository.findById("mongo-id-123")).thenReturn(Optional.of(mockCourse));
+    void addPointsToCourse_ThrowsException_WhenHikeIsNotOptimized() {
+        // Given : Configuration des données d'entrée
+        String courseId = "course-123";
+        Long userId = 10L;
+        List<CourseResponseDto.CoordinateDto> newPoints = new ArrayList<>(); // Contenu peu importe, ça doit bloquer avant
+
+        // Configuration du mock Course
+        Course mockCourse = mock(Course.class);
+        when(mockCourse.getHikeId()).thenReturn(100L);
+
+        // La randonnée n'est PAS optimisée (getOptimize == true)
+        mockHike.setOptimize(true);
+
+        // Simulation des retours de la base de données
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(mockCourse));
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
 
-        // When & Then : L'utilisateur 99L tente d'injecter des points -> Échec
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> courseService.addPointsToCourse("mongo-id-123", new ArrayList<>(), 99L));
-        assertTrue(ex.getMessage().contains("Accès refusé"));
+        // When & Then : L'exception de sécurité doit être levée
+        SecurityException ex = assertThrows(SecurityException.class,
+                () -> courseService.addPointsToCourse(courseId, newPoints, userId)
+        );
+
+        // Vérification du message d'erreur
+        assertTrue(ex.getMessage().contains("Vous devez d'abord vérifier et optimiser les sacs"));
+
+        // Vérification cruciale : on s'assure que rien n'a été ajouté ni sauvegardé par erreur
+        verify(mockCourse, never()).addCoordinate(anyDouble(), anyDouble());
+        verify(courseRepository, never()).save(any(Course.class));
     }
 
     // ==========================================

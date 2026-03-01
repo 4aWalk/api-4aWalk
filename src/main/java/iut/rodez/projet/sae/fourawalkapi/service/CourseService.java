@@ -150,6 +150,11 @@ public class CourseService {
             throw new RuntimeException("Accès refusé : Ce parcours ne vous appartient pas.");
         }
 
+        if(hike.getOptimize()){
+            throw new SecurityException("Vous devez d'abord vérifier et optimiser les sacs " +
+                    "avant de reprendre la randonnée");
+        }
+
         if (newPointsDto != null && !newPointsDto.isEmpty()) {
             // Ajout des points via la méthode métier de l'entité (append-only logic)
             for (CourseResponseDto.CoordinateDto p : newPointsDto) {
