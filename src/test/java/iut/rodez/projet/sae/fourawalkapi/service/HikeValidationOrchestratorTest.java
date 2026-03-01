@@ -79,8 +79,9 @@ class HikeValidationOrchestratorTest {
                 verify(physiologyService).validatePoidsParticipant(p);
             }
 
-            // 3. Vérifie le calcul de la somme des calories (2000 + 2500 = 4500)
-            verify(logisticsService).validateHikeFood(standardHike, 4500);
+            // 3. Vérifie le calcul de la somme des calories avec la durée (2j) et la marge (1j)
+            // Calcul : (4500 kcal/jour * 2 jours) + 4500 kcal (marge) = 13500
+            verify(logisticsService).validateHikeFood(standardHike, 13500);
 
             // 4. Vérifie les validations d'équipement
             verify(logisticsService).validateHikeEquipment(standardHike);

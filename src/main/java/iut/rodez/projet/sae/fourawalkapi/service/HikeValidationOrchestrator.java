@@ -45,6 +45,9 @@ public class HikeValidationOrchestrator {
 
         int besoinCalorieTotalParticipant = 0;
 
+        // Marge de 1 jour de sécurité
+        int margeCalorieParticipant = 0;
+
         // Itération sur chaque participant pour valider ses constantes physiologiques personnelles
         for (Participant p : hike.getParticipants()) {
             physiologyService.validateKcalParticipant(p, distanceRando);
@@ -53,6 +56,14 @@ public class HikeValidationOrchestrator {
 
             besoinCalorieTotalParticipant += p.getBesoinKcal();
         }
+
+        margeCalorieParticipant = besoinCalorieTotalParticipant;
+
+        // Calorie nécessaire théorique
+        besoinCalorieTotalParticipant *= hike.getDureeJours();
+
+        // Ajout de la journée de sécurité
+        besoinCalorieTotalParticipant += margeCalorieParticipant;
 
         // Validation des stocks collectifs (Nourriture, Matériel, Contenants à eau)
         logisticsService.validateHikeFood(hike, besoinCalorieTotalParticipant);
