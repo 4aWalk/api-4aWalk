@@ -190,7 +190,7 @@ class HikeServiceTest {
         // WHEN & THEN : L'orchestrateur de validation rejette la demande avant toute insertion.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> hikeService.createHike(testHike, 1L));
-        assertTrue(ex.getMessage().contains("compris entre 0 e 3"));
+        assertTrue(ex.getMessage().contains("Le nombre de jour doit être compris entre 1 et 3"));
     }
 
     /**
@@ -205,7 +205,7 @@ class HikeServiceTest {
         // WHEN & THEN : Le validateur bloque l'opération.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> hikeService.createHike(testHike, 1L));
-        assertTrue(ex.getMessage().contains("compris entre 0 e 3"));
+        assertTrue(ex.getMessage().contains("Le nombre de jour doit être compris entre 1 et 3"));
     }
 
     // ==========================================

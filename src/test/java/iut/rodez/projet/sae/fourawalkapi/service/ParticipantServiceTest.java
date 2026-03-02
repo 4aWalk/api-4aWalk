@@ -377,7 +377,7 @@ class ParticipantServiceTest {
 
     /**
      * Vérifie le respect des bornes d'âge autorisées pour un participant.
-     * Le système doit rejeter les participants de moins de 10 ans ou de plus de 100 ans.
+     * Le système doit rejeter les participants de moins de 10 ans ou de plus de 99 ans.
      */
     @Test
     void validateParticipantRules_InvalidAge_ThrowsException() {
@@ -440,7 +440,7 @@ class ParticipantServiceTest {
 
     /**
      * Vérifie les contraintes physiques liées à la capacité d'emport du sac à dos.
-     * Le système doit rejeter un poids négatif ou un poids dépassant la limite de sécurité (30 kg).
+     * Le système doit rejeter un poids négatif ou un poids dépassant la limite de sécurité (35 kg).
      */
     @Test
     void validateParticipantRules_InvalidCapaciteEmport_ThrowsException() {
