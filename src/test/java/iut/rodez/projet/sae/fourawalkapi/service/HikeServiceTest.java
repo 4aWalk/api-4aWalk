@@ -263,7 +263,7 @@ class HikeServiceTest {
         when(mockEtape1.getSequence()).thenReturn(2); // Étape censée être en 2ème
         when(mockEtape2.getSequence()).thenReturn(1); // Étape censée être en 1ère
 
-        distanceHike.setOptionalPoints(Set.of(mockEtape1, mockEtape2));
+        distanceHike.setOptionalPoints(List.of(mockEtape1, mockEtape2));
 
         // Définition des distances de chaque segment dans l'ordre de passage attendu :
         when(mockDepart.distanceTo(anyDouble(), anyDouble())).thenReturn(2.0); // Départ -> Étape 2

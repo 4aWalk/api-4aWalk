@@ -172,8 +172,8 @@ public class ParticipantService {
         }
 
         // Validation des limites d'âge
-        if (p.getAge() < 10 || p.getAge() > 100) {
-            throw new IllegalArgumentException("L'âge doit être compris entre 10 et 100 ans");
+        if (p.getAge() < 10 || p.getAge() > 99) {
+            throw new IllegalArgumentException("L'âge doit être compris entre 10 et 99 ans");
         }
 
         // Validation des besoins caloriques
@@ -187,8 +187,8 @@ public class ParticipantService {
         }
 
         // Validation de la capacité d'emport
-        if (p.getCapaciteEmportMaxKg() < 0 || p.getCapaciteEmportMaxKg() > 30.0) {
-            throw new IllegalArgumentException("La capacité d'emport doit être positive et ne peut pas dépasser 30 kg");
+        if (p.getCapaciteEmportMaxKg() < 0 || p.getCapaciteEmportMaxKg() > 35.0) {
+            throw new IllegalArgumentException("La capacité d'emport doit être positive et ne peut pas dépasser 35 kg");
         }
     }
 }

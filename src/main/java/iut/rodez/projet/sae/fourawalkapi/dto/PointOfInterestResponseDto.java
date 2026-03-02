@@ -12,6 +12,7 @@ public class PointOfInterestResponseDto {
     private String description;
     private double latitude;
     private double longitude;
+    private int sequence;
 
     /**
      * Mapper entity to dto
@@ -24,6 +25,7 @@ public class PointOfInterestResponseDto {
             this.description = poi.getDescription();
             this.latitude = poi.getLatitude();
             this.longitude = poi.getLongitude();
+            this.sequence = poi.getSequence();
         }
     }
 
@@ -33,4 +35,5 @@ public class PointOfInterestResponseDto {
     public String getDescription() { return description; }
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
+    public int getSequence() { return sequence; }
 }

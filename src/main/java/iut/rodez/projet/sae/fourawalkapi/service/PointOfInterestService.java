@@ -7,6 +7,9 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mysql.PointOfInterestReposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Service poi gérant la logique métier de base
  */
@@ -22,42 +25,40 @@ public class PointOfInterestService {
     }
 
     /**
-     * Ajoute un point d'intérêt à une randonnée.
+     * Met à jour l'intégralité des points d'intérêt d'une randonnée.
+     * Supprime les anciens points et enregistre la nouvelle liste ordonnée.
      *
-     * @param hikeId Identifiant de la randonnée.
-     * @param poi Point d'intérêt à ajouter.
-     * @param userId Identifiant de l'utilisateur propriétaire.
-     * @return Le point d'intérêt sauvegardé.
+     * @param hikeId  Identifiant de la randonnée.
+     * @param newPois Liste des nouveaux points d'intérêt.
+     * @param userId  Identifiant de l'utilisateur propriétaire.
+     * @return La liste des points d'intérêt sauvegardés et ordonnés.
      * @throws RuntimeException Si l'utilisateur n'est pas le créateur de la randonnée.
      */
     @Transactional
-    public PointOfInterest addPoiToHike(Long hikeId, PointOfInterest poi, Long userId) {
-        Hike hike = hikeRepository.findById(hikeId).orElseThrow();
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
+    public List<PointOfInterest> updateAllPois(Long hikeId, List<PointOfInterest> newPois, Long userId) {
+        Hike hike = hikeRepository.findById(hikeId)
+                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        PointOfInterest saved = poiRepository.save(poi);
-        hike.getOptionalPoints().add(saved);
+        if (!hike.getCreator().getId().equals(userId)) {
+            throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire.");
+        }
+
+        // supprime les anciens points pour les supprimer de la base
+        List<PointOfInterest> oldPois = new ArrayList<>(hike.getOptionalPoints());
+        hike.getOptionalPoints().clear();
+        poiRepository.deleteAll(oldPois);
+
+        // Ajout des nouveaux points avec mise à jour de la séquence
+        for (int i = 0; i < newPois.size(); i++) {
+            PointOfInterest poi = newPois.get(i);
+            poi.setId(null);
+            poi.setSequence(i);
+
+            PointOfInterest savedPoi = poiRepository.save(poi);
+            hike.getOptionalPoints().add(savedPoi);
+        }
+
         hikeRepository.save(hike);
-        return saved;
-    }
-
-    /**
-     * Supprime un point d'intérêt d'une randonnée.
-     *
-     * @param hikeId Identifiant de la randonnée.
-     * @param poiId Identifiant du point d'intérêt.
-     * @param userId Identifiant de l'utilisateur propriétaire.
-     * @throws RuntimeException Si l'utilisateur n'est pas autorisé.
-     */
-    @Transactional
-    public void removePoiFromHike(Long hikeId, Long poiId, Long userId) {
-        Hike hike = hikeRepository.findById(hikeId).orElseThrow();
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException("Accès refusé");
-
-        PointOfInterest poi = poiRepository.findById(poiId).orElseThrow();
-
-        hike.getOptionalPoints().remove(poi);
-        hikeRepository.save(hike);
-        poiRepository.delete(poi);
+        return hike.getOptionalPoints();
     }
 }

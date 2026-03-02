@@ -9,8 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,8 +17,8 @@ import static org.mockito.Mockito.*;
 
 /**
  * Classe de test pour le service PointOfInterestService.
- * Valide l'ajout et la suppression des Points d'Intérêt (POI) sur une carte/randonnée,
- * en insistant sur la sécurité (IDOR) et l'intégrité transactionnelle.
+ * Valide la mise à jour globale et ordonnée des Points d'Intérêt (POI) d'une randonnée,
+ * en vérifiant la gestion de la séquence et la sécurité d'accès.
  */
 class PointOfInterestServiceTest {
 
@@ -29,7 +28,7 @@ class PointOfInterestServiceTest {
 
     private User creatorUser;
     private Hike mockHike;
-    private PointOfInterest validPoi;
+    private List<PointOfInterest> newList;
 
     /**
      * Préparation des données factices et des bouchons (Mocks) avant chaque test.
@@ -48,124 +47,102 @@ class PointOfInterestServiceTest {
         mockHike = new Hike();
         mockHike.setId(100L);
         mockHike.setCreator(creatorUser);
-        // Important : On simule l'initialisation de la collection pour éviter le NullPointerException
-        mockHike.setOptionalPoints(new HashSet<>());
+        // Initialisation avec une liste vide (ArrayList)
+        mockHike.setOptionalPoints(new ArrayList<>());
 
-        // --- Point d'Intérêt (POI) à manipuler ---
-        validPoi = new PointOfInterest();
-        validPoi.setId(50L);
-        validPoi.setNom("Cascade de Salles-la-Source");
+        // --- Nouvelle liste de POIs à synchroniser ---
+        newList = new ArrayList<>();
+        PointOfInterest p1 = new PointOfInterest();
+        p1.setNom("Départ");
+        PointOfInterest p2 = new PointOfInterest();
+        p2.setNom("Arrivée");
+
+        newList.add(p1);
+        newList.add(p2);
     }
 
-    // ==========================================
-    // TESTS : AJOUT D'UN POINT D'INTÉRÊT (POI)
-    // ==========================================
-
     /**
-     * Teste l'ajout nominal d'un POI sur une randonnée par son propriétaire légitime.
+     * Teste la mise à jour nominale de tous les POIs d'une randonnée.
+     * Vérifie que les anciens points sont supprimés et que les nouveaux sont
+     * sauvegardés avec la bonne séquence (0, 1, 2...).
      */
     @Test
-    void addPoiToHike_Success() {
-        // Given : La randonnée existe, et le repository est prêt à sauvegarder le POI
+    void updateAllPois_Success() {
+        // Given : La randonnée existe et contient déjà un ancien point
+        PointOfInterest oldPoi = new PointOfInterest();
+        oldPoi.setId(1L);
+        mockHike.getOptionalPoints().add(oldPoi);
+
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
-        when(poiRepository.save(validPoi)).thenReturn(validPoi);
+        // Simulation de la sauvegarde : on retourne l'objet passé en paramètre
+        when(poiRepository.save(any(PointOfInterest.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // When : Le propriétaire (ID=10L) ajoute le point
-        PointOfInterest result = poiService.addPoiToHike(100L, validPoi, 10L);
+        // When : Le propriétaire met à jour sa liste
+        List<PointOfInterest> result = poiService.updateAllPois(100L, newList, 10L);
 
-        // Then : Le POI est sauvegardé, ajouté à la liste, et la rando est mise à jour
+        // Then : Vérifications de l'état final
         assertNotNull(result);
-        assertTrue(mockHike.getOptionalPoints().contains(validPoi), "Le POI doit être ajouté à la collection de la rando");
+        assertEquals(2, result.size());
 
-        verify(poiRepository).save(validPoi);
+        // Vérification de la séquence
+        assertEquals(0, result.get(0).getSequence());
+        assertEquals(1, result.get(1).getSequence());
+
+        // Vérification des appels repositories
+        verify(poiRepository).deleteAll(anyList()); // Suppression des anciens
+        verify(poiRepository, times(2)).save(any(PointOfInterest.class)); // Sauvegarde des 2 nouveaux
         verify(hikeRepository).save(mockHike);
     }
 
     /**
-     * Vérifie la faille de sécurité (IDOR) : empêche l'ajout de POI sur la carte d'un autre utilisateur.
+     * Vérifie la faille de sécurité (IDOR) : empêche un utilisateur tiers de
+     * modifier la liste des POIs d'une randonnée qui ne lui appartient pas.
      */
     @Test
-    void addPoiToHike_WrongUserAccess_ThrowsException() {
-        // Given : Une randonnée existante appartenant au User 10L
+    void updateAllPois_WrongUserAccess_ThrowsException() {
+        // Given : La randonnée appartient à l'ID 10L
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
 
-        // When & Then : Un utilisateur malveillant (ID=99L) tente d'ajouter un point
+        // When & Then : L'utilisateur 99L tente une modification
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> poiService.addPoiToHike(100L, validPoi, 99L));
-        assertEquals("Accès refusé", ex.getMessage());
+                () -> poiService.updateAllPois(100L, newList, 99L));
 
-        // Sécurité : On vérifie que les données n'ont pas été altérées en base
+        assertTrue(ex.getMessage().contains("Accès refusé"));
+
+        // Sécurité : rien ne doit être supprimé ou sauvegardé
+        verify(poiRepository, never()).deleteAll(any());
         verify(poiRepository, never()).save(any());
-        verify(hikeRepository, never()).save(any());
     }
 
     /**
-     * Vérifie le comportement lorsque la randonnée spécifiée n'existe pas.
+     * Teste le comportement lorsque la liste envoyée est vide.
+     * La randonnée doit se retrouver avec une liste de points vide.
      */
     @Test
-    void addPoiToHike_HikeNotFound_ThrowsException() {
-        // Given : Le repository ne trouve aucune randonnée pour l'ID 999L
+    void updateAllPois_EmptyList_ClearsAll() {
+        // Given : Une randonnée avec des points existants
+        mockHike.getOptionalPoints().add(new PointOfInterest());
+        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
+
+        // When : On envoie une liste vide
+        List<PointOfInterest> result = poiService.updateAllPois(100L, new ArrayList<>(), 10L);
+
+        // Then : La liste de la randonnée doit être vide
+        assertTrue(result.isEmpty());
+        verify(poiRepository).deleteAll(anyList());
+        verify(hikeRepository).save(mockHike);
+    }
+
+    /**
+     * Vérifie la gestion d'erreur lorsque la randonnée n'existe pas.
+     */
+    @Test
+    void updateAllPois_HikeNotFound_ThrowsException() {
+        // Given : ID inexistant
         when(hikeRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When & Then : L'appel de .orElseThrow() lève une NoSuchElementException
-        assertThrows(NoSuchElementException.class,
-                () -> poiService.addPoiToHike(999L, validPoi, 10L));
-    }
-
-    // ==========================================
-    // TESTS : SUPPRESSION D'UN POINT D'INTÉRÊT
-    // ==========================================
-
-    /**
-     * Teste la suppression réussie d'un POI de la carte.
-     */
-    @Test
-    void removePoiFromHike_Success() {
-        // Given : La randonnée contient déjà le POI
-        mockHike.getOptionalPoints().add(validPoi);
-        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
-        when(poiRepository.findById(50L)).thenReturn(Optional.of(validPoi));
-
-        // When : Le propriétaire demande la suppression
-        poiService.removePoiFromHike(100L, 50L, 10L);
-
-        // Then : Le point est retiré de la collection, la rando est sauvegardée, et le POI est détruit
-        assertFalse(mockHike.getOptionalPoints().contains(validPoi), "Le POI doit être retiré de la collection");
-
-        verify(hikeRepository).save(mockHike);
-        verify(poiRepository).delete(validPoi);
-    }
-
-    /**
-     * Vérifie que l'on ne peut pas supprimer un POI sur la randonnée d'un autre.
-     */
-    @Test
-    void removePoiFromHike_WrongUserAccess_ThrowsException() {
-        // Given : Une randonnée existante (Créateur = 10L)
-        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
-
-        // When & Then : L'utilisateur 99L essaie de supprimer un point
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> poiService.removePoiFromHike(100L, 50L, 99L));
-        assertEquals("Accès refusé", ex.getMessage());
-
-        verify(poiRepository, never()).delete(any());
-    }
-
-    /**
-     * Vérifie la gestion d'erreur lorsqu'un utilisateur tente de supprimer un POI qui n'existe plus (ou mauvais ID).
-     */
-    @Test
-    void removePoiFromHike_PoiNotFound_ThrowsException() {
-        // Given : La randonnée est trouvée, mais le POI (ID=888L) n'existe pas en base
-        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
-        when(poiRepository.findById(888L)).thenReturn(Optional.empty());
-
-        // When & Then : L'appel de .orElseThrow() sur le POI lève l'exception
-        assertThrows(NoSuchElementException.class,
-                () -> poiService.removePoiFromHike(100L, 888L, 10L));
-
-        verify(hikeRepository, never()).save(any());
-        verify(poiRepository, never()).delete(any());
+        // When & Then
+        assertThrows(RuntimeException.class,
+                () -> poiService.updateAllPois(999L, newList, 10L));
     }
 }

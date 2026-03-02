@@ -119,7 +119,7 @@ public class HikeService {
 
         resolvePois(hike);
 
-        hike.setOptionalPoints(new HashSet<>());
+        hike.setOptionalPoints(new ArrayList<>());
         hike.setFoodCatalogue(new ArrayList<>());
         hike.setEquipmentGroups(new EnumMap<>(TypeEquipment.class));
 
@@ -131,8 +131,8 @@ public class HikeService {
      * @param hike randonnée à contrôler
      */
     private void validateHike(Hike hike) {
-        if(hike.getDureeJours() < 0 || hike.getDureeJours() > 3){
-            throw new RuntimeException("Le nombre de jour doit être compris entre 0 e 3");
+        if(hike.getDureeJours() < 1 || hike.getDureeJours() > 3){
+            throw new RuntimeException("Le nombre de jour doit être compris entre 1 et 3");
         }
     }
 
@@ -256,7 +256,7 @@ public class HikeService {
      */
     public static double getAllDistance(Hike hike) {
         double distance = 0.0;
-        Set<PointOfInterest> setPoi = hike.getOptionalPoints();
+        List<PointOfInterest> setPoi = hike.getOptionalPoints();
         List<PointOfInterest> sortedPois = new ArrayList<>();
 
         if (setPoi != null) {

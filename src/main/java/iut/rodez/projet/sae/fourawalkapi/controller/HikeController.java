@@ -157,30 +157,24 @@ public class HikeController {
     // --- SCOPE POI ---
 
     /**
-     * Ajout d'un poi dans la randonnée
-     * @param hikeId identifiant de la randonnée dans laquelle le poi est ajouté
-     * @param poi Point d interet à ajouter
-     * @param auth token d'identification
-     * @return le nouveau poi créer et ajouté
+     * Met à jour la liste complète des points d'intérêt d'une randonnée.
+     * Cet endpoint remplace tous les POI existants par la nouvelle liste fournie,
+     * en respectant l'ordre d'insertion pour la séquence.
+     *
+     * @param hikeId  Identifiant de la randonnée à modifier.
+     * @param pois    Nouvelle liste des points d'intérêt.
+     * @param auth    Token d'authentification.
+     * @return La liste des nouveaux points d'intérêt mappée en DTO.
      */
-    @PostMapping("/{hikeId}/poi")
-    public PointOfInterestResponseDto addPoi(@PathVariable Long hikeId, @RequestBody PointOfInterest poi,
-                                             Authentication auth) {
-        PointOfInterest savedPoi = poiService.addPoiToHike(hikeId, poi, getUserId(auth));
-        return new PointOfInterestResponseDto(savedPoi);
-    }
+    @PutMapping("/{hikeId}/pois")
+    public List<PointOfInterestResponseDto> updatePois(@PathVariable Long hikeId,
+                                                       @RequestBody List<PointOfInterest> pois,
+                                                       Authentication auth) {
+        List<PointOfInterest> updatedPois = poiService.updateAllPois(hikeId, pois, getUserId(auth));
 
-    /**
-     * Suppression du point d interet
-     * @param hikeId identifiant de la randonnée dans laquelle le poi est supprimer
-     * @param poiId identifiant du poi à supprimer
-     * @param auth token d'identification
-     * @return Code retour de la suppression du poi
-     */
-    @DeleteMapping("/{hikeId}/poi/{poiId}")
-    public ResponseEntity<Void> deletePoi(@PathVariable Long hikeId, @PathVariable Long poiId, Authentication auth) {
-        poiService.removePoiFromHike(hikeId, poiId, getUserId(auth));
-        return ResponseEntity.noContent().build();
+        return updatedPois.stream()
+                .map(PointOfInterestResponseDto::new)
+                .toList();
     }
 
     // --- SCOPE FOOD (Liaison) ---

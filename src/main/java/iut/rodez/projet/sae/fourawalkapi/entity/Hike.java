@@ -58,7 +58,7 @@ public class Hike {
     /* Liste de tous les points d'intêrets à visiter pendant la randonnée */
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name="hike_id")
-    private Set<PointOfInterest> optionalPoints = new HashSet<>();
+    private List<PointOfInterest> optionalPoints = new ArrayList<>();
 
     /* Liste de la nourriture ajouté à la randonnée */
     @ManyToMany
@@ -224,8 +224,8 @@ public class Hike {
     public Set<Participant> getParticipants() { return participants; }
     public void setParticipants(Set<Participant> participants) { this.participants = participants; }
 
-    public Set<PointOfInterest> getOptionalPoints() { return optionalPoints; }
-    public void setOptionalPoints(Set<PointOfInterest> optionalPoints) { this.optionalPoints = optionalPoints; }
+    public List<PointOfInterest> getOptionalPoints() { return optionalPoints; }
+    public void setOptionalPoints(List<PointOfInterest> optionalPoints) { this.optionalPoints = optionalPoints; }
 
     public List<FoodProduct> getFoodCatalogue() { return foodCatalogue; }
     public void setFoodCatalogue(List<FoodProduct> foodCatalogue) { this.foodCatalogue = foodCatalogue; }

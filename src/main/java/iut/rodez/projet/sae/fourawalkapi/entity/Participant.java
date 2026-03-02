@@ -65,7 +65,7 @@ public class Participant implements Person {
 
     /* Capacité d'emport du sac du participant */
     @PositiveOrZero(message = "La capacité d'emport doit être positive")
-    @Max(value = 30, message = "La capacité d'emport ne peut pas dépasser 30 kg")
+    @Max(value = 35, message = "La capacité d'emport ne peut pas dépasser 35 kg")
     private Double capaciteEmportMaxKg;
 
     /** sac à dos attribué au participant */
