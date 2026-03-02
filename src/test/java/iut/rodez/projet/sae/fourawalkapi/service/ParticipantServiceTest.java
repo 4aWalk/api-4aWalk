@@ -169,7 +169,7 @@ class ParticipantServiceTest {
         // When & Then : L'exception est levée immédiatement lors de la validation
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> participantService.addParticipant(100L, invalidParticipant, 10L));
-        assertTrue(exception.getMessage().contains("L'âge doit être compris entre 10 et 100"));
+        assertTrue(exception.getMessage().contains("L'âge doit être compris entre 10 et 99"));
 
         // Sécurité : On s'assure que la base de données n'est jamais sollicitée
         verify(hikeRepository, never()).findById(any());
@@ -387,13 +387,13 @@ class ParticipantServiceTest {
         p.setAge(9);
         IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
                 () -> participantService.addParticipant(100L, p, 10L));
-        assertEquals("L'âge doit être compris entre 10 et 100 ans", ex1.getMessage());
+        assertEquals("L'âge doit être compris entre 10 et 99 ans", ex1.getMessage());
 
         // Test de la borne supérieure (trop âgé)
         p.setAge(101);
         IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
                 () -> participantService.addParticipant(100L, p, 10L));
-        assertEquals("L'âge doit être compris entre 10 et 100 ans", ex2.getMessage());
+        assertEquals("L'âge doit être compris entre 10 et 99 ans", ex2.getMessage());
     }
 
     /**
@@ -450,12 +450,12 @@ class ParticipantServiceTest {
         p.setCapaciteEmportMaxKg(-1.0);
         IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
                 () -> participantService.addParticipant(100L, p, 10L));
-        assertEquals("La capacité d'emport doit être positive et ne peut pas dépasser 30 kg", ex1.getMessage());
+        assertEquals("La capacité d'emport doit être positive et ne peut pas dépasser 35 kg", ex1.getMessage());
 
         // Test de la borne supérieure (dépassement de la capacité humaine standard)
-        p.setCapaciteEmportMaxKg(30.1);
+        p.setCapaciteEmportMaxKg(35.1);
         IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
                 () -> participantService.addParticipant(100L, p, 10L));
-        assertEquals("La capacité d'emport doit être positive et ne peut pas dépasser 30 kg", ex2.getMessage());
+        assertEquals("La capacité d'emport doit être positive et ne peut pas dépasser 35 kg", ex2.getMessage());
     }
 }
