@@ -186,8 +186,8 @@ public class HikeController {
      * @param auth token d'identification
      * @return Code retour de l'ajout de la nourriture à la randonné
      */
-    @PostMapping("/{hikeId}/food")
-    public ResponseEntity<Void> addFoodToHike(@PathVariable Long hikeId, @RequestBody Long foodId,
+    @PostMapping("/{hikeId}/food/{foodId}")
+    public ResponseEntity<Void> addFoodToHike(@PathVariable Long hikeId, @PathVariable Long foodId,
                                               Authentication auth) {
         foodService.addFoodToHike(hikeId, foodId, getUserId(auth));
         return ResponseEntity.ok().build();
@@ -216,8 +216,8 @@ public class HikeController {
      * @param auth token d'identification
      * @return Code retour de l'ajout de l'équipement
      */
-    @PostMapping("/{hikeId}/equipment")
-    public ResponseEntity<Void> addEquipmentToHike(@PathVariable Long hikeId, @RequestBody Long equipmentId, Authentication auth) {
+    @PostMapping("/{hikeId}/equipment/{equipmentId}")
+    public ResponseEntity<Void> addEquipmentToHike(@PathVariable Long hikeId, @PathVariable Long equipmentId, Authentication auth) {
         equipmentService.addEquipmentToHike(hikeId, equipmentId, getUserId(auth));
         return ResponseEntity.ok().build();
     }
