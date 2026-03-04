@@ -59,7 +59,7 @@ public class ParticipantPhysiologyService {
      */
     public void validateEauParticipant(Participant p, double distance) {
 
-        double base = 2.0 + (distance * 0.1);
+        double base = 2.0 + (distance * 0.001 * 0.1); // 0.1 L / km
         double target = base + calculateProfileModifier(p,
                 0.5, -0.25,
                 -0.25, 0.5,

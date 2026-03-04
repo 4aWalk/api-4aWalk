@@ -92,7 +92,7 @@ class ParticipantPhysiologyServiceTest {
 
     @Test
     void validateEauParticipant_ValidWater_ShouldPass() {
-        // Given : Distance = 10 (Le calcul base = 2.0 + 10 * 0.1 = 3.0 L)
+        // Given : Distance = 10 km (Le calcul base = 2.0 + 10 * 0.1 = 3.0 L)
         // Profil Senior Fort Débutant :
         // Modificateurs : Débutant (+0.5), Forte (+0.5), Senior (+0.25) -> Total = +1.25 L.
         // Cible = 3.0 + 1.25 = 4.25 L.
@@ -100,7 +100,7 @@ class ParticipantPhysiologyServiceTest {
         p.setBesoinEauLitre(4); // 4L est dans la tolérance de 10% [3.82L - 4.67L]
 
         // When & Then
-        assertDoesNotThrow(() -> physiologyService.validateEauParticipant(p, 10.0));
+        assertDoesNotThrow(() -> physiologyService.validateEauParticipant(p, 10000.0));
     }
 
     @Test
@@ -111,7 +111,7 @@ class ParticipantPhysiologyServiceTest {
 
         // When & Then
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> physiologyService.validateEauParticipant(p, 10.0));
+                () -> physiologyService.validateEauParticipant(p, 10000.0));
         assertTrue(ex.getMessage().contains("besoin en eau est aberrant"));
     }
 
