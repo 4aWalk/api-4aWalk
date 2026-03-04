@@ -45,10 +45,10 @@ class ParticipantPhysiologyServiceTest {
 
     @Test
     void validateDistanceHike_DistanceTooHigh_ShouldThrowException() {
-        // Given : Même profil cible (25 000 m / jour). Tolérance max = +10% (27 500 m).
+        // Given : Même profil cible (25 000 m / jour)
         Participant referent = createParticipant("John", 40, Level.ENTRAINE, Morphology.MOYENNE);
 
-        // Randonnée de 1 jour de 30 000 m (aberrant car > 27 500)
+        // Randonnée de 1 jour de 30 000 m (aberrant car > 25 000)
         double distanceTotaleMeters = 30000.0;
 
         // When & Then : L'exception est levée

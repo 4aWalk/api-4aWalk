@@ -93,8 +93,8 @@ public class Hike {
     }
 
     /**
-     * Ajoute un équipement à la randonné et ordonne la liste
-     * pour pré trier la liste à optimisé
+     * Ajoute un équipement à la randonnée et ordonne la liste
+     * par rentabilité (masse par personne couverte).
      * @param item équipement à ajouter
      */
     public void addEquipment(EquipmentItem item) {
@@ -112,7 +112,9 @@ public class Hike {
         // Tri du groupe spécifique
         if (group.getItems() != null) {
             group.getItems().sort(Comparator.comparingDouble(equip -> {
-                return item.getMasseGrammes() / item.getNbItem();
+                // Sécurité anti-division par zéro
+                double nb = equip.getNbItem() > 0 ? equip.getNbItem() : 1.0;
+                return equip.getMasseGrammes() / nb; // Utilisation de 'equip' !
             }));
         }
     }

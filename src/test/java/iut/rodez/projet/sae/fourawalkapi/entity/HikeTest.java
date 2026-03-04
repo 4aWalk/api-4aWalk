@@ -26,28 +26,38 @@ class HikeTest {
     }
 
     /**
-     * Test l'ajout d'équipement et le tri automatique par masse.
+     * Test l'ajout d'équipement et le tri automatique par rentabilité (Masse / NbItem).
      */
     @Test
     void addEquipment() {
-        // Given: Deux équipements de REPOS de masses différentes
+        // Given: Deux équipements de REPOS
         EquipmentItem heavy = mock(EquipmentItem.class);
         EquipmentItem light = mock(EquipmentItem.class);
+
         when(heavy.getType()).thenReturn(TypeEquipment.REPOS);
         when(light.getType()).thenReturn(TypeEquipment.REPOS);
+
+        // 1. Configurer les masses
         when(heavy.getMasseGrammes()).thenReturn(2000.0);
         when(light.getMasseGrammes()).thenReturn(500.0);
 
-        // When: On ajoute le lourd puis le léger, ou un item null
+        // Si nbItem est 1 pour les deux, le ratio est identique à la masse
+        when(heavy.getNbItem()).thenReturn(1);
+        when(light.getNbItem()).thenReturn(1);
+
+        // When: On ajoute le lourd d'abord, puis le léger
         hike.addEquipment(heavy);
         hike.addEquipment(light);
-        hike.addEquipment(null); // Cas limite null
 
-        // Then: Le groupe REPOS doit exister et être trié (léger en premier)
+        // Then: Le groupe doit être trié (light en premier car 500/1 < 2000/1)
         GroupEquipment group = hike.getEquipmentGroups().get(TypeEquipment.REPOS);
-        assertNotNull(group);
+
+        assertNotNull(group, "Le groupe d'équipement devrait être créé");
         assertEquals(2, group.getItems().size());
-        assertEquals(light, group.getItems().getFirst(), "L'item le plus léger doit être en tête de liste");
+
+        // On compare les objets
+        assertEquals(light, group.getItems().get(0), "L'item léger (500g) devrait être à l'index 0");
+        assertEquals(heavy, group.getItems().get(1), "L'item lourd (2000g) devrait être à l'index 1");
     }
 
     /**
