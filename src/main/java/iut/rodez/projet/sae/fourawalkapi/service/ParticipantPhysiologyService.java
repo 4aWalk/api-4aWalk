@@ -32,8 +32,9 @@ public class ParticipantPhysiologyService {
         // Conversion km en m
         distanceTheorique *= 1000;
 
-        checkAbberation(distanceMoyenneJour, distanceTheorique,
-                "La distance quotidienne de la randonnée est aberrante");
+        if(distanceMoyenneJour > distanceTheorique) {
+            throw new RuntimeException("La distance quotidienne de la randonnée est aberrante");
+        }
     }
 
     /**

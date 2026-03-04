@@ -111,7 +111,9 @@ public class Hike {
 
         // Tri du groupe spécifique
         if (group.getItems() != null) {
-            group.getItems().sort(Comparator.comparingDouble(Item::getMasseGrammes));
+            group.getItems().sort(Comparator.comparingDouble(equip -> {
+                return item.getMasseGrammes() / item.getNbItem();
+            }));
         }
     }
 
