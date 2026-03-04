@@ -49,6 +49,7 @@ class FoodServiceTest {
         // --- Aliment standard valide ---
         validFood = new FoodProduct();
         validFood.setId(300L);
+        validFood.setAppellationCourante("Lentille");
         validFood.setMasseGrammes(500); // 500g (Valide)
         validFood.setApportNutritionnelKcal(1500); // 1500 kcal (Valide)
     }
