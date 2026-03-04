@@ -61,7 +61,7 @@ public class Participant implements Person {
     /* Besoin en eau du participant en L/j */
     @Min(value = 1, message = "Le besoin en eau minimum est de 1 Litre")
     @Max(value = 8, message = "Le besoin en eau maximum est de 8 Litres")
-    private Integer besoinEauLitre;
+    private Double besoinEauLitre;
 
     /* Capacité d'emport du sac du participant */
     @PositiveOrZero(message = "La capacité d'emport doit être positive")
@@ -77,7 +77,7 @@ public class Participant implements Person {
     public Participant() {}
 
     public Participant(String prenom, String nom, int age, Level niveau, Morphology morphologie, boolean creator,
-                       Long creatorId, int besoinKcal, int besoinEauLitre, double capaciteEmportMaxKg) {
+                       Long creatorId, int besoinKcal, double besoinEauLitre, double capaciteEmportMaxKg) {
         this.prenom = prenom;
         this.nom = nom;
         this.age = age;
@@ -140,8 +140,8 @@ public class Participant implements Person {
     public int getBesoinKcal() { return besoinKcal; }
     public void setBesoinKcal(int besoinKcal) { this.besoinKcal = besoinKcal; }
 
-    public int getBesoinEauLitre() { return besoinEauLitre; }
-    public void setBesoinEauLitre(int besoinEauLitre) { this.besoinEauLitre = besoinEauLitre; }
+    public double getBesoinEauLitre() { return besoinEauLitre; }
+    public void setBesoinEauLitre(double besoinEauLitre) { this.besoinEauLitre = besoinEauLitre; }
 
     public double getCapaciteEmportMaxKg() { return capaciteEmportMaxKg; }
     public void setCapaciteEmportMaxKg(double capaciteEmportMaxKg) { this.capaciteEmportMaxKg = capaciteEmportMaxKg; }

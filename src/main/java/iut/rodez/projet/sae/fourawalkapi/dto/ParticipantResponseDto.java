@@ -17,7 +17,7 @@ public class ParticipantResponseDto {
     private boolean creator;
     private Long creatorId;
     private int besoinKcal;
-    private int besoinEauLitre;
+    private double besoinEauLitre;
     private double capaciteEmportMaxKg;
     private BackpackResponseDto backpack;
 
@@ -54,7 +54,7 @@ public class ParticipantResponseDto {
     public boolean getIsCreator() { return creator; }
     public Long getCreatorId() { return creatorId; }
     public int getBesoinKcal() { return besoinKcal; }
-    public int getBesoinEauLitre() { return besoinEauLitre; }
+    public double getBesoinEauLitre() { return besoinEauLitre; }
     public double getCapaciteEmportMaxKg() { return capaciteEmportMaxKg; }
     public BackpackResponseDto getBackpack() { return backpack; }
 }

@@ -38,7 +38,7 @@ CREATE TABLE participants (
                               creator BOOLEAN,
                               creator_id BIGINT,
                               besoin_kcal INTEGER NOT NULL,
-                              besoin_eau_litre INTEGER NOT NULL,
+                              besoin_eau_litre DOUBLE NOT NULL,
                               capacite_emport_max_kg DOUBLE NOT NULL
 );
 
