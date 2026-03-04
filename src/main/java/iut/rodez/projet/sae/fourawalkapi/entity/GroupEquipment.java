@@ -29,6 +29,7 @@ public class GroupEquipment {
             joinColumns = @JoinColumn(name = "group_id"),
             inverseJoinColumns = @JoinColumn(name = "equipment_id")
     )
+    @OrderColumn(name = "item_order")
     private List<EquipmentItem> items = new ArrayList<>();
 
     // --- Constructeurs ---

@@ -28,6 +28,7 @@ public class FoodProduct implements Item {
     private Double masseGrammes;
 
     /* Appellation courante de la nourriture */
+    @NotNull(message = "L'appellation courante est obligatoire")
     private String appellationCourante;
 
     /* Conditionnement de la nourriture */

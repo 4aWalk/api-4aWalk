@@ -131,5 +131,11 @@ public class FoodService {
         if (f.getApportNutritionnelKcal() < 50 || f.getApportNutritionnelKcal() > 3000) {
             throw new RuntimeException("L'apport calorique doit être compris entre 50 et 3000 kcal");
         }
+
+        // Vérification appellation courrante
+        if(f.getAppellationCourante() == null || f.getAppellationCourante().isEmpty() ||
+            f.getAppellationCourante().isBlank()) {
+            throw new RuntimeException("L'appellation courante du produit est obligatoire");
+        }
     }
 }

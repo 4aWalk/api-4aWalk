@@ -45,4 +45,6 @@ public class ParticipantController {
         List<Participant> participants = participantService.getMyParticipants(userId);
         return ResponseEntity.ok(participants);
     }
+
+
 }
