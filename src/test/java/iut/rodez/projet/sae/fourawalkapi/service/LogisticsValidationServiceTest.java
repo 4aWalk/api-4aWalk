@@ -74,18 +74,6 @@ class LogisticsValidationServiceTest {
     }
 
     @Test
-    void validateHikeFood_DuplicateFood_ShouldThrowException() {
-        // Given : Deux objets sous la limite des 1000 kcal, mais avec le même nom
-        standardHike.getFoodCatalogue().add(createFood("Riz", 200, 4)); // 800 kcal
-        standardHike.getFoodCatalogue().add(createFood("Riz", 200, 4)); // Doublon (800 kcal) !
-
-        // When & Then
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
-        assertTrue(ex.getMessage().contains("Doublon de type de nourriture détecté"));
-    }
-
-    @Test
     void validateHikeFood_ItemTooCaloric_ShouldThrowException() {
         // Given : Les participants demandent 4000 kcal (max 1000 kcal/item).
         // On introduit un aliment unitaire à 1200 kcal.

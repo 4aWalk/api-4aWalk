@@ -112,25 +112,36 @@ public class OptimizerService {
 
     /**
      * Algorithme d'optimisation pour la nourriture.
-     * Cherche à atteindre l'objectif calorique total en minimisant le poids transporté.
+     * Cherche à atteindre l'objectif calorique en minimisant le poids,
+     * tout en garantissant qu'aucun aliment n'est surreprésenté.
+     * Renvoie une liste vide si l'objectif est de 0 ou si aucune solution n'est trouvée.
      *
-     * @param hike La randonnée contenant le catalogue de nourriture et les besoins caloriques.
-     * @return La liste des aliments sélectionnés pour le voyage.
+     * @param hike La randonnée contenant le catalogue et les participants.
+     * @return La liste des aliments sélectionnés, ou une liste vide si impossible.
      */
     public List<FoodProduct> getOptimizeAllFood(Hike hike) {
         int targetKcal = hike.getCaloriesForAllParticipants();
 
-        if (targetKcal == 0) return new ArrayList<>();
+        // Fast-exit
+        if (targetKcal <= 0) {
+            return new ArrayList<>();
+        }
+
+        int nbParticipants = hike.getParticipants().size();
 
         List<FoodProduct> allFood = new ArrayList<>(hike.getFoodCatalogue());
 
+        // Recherche récursive de la liste de nourriture optimisée
         List<FoodProduct> optimizedList = sortBestFoodRecursive(
                 allFood,
                 new ArrayList<>(),
+                new HashMap<>(),
                 targetKcal,
+                nbParticipants,
                 0
         );
 
+        // Échec return d'une liste vide
         if (optimizedList == null) {
             return new ArrayList<>();
         }
@@ -139,45 +150,54 @@ public class OptimizerService {
     }
 
     /**
-     * Moteur récursif pour la sélection de nourriture.
-     * Minimise le poids pour une valeur calorique cible atteinte.
-     *
-     * @param candidats Liste des aliments disponibles.
-     * @param currentSelection Sélection courante.
-     * @param targetKcal Objectif calorique à atteindre.
-     * @param index Index courant.
-     * @return La liste d'aliments la plus légère satisfaisant les besoins caloriques.
+     * Moteur récursif (Glouton exhaustif avec élagage).
      */
     private List<FoodProduct> sortBestFoodRecursive(
             List<FoodProduct> candidats,
             List<FoodProduct> currentSelection,
+            Map<String, Integer> usedAppellations,
             int targetKcal,
+            int maxPerAppel,
             int index) {
 
         int currentKcal = currentSelection.stream().mapToInt(FoodProduct::getTotalKcals).sum();
 
+        // Condition d'arrêt 1 : Objectif calorique atteint
         if (currentKcal >= targetKcal) {
             return new ArrayList<>(currentSelection);
         }
 
+        // Condition d'arrêt 2 : Fin de la liste atteinte sans succès
         if (index >= candidats.size()) {
             return null;
         }
 
         FoodProduct item = candidats.get(index);
+        String label = item.getAppellationCourante();
+        int currentCountForLabel = usedAppellations.getOrDefault(label, 0);
 
-        // Branche inclusion
-        currentSelection.add(item);
-        List<FoodProduct> solutionTake = sortBestFoodRecursive(candidats, currentSelection, targetKcal, index + 1);
-        currentSelection.removeLast();
+        List<FoodProduct> solutionTake = null;
 
-        // Branche exclusion
-        List<FoodProduct> solutionSkip = sortBestFoodRecursive(candidats, currentSelection, targetKcal, index + 1);
+        // si on ne dépasse pas le nombre de participants
+        if (currentCountForLabel + item.getNbItem() <= maxPerAppel) {
+            currentSelection.add(item);
+            usedAppellations.put(label, currentCountForLabel + item.getNbItem());
 
+            solutionTake = sortBestFoodRecursive(candidats, currentSelection, usedAppellations, targetKcal, maxPerAppel, index + 1);
+
+            // Backtracking : on annule l'action pour explorer l'autre branche
+            currentSelection.removeLast();
+            usedAppellations.put(label, currentCountForLabel);
+        }
+
+        // BRANCHE EXCLUSION : On ignore cet item et on passe au suivant
+        List<FoodProduct> solutionSkip = sortBestFoodRecursive(candidats, currentSelection, usedAppellations, targetKcal, maxPerAppel, index + 1);
+
+        // Évaluation des résultats
         if (solutionTake == null) return solutionSkip;
         if (solutionSkip == null) return solutionTake;
 
-        // Comparaison sur le critère du poids total
+        // Si les deux branches ont trouvé une solution, on garde la plus légère
         int massTake = solutionTake.stream().mapToInt(FoodProduct::getTotalMasses).sum();
         int massSkip = solutionSkip.stream().mapToInt(FoodProduct::getTotalMasses).sum();
 

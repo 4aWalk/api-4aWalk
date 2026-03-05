@@ -9,6 +9,7 @@ public class FoodProductResponseDto {
     private Long id;
     private String nom;
     private double masseGrammes;
+    private String appelationCourante;
     private String conditionnement;
     private double apportNutritionnelKcal;
     private double prixEuro;
@@ -22,6 +23,7 @@ public class FoodProductResponseDto {
         this.id = food.getId();
         this.nom = food.getNom();
         this.masseGrammes = food.getMasseGrammes();
+        this.appelationCourante = food.getAppellationCourante();
         this.conditionnement = food.getConditionnement();
         this.apportNutritionnelKcal = food.getApportNutritionnelKcal();
         this.prixEuro = food.getPrixEuro();
@@ -32,6 +34,7 @@ public class FoodProductResponseDto {
     public Long getId() { return id; }
     public String getNom() { return nom; }
     public double getMasseGrammes() { return masseGrammes; }
+    public String getAppelationCourante() { return appelationCourante; }
     public String getConditionnement() { return conditionnement; }
     public double getApportNutritionnelKcal() { return apportNutritionnelKcal; }
     public double getPrixEuro() { return prixEuro; }
