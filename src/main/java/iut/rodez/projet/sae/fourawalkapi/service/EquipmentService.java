@@ -93,7 +93,7 @@ public class EquipmentService {
 
         // Propriétaire obligatoire pour certains types ---
         boolean needsOwner = (item.getType() == TypeEquipment.VETEMENT) ||
-                (item.getType() == TypeEquipment.REPOS && hike.getDureeJours() > 1);
+                (item.getType() == TypeEquipment.REPOS);
 
         if (needsOwner && participantId == null) {
             throw new RuntimeException("Un propriétaire n'a pas été défini pour l'objet " + item.getNom());
