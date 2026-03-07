@@ -22,6 +22,7 @@ public class HikeResponseDto {
     private Set<ParticipantResponseDto> participants;
     private Set<FoodProductResponseDto> foodCatalogue;
     private Map<TypeEquipment, GroupEquipmentResponseDto> equipmentGroups;
+    private boolean optimize;
 
 
     /**
@@ -58,6 +59,7 @@ public class HikeResponseDto {
                             entry -> new GroupEquipmentResponseDto(entry.getValue(), equipmentOwners)
                     ));
         }
+        this.optimize = hike.getOptimize();
     }
 
     // Getters
@@ -73,4 +75,5 @@ public class HikeResponseDto {
     public Map<TypeEquipment, GroupEquipmentResponseDto> getEquipmentGroups() {
         return equipmentGroups;
     }
+    public boolean isOptimize() { return optimize; }
 }

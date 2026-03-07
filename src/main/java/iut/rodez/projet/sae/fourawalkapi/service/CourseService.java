@@ -95,7 +95,7 @@ public class CourseService {
                     " qui ne vous appartient pas.");
         }
 
-        if(hike.getOptimize()){
+        if(!hike.getOptimize()){
             throw new SecurityException("Vous devez d'abord vérifier et optimiser les sacs " +
                     "avant de commencer une randonnée");
         }

@@ -135,8 +135,8 @@ class CourseServiceTest {
      */
     @Test
     void createCourse_ThrowsException_WhenHikeIsNotOptimized() {
-        // Given : La randonnée n'est pas optimisée (getOptimize == true)
-        mockHike.setOptimize(true); // Utilisation du setter classique
+        // Given : La randonnée n'est pas optimisée (getOptimize == false)
+        mockHike.setOptimize(false); // Utilisation du setter classique
 
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
 
