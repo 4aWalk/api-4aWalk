@@ -32,6 +32,10 @@ public class GroupEquipment {
     @OrderColumn(name = "item_order")
     private List<EquipmentItem> items = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hike_id")
+    private Hike hike;
+
     // --- Constructeurs ---
     public GroupEquipment() {}
 
@@ -65,4 +69,7 @@ public class GroupEquipment {
         }
         return totalMassesKg;
     }
+
+    public Hike getHike() { return hike; }
+    public void setHike(Hike hike) { this.hike = hike; }
 }
