@@ -258,6 +258,8 @@ public class HikeService {
             }
         }
 
+        hikeRepository.saveAndFlush(hike);
+
         List<Backpack> backpacks = hike.getBackpacks();
 
         // Répartitions des vivres
