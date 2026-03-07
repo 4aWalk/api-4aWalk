@@ -4,6 +4,8 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
+import java.util.Map;
+
 /**
  * Data transfert object utilisé dans les communications d'objet participant avec le client
  */
@@ -25,7 +27,7 @@ public class ParticipantResponseDto {
      * Mapper entity to dto
      * @param participant participant à mapper
      */
-    public ParticipantResponseDto(Participant participant) {
+    public ParticipantResponseDto(Participant participant, Map<Long, Participant> equipmentOwners) {
         this.id = participant.getId();
         this.prenom = participant.getPrenom();
         this.nom = participant.getNom();
@@ -38,7 +40,7 @@ public class ParticipantResponseDto {
         this.besoinEauLitre = participant.getBesoinEauLitre();
         this.capaciteEmportMaxKg = participant.getCapaciteEmportMaxKg();
         if (participant.getBackpack() != null) {
-            this.backpack = new BackpackResponseDto(participant.getBackpack());
+            this.backpack = new BackpackResponseDto(participant.getBackpack(), equipmentOwners);
         } else {
             this.backpack = null;
         }

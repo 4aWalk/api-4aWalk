@@ -2,12 +2,14 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests unitaires de l'OptimizerService.
@@ -17,11 +19,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class OptimizerServiceTest {
 
     private OptimizerService optimizerService;
+    private BelongEquipmentRepository belongEquipmentRepositoryMock;
     private Hike testHike;
 
     @BeforeEach
     void setUp() {
+        // Initialisation du mock du repository
+        belongEquipmentRepositoryMock = mock(BelongEquipmentRepository.class);
+        // Si ton OptimizerService a besoin du repository, on l'injecte ici.
+        // (Si le constructeur n'en a pas besoin, tu peux retirer cette injection).
         optimizerService = new OptimizerService();
+
         testHike = new Hike();
         testHike.setParticipants(new HashSet<>());
         testHike.setFoodCatalogue(new ArrayList<>());
@@ -31,13 +39,17 @@ class OptimizerServiceTest {
     // TESTS : OPTIMISATION DE L'ÉQUIPEMENT
     // ==========================================
 
+    /**
+     * Teste que l'optimisation sélectionne la combinaison d'équipements
+     * qui minimise le nombre d'éléments transportés.
+     */
     @Test
     void getOptimizeAllEquipment_NominalCase_ShouldFindBestCombination() {
-        // GIVEN : Une randonnée de 2 jours pour 3 participants.
-        setupHikeParticipants(3, 2000); // 3 personnes
-        testHike.setDureeJours(2); // Dure > 1 jour, donc le type REPOS est requis
+        // Given : Une randonnée de 2 jours pour 3 participants (Type REPOS requis).
+        setupHikeParticipants(3, 2000);
+        testHike.setDureeJours(2);
 
-        // GIVEN : Un catalogue d'équipement avec 2 options pour le REPOS.
+        // Given : Un catalogue d'équipement avec 2 options pour le REPOS.
         Map<TypeEquipment, GroupEquipment> groups = new EnumMap<>(TypeEquipment.class);
         GroupEquipment reposGroup = new GroupEquipment();
 
@@ -49,115 +61,127 @@ class OptimizerServiceTest {
         reposGroup.addItem(createEquip("Tente 1 place", 1, TypeEquipment.REPOS));
 
         groups.put(TypeEquipment.REPOS, reposGroup);
-        fillOtherRequiredTypes(groups, 3); // Remplissage bouchon pour éviter le crash des autres types
+        fillOtherRequiredTypes(groups, 3);
         testHike.setEquipmentGroups(groups);
 
-        // WHEN : On lance l'optimisation des équipements
+        // When : On lance l'optimisation des équipements
         List<EquipmentItem> result = optimizerService.getOptimizeAllEquipment(testHike);
 
-        // THEN : L'algorithme choisit l'Option 1 (la tente 3 places) pour minimiser la taille de la liste
+        // Then : L'algorithme choisit l'Option 1 (la tente 3 places)
         boolean hasTente3Places = result.stream().anyMatch(e -> e.getNbItem() == 3);
         assertTrue(hasTente3Places, "L'algorithme doit privilégier la tente 3 places (1 seul item)");
     }
 
+    /**
+     * Teste que l'optimisation ne lève pas d'exception si le type REPOS
+     * est absent lors d'une randonnée d'un seul jour.
+     */
     @Test
     void getOptimizeAllEquipment_OneDayHike_ShouldSkipRepos() {
-        // GIVEN : Une randonnée de 1 JOUR pour 2 personnes.
+        // Given : Une randonnée de 1 JOUR pour 2 personnes.
         setupHikeParticipants(2, 2000);
         testHike.setDureeJours(1);
 
-        // GIVEN : Un catalogue qui ne contient AUCUN équipement de type REPOS.
+        // Given : Un catalogue qui ne contient AUCUN équipement de type REPOS.
         Map<TypeEquipment, GroupEquipment> groups = new EnumMap<>(TypeEquipment.class);
         fillOtherRequiredTypes(groups, 2);
-        groups.remove(TypeEquipment.REPOS); // On s'assure qu'il n'y a rien
+        groups.remove(TypeEquipment.REPOS);
         testHike.setEquipmentGroups(groups);
 
-        // WHEN : On lance l'optimisation
-        // THEN : Pas d'exception levée, car la durée de 1 jour exclut le besoin de REPOS.
+        // When & Then : Pas d'exception levée, car la durée exclut le besoin de REPOS.
         assertDoesNotThrow(() -> optimizerService.getOptimizeAllEquipment(testHike));
     }
 
+    /**
+     * Teste que l'optimisation échoue si le catalogue ne contient pas
+     * assez d'équipements pour couvrir tous les participants.
+     */
     @Test
     void getOptimizeAllEquipment_InsufficientCoverage_ShouldThrowException() {
-        // GIVEN : 4 participants à couvrir pour 2 jours.
+        // Given : 4 participants à couvrir pour 2 jours.
         setupHikeParticipants(4, 2000);
         testHike.setDureeJours(2);
 
-        // GIVEN : Le catalogue ne propose qu'une tente de 2 places pour le REPOS.
+        // Given : Le catalogue ne propose qu'une tente de 2 places pour le REPOS.
         Map<TypeEquipment, GroupEquipment> groups = new EnumMap<>(TypeEquipment.class);
         GroupEquipment reposGroup = new GroupEquipment();
         reposGroup.addItem(createEquip("Petite tente", 2, TypeEquipment.REPOS));
         groups.put(TypeEquipment.REPOS, reposGroup);
+        fillOtherRequiredTypes(groups, 4); // On remplit les autres pour être sûr de planter sur le REPOS
         testHike.setEquipmentGroups(groups);
 
-        // WHEN : On lance l'optimisation
-        // THEN : L'algorithme échoue et remonte l'erreur demandée par le service.
+        // When & Then : L'algorithme échoue car 2 places < 4 participants
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> optimizerService.getOptimizeAllEquipment(testHike));
-        assertTrue(ex.getMessage().contains("Impossible de trouver une combinaison valide"));
+        assertTrue(ex.getMessage().contains("Impossible de couvrir les besoins pour :"));
     }
 
     // ==========================================
     // TESTS : OPTIMISATION DE LA NOURRITURE
     // ==========================================
 
+    /**
+     * Teste que l'optimisation sélectionne la combinaison de nourriture
+     * qui couvre les besoins caloriques tout en minimisant le poids total.
+     */
     @Test
     void getOptimizeAllFood_NominalCase_ShouldMinimizeWeight() {
-        // GIVEN : 1 participant avec un besoin de 2000 Kcal (Donc Hike target = 2000 Kcal)
+        // Given : 1 participant avec un besoin de 2000 Kcal
         setupHikeParticipants(1, 2000);
 
-        // GIVEN : Un catalogue de nourriture avec plusieurs combinaisons possibles
+        // Given : Un catalogue de nourriture avec plusieurs combinaisons possibles
         List<FoodProduct> catalogue = new ArrayList<>();
-
-        // Option 1 : Atteint 2000 kcal mais pèse LOURD (1 unité de 1000g, apporte 2000 Kcal)
         catalogue.add(createFood("Ration Lourde", 2000, 1000, 1));
-
-        // Option 2 : Atteint 2000 kcal et pèse LÉGER (1 unité de 400g, apporte 2000 Kcal) -> DOIT GAGNER
-        catalogue.add(createFood("Barre Magique", 2000, 400, 1));
-
-        // Option 3 : Ne suffit pas tout seul (1 unité de 200g, apporte 1000 Kcal)
+        catalogue.add(createFood("Barre Magique", 2000, 400, 1)); // Option la plus légère
         catalogue.add(createFood("Pomme", 1000, 200, 1));
-
         testHike.setFoodCatalogue(catalogue);
 
-        // WHEN : On lance l'optimisation alimentaire
+        // When : On lance l'optimisation alimentaire
         List<FoodProduct> result = optimizerService.getOptimizeAllFood(testHike);
 
-        // THEN : L'algorithme a choisi la barre magique (400g) pour minimiser le poids
+        // Then : L'algorithme a choisi la barre magique
         assertEquals(1, result.size());
         assertEquals("Barre Magique", result.getFirst().getNom());
     }
 
+    /**
+     * Teste que l'optimisation retourne une liste vide si l'objectif
+     * calorique est de zéro.
+     */
     @Test
     void getOptimizeAllFood_ZeroTarget_ShouldReturnEmptyList() {
-        // GIVEN : Un besoin calorique total de 0 Kcal (Participant configuré à 0)
+        // Given : Un besoin calorique total de 0 Kcal
         setupHikeParticipants(1, 0);
 
         List<FoodProduct> catalogue = new ArrayList<>();
         catalogue.add(createFood("Pomme", 100, 100, 1));
         testHike.setFoodCatalogue(catalogue);
 
-        // WHEN : On lance l'optimisation
+        // When : On lance l'optimisation
         List<FoodProduct> result = optimizerService.getOptimizeAllFood(testHike);
 
-        // THEN : La liste est vide, pas besoin de s'encombrer pour 0 kcal
+        // Then : La liste est vide
         assertTrue(result.isEmpty());
     }
 
+    /**
+     * Teste que l'optimisation échoue silencieusement (retourne une liste vide)
+     * si le catalogue ne contient pas assez de calories.
+     */
     @Test
     void getOptimizeAllFood_InsufficientFood_ShouldHandleGracefully() {
-        // GIVEN : Un besoin énorme de 5000 Kcal
+        // Given : Un besoin énorme de 5000 Kcal
         setupHikeParticipants(1, 5000);
 
-        // GIVEN : Le catalogue n'a que 1000 Kcal en stock (1 biscuit)
+        // Given : Le catalogue n'a que 1000 Kcal en stock
         List<FoodProduct> catalogue = new ArrayList<>();
         catalogue.add(createFood("Biscuit", 1000, 200, 1));
         testHike.setFoodCatalogue(catalogue);
 
-        // WHEN : L'algorithme cherche une solution
+        // When : L'algorithme cherche une solution
         List<FoodProduct> result = optimizerService.getOptimizeAllFood(testHike);
 
-        // THEN : Renvoie une liste vide suite à l'échec
+        // Then : Renvoie une liste vide suite à l'échec
         assertTrue(result.isEmpty());
     }
 

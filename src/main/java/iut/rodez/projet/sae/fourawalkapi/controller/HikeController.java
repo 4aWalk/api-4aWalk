@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static iut.rodez.projet.sae.fourawalkapi.security.SecurityUtils.getUserId;
 
@@ -55,7 +56,10 @@ public class HikeController {
         List<Hike> hikes = hikeService.getHikesByCreator(getUserId(auth));
 
         return hikes.stream()
-                .map(HikeResponseDto::new)
+                .map(hike -> {
+                    Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hike.getId());
+                    return new HikeResponseDto(hike, owners);
+                })
                 .toList();
     }
 
@@ -68,7 +72,8 @@ public class HikeController {
     @GetMapping("/{id}")
     public ResponseEntity<HikeResponseDto> getHike(@PathVariable Long id, Authentication auth) {
         Hike hike = hikeService.getHikeById(id, getUserId(auth));
-        return ResponseEntity.ok(new HikeResponseDto(hike));
+        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(id);
+        return ResponseEntity.ok(new HikeResponseDto(hike, owners));
     }
 
     /**
@@ -80,7 +85,8 @@ public class HikeController {
     @PostMapping
     public ResponseEntity<HikeResponseDto> createHike(@RequestBody Hike hike, Authentication auth) {
         Hike savedHike = hikeService.createHike(hike, getUserId(auth));
-        return ResponseEntity.ok(new HikeResponseDto(savedHike));
+        // À la création, aucun équipement n'est encore assigné, on passe une map vide
+        return ResponseEntity.ok(new HikeResponseDto(savedHike, Map.of()));
     }
 
     /**
@@ -94,7 +100,8 @@ public class HikeController {
     public ResponseEntity<HikeResponseDto> updateHike(@PathVariable Long id, @RequestBody Hike hike,
                                                       Authentication auth) {
         Hike updatedHike = hikeService.updateHike(id, hike, getUserId(auth));
-        return ResponseEntity.ok(new HikeResponseDto(updatedHike));
+        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(id);
+        return ResponseEntity.ok(new HikeResponseDto(updatedHike, owners));
     }
 
     /**
@@ -122,7 +129,8 @@ public class HikeController {
     public ParticipantResponseDto addParticipant(@PathVariable Long hikeId, @RequestBody Participant p,
                                                  Authentication auth) {
         Participant savedParticipant = participantService.addParticipant(hikeId, p, getUserId(auth));
-        return new ParticipantResponseDto(savedParticipant);
+        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hikeId);
+        return new ParticipantResponseDto(savedParticipant, owners);
     }
 
     /**
@@ -137,7 +145,8 @@ public class HikeController {
     public ParticipantResponseDto updateParticipant(@PathVariable Long hikeId, @PathVariable Long pId,
                                                     @RequestBody Participant p, Authentication auth) {
         Participant updatedParticipant = participantService.updateParticipant(hikeId, pId, p, getUserId(auth));
-        return new ParticipantResponseDto(updatedParticipant);
+        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hikeId);
+        return new ParticipantResponseDto(updatedParticipant, owners);
     }
 
     /**
@@ -210,15 +219,24 @@ public class HikeController {
     // --- SCOPE EQUIPMENT ---
 
     /**
-     * Ajout d'un équipement à une randonnée
-     * @param hikeId identifiant de la randonnée dans laquelle l'équipement est ajouté
-     * @param equipmentId  identifiant de l'équipement à ajouter à la randonnée
+     * Ajout d'un équipement à une randonnée avec affectation optionnelle d'un propriétaire.
+     * @param hikeId identifiant de la randonnée
+     * @param equipmentId identifiant de l'équipement
+     * @param payload Corps de la requête contenant le participantId (optionnel)
      * @param auth token d'identification
-     * @return Code retour de l'ajout de l'équipement
      */
     @PostMapping("/{hikeId}/equipment/{equipmentId}")
-    public ResponseEntity<Void> addEquipmentToHike(@PathVariable Long hikeId, @PathVariable Long equipmentId, Authentication auth) {
-        equipmentService.addEquipmentToHike(hikeId, equipmentId, getUserId(auth));
+    public ResponseEntity<Void> addEquipmentToHike(
+            @PathVariable Long hikeId,
+            @PathVariable Long equipmentId,
+            @RequestBody(required = false) Map<String, Long> payload,
+            Authentication auth) {
+
+        // Extraction sécurisée du paramètre optionnel
+        Long participantId = (payload != null) ? payload.get("participantId") : null;
+
+        equipmentService.addEquipmentToHike(hikeId, equipmentId, getUserId(auth), participantId);
+
         return ResponseEntity.ok().build();
     }
 
@@ -247,6 +265,7 @@ public class HikeController {
     public ResponseEntity<HikeResponseDto> optimizeBackpacks(@PathVariable Long hikeId, Authentication auth) {
         hikeService.optimizeBackpack(hikeId, getUserId(auth));
         Hike optimizedHike = hikeService.getHikeById(hikeId, getUserId(auth));
-        return ResponseEntity.ok(new HikeResponseDto(optimizedHike));
+        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hikeId);
+        return ResponseEntity.ok(new HikeResponseDto(optimizedHike, owners));
     }
 }

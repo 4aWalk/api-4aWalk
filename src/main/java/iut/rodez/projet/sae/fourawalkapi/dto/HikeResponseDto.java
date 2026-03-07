@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 
 import java.util.Map;
@@ -22,11 +23,13 @@ public class HikeResponseDto {
     private Set<FoodProductResponseDto> foodCatalogue;
     private Map<TypeEquipment, GroupEquipmentResponseDto> equipmentGroups;
 
+
     /**
      * Mapper entity to dto
      * @param hike randonnée à mapper
+     * @param equipmentOwners Map associant l'ID d'un équipement à son Propriétaire
      */
-    public HikeResponseDto(Hike hike) {
+    public HikeResponseDto(Hike hike, Map<Long, Participant> equipmentOwners) {
         this.id = hike.getId();
         this.libelle = hike.getLibelle();
         this.dureeJours = hike.getDureeJours();
@@ -35,12 +38,13 @@ public class HikeResponseDto {
         this.points = hike.getOptionalPoints().stream()
                 .map(PointOfInterestResponseDto::new)
                 .collect(Collectors.toSet());
+
         if (hike.getCreator() != null) {
             this.creator = new UserResponseDto(hike.getCreator());
         }
 
         this.participants = hike.getParticipants().stream()
-                .map(ParticipantResponseDto::new)
+                .map(participant -> new ParticipantResponseDto(participant, equipmentOwners))
                 .collect(Collectors.toSet());
 
         this.foodCatalogue = hike.getFoodCatalogue().stream()
@@ -51,7 +55,8 @@ public class HikeResponseDto {
             this.equipmentGroups = hike.getEquipmentGroups().entrySet().stream()
                     .collect(Collectors.toMap(
                             Map.Entry::getKey,
-                            entry -> new GroupEquipmentResponseDto(entry.getValue())
+                            // NOUVEAUTÉ : On passe la map au groupe global
+                            entry -> new GroupEquipmentResponseDto(entry.getValue(), equipmentOwners)
                     ));
         }
     }

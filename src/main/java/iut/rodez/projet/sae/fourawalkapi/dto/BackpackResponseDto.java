@@ -1,8 +1,11 @@
 package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
+import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Data transfert object utilisé dans les communications d'objet sac à dos avec le client
@@ -19,8 +22,9 @@ public class BackpackResponseDto {
     /**
      * Mapper entity to dto
      * @param backpack backpack à mapper en dto
+     * @param equipmentOwners Map associant l'ID d'un équipement à son Propriétaire
      */
-    public BackpackResponseDto(Backpack backpack) {
+    public BackpackResponseDto(Backpack backpack, Map<Long, Participant> equipmentOwners) {
         // Possibilité que le sac soit vide ou que le particpant n'en est pas
         if (backpack == null) return;
 
@@ -32,7 +36,8 @@ public class BackpackResponseDto {
         this.equipements = new ArrayList<>();
         if (backpack.getGroupEquipments() != null) {
             this.equipements = backpack.getGroupEquipments().values().stream()
-                    .map(GroupEquipmentResponseDto::new)
+                    // NOUVEAUTÉ : On passe la map au groupe
+                    .map(group -> new GroupEquipmentResponseDto(group, equipmentOwners))
                     .toList();
         }
 

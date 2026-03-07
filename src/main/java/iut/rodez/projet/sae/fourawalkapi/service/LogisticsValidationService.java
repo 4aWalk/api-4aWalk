@@ -79,7 +79,7 @@ public class LogisticsValidationService {
                 for(EquipmentItem item : group.getItems()) {
                     Long idparticipant = belongEquipmentRepository.getIfExistParticipantForEquipmentAndHike(hike.getId(),item.getId());
                     if(idparticipant == null) {
-                        throw new IllegalStateException("Un propriétaire n'a pas été définit pour l'objet" + item.getNom());
+                        throw new IllegalStateException("Un propriétaire n'a pas été définit pour l'objet " + item.getNom());
                     }
                 }
             }

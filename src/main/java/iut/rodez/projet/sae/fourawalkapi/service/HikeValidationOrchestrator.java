@@ -33,10 +33,6 @@ public class HikeValidationOrchestrator {
      * @throws RuntimeException Si une contrainte métier n'est pas respectée.
      */
     public void validateHikeForOptimize(Hike hike) {
-        if (hike.getParticipants().isEmpty()) {
-            throw new RuntimeException("Validation impossible : Aucun participant dans la randonnée");
-        }
-
         // Calcul de la distance totale via les points de passage
         double distanceRando = HikeService.getAllDistance(hike);
 

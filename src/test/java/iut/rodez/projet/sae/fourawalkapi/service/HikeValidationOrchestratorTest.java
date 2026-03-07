@@ -17,6 +17,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests unitaires du HikeValidationOrchestrator.
+ * Vérifie que l'orchestrateur appelle correctement les services de physiologie
+ * et de logistique dans le bon ordre, et qu'il s'arrête en cas d'erreur.
+ */
 @ExtendWith(MockitoExtension.class)
 class HikeValidationOrchestratorTest {
 
@@ -53,37 +58,41 @@ class HikeValidationOrchestratorTest {
     }
 
     // ==========================================
-    // TESTS DU FLUX NOMINAL ET LIMITES
+    // TESTS DU FLUX NOMINAL
     // ==========================================
 
+    /**
+     * Teste le flux nominal de validation d'une randonnée.
+     * Vérifie que tous les sous-services sont appelés avec les bons paramètres
+     * si aucune exception n'est levée en cours de route.
+     */
     @Test
     void validateHikeForOptimize_NominalFlow_ShouldCallAllServicesCorrectly() {
-        // On mock la méthode statique HikeService.getAllDistance pour qu'elle renvoie 20.0 km
+        // Given : Une randonnée standard de 20km avec 2 participants
         try (MockedStatic<HikeService> mockedHikeService = mockStatic(HikeService.class)) {
             mockedHikeService.when(() -> HikeService.getAllDistance(standardHike)).thenReturn(20000.0);
 
-            // On configure le mock de physiologie pour qu'il renvoie p1 comme maillon faible
+            // Given : Le service de physiologie identifie p1 comme le maillon faible
             when(physiologyService.getParticipantWithBadStat(standardHike.getParticipants())).thenReturn(p1);
 
-            // Exécution de l'orchestrateur
+            // When : On lance la validation globale de la randonnée
             assertDoesNotThrow(() -> orchestrator.validateHikeForOptimize(standardHike));
 
-            // VÉRIFICATIONS (Les "Verify")
-            // 1. Vérifie que la distance a été validée avec le maillon faible (p1)
+            // Then : La distance est validée avec le maillon faible (p1)
             verify(physiologyService).validateDistanceHike(20000.0, 2, p1);
 
-            // 2. Vérifie que CHAQUE participant a été validé physiologiquement
+            // Then : CHAQUE participant a été validé physiologiquement
             for (Participant p : standardHike.getParticipants()) {
                 verify(physiologyService).validateKcalParticipant(p, 20000.0);
                 verify(physiologyService).validateEauParticipant(p, 20000.0);
                 verify(physiologyService).validatePoidsParticipant(p);
             }
 
-            // 3. Vérifie le calcul de la somme des calories avec la durée (2j) et la marge (1j)
-            // Calcul : (4500 kcal/jour * 2 jours) + 4500 kcal (marge) = 13500
+            // Then : La nourriture est validée avec le bon calcul de marge
+            // Calcul : (4500 kcal/jour * 2 jours) + 4500 kcal (marge d'1 jour) = 13500
             verify(logisticsService).validateHikeFood(standardHike, 13500);
 
-            // 4. Vérifie les validations d'équipement
+            // Then : L'équipement et la capacité d'eau sont validés
             verify(logisticsService).validateHikeEquipment(standardHike);
             verify(logisticsService).validateCapaciteEmportEauLitre(standardHike);
         }
@@ -93,59 +102,56 @@ class HikeValidationOrchestratorTest {
     // TESTS DES CAS D'ERREUR (ARRÊT D'URGENCE)
     // ==========================================
 
-    @Test
-    void validateHikeForOptimize_EmptyParticipants_ShouldThrowExceptionAndStop() {
-        // On vide la liste des participants
-        standardHike.setParticipants(new HashSet<>());
-
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> orchestrator.validateHikeForOptimize(standardHike));
-
-        assertEquals("Validation impossible : Aucun participant dans la randonnée", ex.getMessage());
-
-        // L'arrêt doit être immédiat : AUCUN service ne doit être appelé
-        verifyNoInteractions(physiologyService);
-        verifyNoInteractions(logisticsService);
-    }
-
+    /**
+     * Teste que la validation s'arrête immédiatement si une erreur
+     * physiologique est détectée, sans appeler le service de logistique.
+     */
     @Test
     void validateHikeForOptimize_PhysiologyError_ShouldStopBeforeLogistics() {
+        // Given : Une randonnée standard de 20km
         try (MockedStatic<HikeService> mockedHikeService = mockStatic(HikeService.class)) {
             mockedHikeService.when(() -> HikeService.getAllDistance(standardHike)).thenReturn(20000.0);
             when(physiologyService.getParticipantWithBadStat(any())).thenReturn(p1);
 
-            // On simule une erreur lors de la validation de la distance
+            // Given : Une erreur critique survient lors de la validation de la distance
             doThrow(new RuntimeException("Distance aberrante"))
                     .when(physiologyService).validateDistanceHike(anyDouble(), anyInt(), any(Participant.class));
 
-            // Exécution
+            // When : On lance la validation globale
             RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> orchestrator.validateHikeForOptimize(standardHike));
 
+            // Then : L'exception remonte correctement
             assertEquals("Distance aberrante", ex.getMessage());
 
-            // VÉRIFICATION CRUCIALE : Le service de logistique ne DOIT PAS avoir été appelé
+            // Then : Le service de logistique n'a JAMAIS été appelé (l'orchestrateur a stoppé le flux)
             verifyNoInteractions(logisticsService);
         }
     }
 
+    /**
+     * Teste que la validation propage correctement une exception
+     * levée par le service de logistique (en fin de chaîne).
+     */
     @Test
     void validateHikeForOptimize_LogisticsError_ShouldPropagateException() {
+        // Given : Une randonnée standard de 20km
         try (MockedStatic<HikeService> mockedHikeService = mockStatic(HikeService.class)) {
             mockedHikeService.when(() -> HikeService.getAllDistance(standardHike)).thenReturn(20000.0);
             when(physiologyService.getParticipantWithBadStat(any())).thenReturn(p1);
 
-            // On simule une erreur à la TOUTE DERNIÈRE étape (l'eau)
+            // Given : Une erreur survient à la toute dernière étape (capacité d'emport d'eau)
             doThrow(new RuntimeException("Pas assez de gourdes"))
                     .when(logisticsService).validateCapaciteEmportEauLitre(any(Hike.class));
 
-            // Exécution
+            // When : On lance la validation globale
             RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> orchestrator.validateHikeForOptimize(standardHike));
 
+            // Then : L'exception remonte correctement
             assertEquals("Pas assez de gourdes", ex.getMessage());
 
-            // Vérifie que les validations précédentes ont bien eu lieu avant le crash
+            // Then : Les validations logistiques précédentes ont bien été exécutées avant le crash
             verify(logisticsService).validateHikeFood(eq(standardHike), anyInt());
             verify(logisticsService).validateHikeEquipment(standardHike);
         }

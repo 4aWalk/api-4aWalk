@@ -27,18 +27,28 @@ public class OptimizerService {
         List<TypeEquipment> typeList = new ArrayList<>(Arrays.asList(TypeEquipment.values()));
         List<EquipmentItem> equipmentOptimized = new ArrayList<>();
 
-        /* Skip de repos si non nécessaire */
-        if (hike.getDureeJours() == 1) {
+        /* Skip de repos si non nécessaire (Rando d'un jour) */
+        if (hike.getDureeJours() <= 1) {
             typeList.remove(TypeEquipment.REPOS);
         }
 
         for (TypeEquipment type : typeList) {
             GroupEquipment group = hike.getEquipmentGroups().get(type);
-            List<EquipmentItem> itemsDispo = (group != null) ? new ArrayList<>(group.getItems()) : new ArrayList<>();
-            if(type == TypeEquipment.VETEMENT ||type == TypeEquipment.AUTRE) {
+
+            // Si le groupe n'existe pas pour ce type dans cette rando, on passe au suivant
+            if (group == null) {
+                continue;
+            }
+
+            List<EquipmentItem> itemsDispo = new ArrayList<>(group.getItems());
+
+            // Traitement spécial pour les catégories sans optimisation combinatoire
+            if(type == TypeEquipment.VETEMENT || type == TypeEquipment.AUTRE) {
                 equipmentOptimized.addAll(itemsDispo);
                 continue;
             }
+
+            // Appel au moteur de recherche pour les autres types (EAU, SOIN, etc.)
             List<EquipmentItem> bestItemsForType = sortBestEquipment(
                     itemsDispo,
                     new ArrayList<>(),
@@ -49,7 +59,9 @@ public class OptimizerService {
             if (bestItemsForType != null) {
                 equipmentOptimized.addAll(bestItemsForType);
             } else {
-                throw new RuntimeException("Impossible de trouver une combinaison valide pour le type : " + type);
+                // Optionnel : ne pas throw si la catégorie n'est pas "vitale"
+                // ou si vous acceptez des randos sans certains équipements
+                throw new RuntimeException("Impossible de couvrir les besoins pour : " + type);
             }
         }
 

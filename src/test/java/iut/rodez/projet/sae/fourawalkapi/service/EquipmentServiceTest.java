@@ -1,10 +1,10 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
-import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
-import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
-import iut.rodez.projet.sae.fourawalkapi.entity.User;
+import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +24,8 @@ class EquipmentServiceTest {
     private EquipmentItemRepository equipmentRepository;
     private HikeRepository hikeRepository;
     private EquipmentService equipmentService;
+    private ParticipantRepository participantRepository;
+    private BelongEquipmentRepository belongEquipmentRepository;
 
     private Hike mockHike;
     private EquipmentItem mockEquipment;
@@ -35,7 +37,7 @@ class EquipmentServiceTest {
     void setUp() {
         equipmentRepository = mock(EquipmentItemRepository.class);
         hikeRepository = mock(HikeRepository.class);
-        equipmentService = new EquipmentService(equipmentRepository, hikeRepository);
+        equipmentService = new EquipmentService(equipmentRepository, hikeRepository, participantRepository, belongEquipmentRepository);
 
         // --- Utilisateur propriétaire ---
         User creatorUser = new User();
@@ -155,7 +157,7 @@ class EquipmentServiceTest {
         when(equipmentRepository.findById(500L)).thenReturn(Optional.of(mockEquipment));
 
         // When : Le propriétaire (ID=10L) ajoute l'équipement
-        equipmentService.addEquipmentToHike(100L, 500L, 10L);
+        equipmentService.addEquipmentToHike(100L, 500L, 10L, null);
 
         // Then : La logique DDD est respectée (appel de hike.addEquipment) et la rando est sauvegardée
         verify(mockHike).addEquipment(mockEquipment);
@@ -172,7 +174,7 @@ class EquipmentServiceTest {
 
         // When & Then : L'utilisateur 99L essaie d'ajouter un équipement -> Accès refusé
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> equipmentService.addEquipmentToHike(100L, 500L, 99L));
+                () -> equipmentService.addEquipmentToHike(100L, 500L, 99L, null));
         assertEquals("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée", ex.getMessage());
 
         // La méthode interne de l'entité ne doit jamais être appelée
@@ -190,7 +192,7 @@ class EquipmentServiceTest {
 
         // When & Then : La transaction est interrompue
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> equipmentService.addEquipmentToHike(100L, 999L, 10L));
+                () -> equipmentService.addEquipmentToHike(100L, 999L, 10L, null));
         assertEquals("Équipement introuvable", ex.getMessage());
 
         verify(hikeRepository, never()).save(any());

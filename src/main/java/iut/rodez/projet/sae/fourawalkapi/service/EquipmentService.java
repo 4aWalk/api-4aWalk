@@ -1,13 +1,19 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
+import iut.rodez.projet.sae.fourawalkapi.entity.BelongEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
+import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service de gestion du matériel de randonnée.
@@ -19,13 +25,18 @@ public class EquipmentService {
 
     private final EquipmentItemRepository equipmentRepository;
     private final HikeRepository hikeRepository;
+    private final ParticipantRepository participantRepository;
+    private final BelongEquipmentRepository belongEquipmentRepository;
 
     /**
      * Injection de dépendances via le constructeur pour assurer l'immutabilité des repositories.
      */
-    public EquipmentService(EquipmentItemRepository er, HikeRepository hr) {
+    public EquipmentService(EquipmentItemRepository er, HikeRepository hr,
+                            ParticipantRepository pr, BelongEquipmentRepository be) {
         this.equipmentRepository = er;
         this.hikeRepository = hr;
+        this.participantRepository = pr;
+        this.belongEquipmentRepository = be;
     }
 
     /**
@@ -67,11 +78,11 @@ public class EquipmentService {
      * @throws RuntimeException Si la randonnée/équipement n'existe pas ou si l'utilisateur n'est pas le créateur.
      */
     @Transactional
-    public void addEquipmentToHike(Long hikeId, Long equipId, Long userId) {
+    public void addEquipmentToHike(Long hikeId, Long equipId, Long userId, Long participantId) {
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        // Vérification de sécurité : Seul le créateur peut modifier le contenu du sac
+        // Vérification de sécurité : Seul le créateur peut modifier
         if (!hike.getCreator().getId().equals(userId)) {
             throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
@@ -79,12 +90,27 @@ public class EquipmentService {
         EquipmentItem item = equipmentRepository.findById(equipId)
                 .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
 
-        // Délégation de la logique métier à l'Entité Hike (Domain Driven Design)
-        // C'est l'entité qui sait comment trier et organiser ses listes internes
+        // Délégation de la logique métier (ajout dans le sac de la rando)
         hike.addEquipment(item);
-
-        // La sauvegarde de la randonnée propage les changements vers la table de jointure
         hikeRepository.save(hike);
+
+        // --- NOUVEAUTÉ : Gestion de l'appartenance ---
+        if (participantId != null) {
+            Participant participant = participantRepository.findById(participantId)
+                    .orElseThrow(() -> new RuntimeException("Participant introuvable"));
+
+            // Règle métier : le participant doit faire partie de cette randonnée
+            boolean isParticipantInHike = hike.getParticipants().stream()
+                    .anyMatch(p -> p.getId().equals(participantId));
+
+            if (!isParticipantInHike) {
+                throw new RuntimeException("Le participant spécifié ne fait pas partie de cette randonnée.");
+            }
+
+            // Création et sauvegarde de la relation ternaire
+            BelongEquipment belong = new BelongEquipment(hike, participant, item);
+            belongEquipmentRepository.save(belong);
+        }
     }
 
     /**
@@ -123,5 +149,18 @@ public class EquipmentService {
             throw new RuntimeException("Validation échouée : " +
                     "La masse de l'équipement doit être comprise entre 50g et 5kg");
         }
+    }
+
+    /**
+     * Récupère une Map associant l'ID de chaque équipement à son propriétaire pour une randonnée.
+     */
+    public Map<Long, Participant> getEquipmentOwners(Long hikeId) {
+        List<BelongEquipment> belongs = belongEquipmentRepository.findByHikeId(hikeId);
+
+        return belongs.stream()
+                .collect(Collectors.toMap(
+                        belong -> belong.getEquipment().getId(),
+                        BelongEquipment::getParticipant
+                ));
     }
 }

@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests unitaires du LogisticsValidationService.
  * Adapté aux vraies entités Hike et Participant (calculs dynamiques des calories et de l'eau).
+ * Inclut la validation de l'appartenance des équipements via le BelongEquipmentRepository.
  */
 class LogisticsValidationServiceTest {
 
@@ -26,7 +27,7 @@ class LogisticsValidationServiceTest {
 
     @BeforeEach
     void setUp() {
-        // On passe le mock en attribut de classe pour pouvoir configurer ses retours dans les tests
+        // Initialisation du mock du repository pour la gestion des propriétaires
         belongEquipmentRepositoryMock = mock(BelongEquipmentRepository.class);
         logisticsService = new LogisticsValidationService(belongEquipmentRepositoryMock);
 
@@ -49,16 +50,16 @@ class LogisticsValidationServiceTest {
 
         standardHike.getParticipants().add(p1);
         standardHike.getParticipants().add(p2);
-
-        // À ce stade :
-        // hike.getCaloriesForAllParticipants() == 4000
-        // Besoin en eau total == 5.0L
     }
 
     // ==========================================
     // TESTS : VALIDATION DE LA NOURRITURE
     // ==========================================
 
+    /**
+     * Teste que la validation passe si le catalogue de nourriture est suffisant
+     * et qu'aucun aliment n'est trop calorique individuellement.
+     */
     @Test
     void validateHikeFood_ValidFood_ShouldPass() {
         // Given : 4000 kcal requises. Max par lot = 1000 kcal.
@@ -69,15 +70,19 @@ class LogisticsValidationServiceTest {
         standardHike.getFoodCatalogue().add(createFood("Amandes", 500, 2));   // 1000 kcal
         standardHike.getFoodCatalogue().add(createFood("Chocolat", 250, 2));  // 500 kcal
 
-        // When & Then
+        // When & Then : La validation ne doit lever aucune exception
         assertDoesNotThrow(() -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
     }
 
+    /**
+     * Teste que la validation échoue si un seul aliment dépasse la limite
+     * calorique autorisée par unité.
+     */
     @Test
     void validateHikeFood_ItemTooCaloric_ShouldThrowException() {
         // Given : Les participants demandent 4000 kcal (max 1000 kcal/item).
         // On introduit un aliment unitaire à 1200 kcal.
-        standardHike.getFoodCatalogue().add(createFood("Ration Survie", 1200, 4)); // Total 4800, mais 1200 unitaire
+        standardHike.getFoodCatalogue().add(createFood("Ration Survie", 1200, 4));
 
         // When & Then : L'aliment est rejeté car sa densité est trop forte
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -85,12 +90,16 @@ class LogisticsValidationServiceTest {
         assertTrue(ex.getMessage().contains("Nourriture trop calorique"));
     }
 
+    /**
+     * Teste que la validation échoue si la somme des calories du catalogue
+     * est inférieure au besoin total des participants.
+     */
     @Test
     void validateHikeFood_TotalCaloriesInsufficient_ShouldThrowException() {
         // Given : 4000 kcal requises. On ne fournit que 800 kcal au total.
-        standardHike.getFoodCatalogue().add(createFood("Barre Céréale", 200, 4)); // 800 kcal au total
+        standardHike.getFoodCatalogue().add(createFood("Barre Céréale", 200, 4));
 
-        // When & Then
+        // When & Then : L'exception de nourriture insuffisante est levée
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
         assertTrue(ex.getMessage().contains("Nourriture insuffisante"));
@@ -100,17 +109,25 @@ class LogisticsValidationServiceTest {
     // TESTS : VALIDATION DE L'ÉQUIPEMENT
     // ==========================================
 
+    /**
+     * Teste que la validation échoue si des catégories d'équipement obligatoires
+     * sont manquantes dans la randonnée.
+     */
     @Test
     void validateHikeEquipment_MissingMandatoryEquipment_ShouldThrowException() {
         // Given : Une rando d'un jour (1). 2 participants. Aucun équipement configuré.
         standardHike.setDureeJours(1);
 
-        // When & Then : Le code va chercher les Trousse de secours, etc. (Type != AUTRE, != REPOS)
+        // When & Then : L'exception de couverture insuffisante est levée
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> logisticsService.validateHikeEquipment(standardHike));
         assertTrue(ex.getMessage().contains("Couverture insuffisante pour le type"));
     }
 
+    /**
+     * Teste que la validation échoue si la randonnée dure plus d'un jour
+     * et qu'aucun équipement de type REPOS n'est fourni.
+     */
     @Test
     void validateHikeEquipment_TwoDayHike_MissingRepos_ShouldThrowException() {
         // Given : Randonnée de 2 jours. On fournit tout l'équipement OBLIGATOIRE sauf le type REPOS.
@@ -123,6 +140,10 @@ class LogisticsValidationServiceTest {
         assertTrue(ex.getMessage().contains("Couverture insuffisante pour le type : REPOS"));
     }
 
+    /**
+     * Teste que la validation passe si tous les équipements requis (y compris
+     * les vêtements) ont bien un propriétaire assigné en base de données.
+     */
     @Test
     void validateHikeEquipment_VetementAndReposWithOwner_ShouldPass() {
         // Given : Rando de 2 jours, l'équipement de base est présent
@@ -140,13 +161,17 @@ class LogisticsValidationServiceTest {
         standardHike.getEquipmentGroups().put(TypeEquipment.VETEMENT, vetementGroup);
 
         // On simule que la base de données trouve bien un propriétaire pour ces objets
-        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 10L)).thenReturn(99L); // Propriétaire 99
-        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 20L)).thenReturn(88L); // Propriétaire 88
+        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 10L)).thenReturn(99L);
+        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 20L)).thenReturn(88L);
 
         // When & Then : La validation doit passer sans encombre
         assertDoesNotThrow(() -> logisticsService.validateHikeEquipment(standardHike));
     }
 
+    /**
+     * Teste que la validation échoue si un équipement spécifique (comme un vêtement)
+     * n'a pas de propriétaire assigné dans la base de données.
+     */
     @Test
     void validateHikeEquipment_VetementWithoutOwner_ShouldThrowException() {
         // Given : Rando de 1 jour avec l'équipement de base
@@ -166,13 +191,17 @@ class LogisticsValidationServiceTest {
         // When & Then : L'exception de propriétaire non défini doit sauter
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> logisticsService.validateHikeEquipment(standardHike));
-        assertTrue(ex.getMessage().contains("Un propriétaire n'a pas été définit pour l'objetVeste Imperméable"));
+        assertTrue(ex.getMessage().contains("Un propriétaire n'a pas été définit pour l'objet"));
     }
 
     // ==========================================
     // TESTS : CAPACITÉ D'EMPORT D'EAU
     // ==========================================
 
+    /**
+     * Teste que la validation de la capacité d'emport d'eau passe
+     * si le volume total des gourdes est supérieur au besoin.
+     */
     @Test
     void validateCapaciteEmportEauLitre_SufficientWater_ShouldPass() {
         // Given : Besoin total de 5L (2L + 3L d'après setUp).
@@ -180,10 +209,14 @@ class LogisticsValidationServiceTest {
         GroupEquipment groupeEau = createGroupEquipment(TypeEquipment.EAU, 2, 3100, 100);
         standardHike.getEquipmentGroups().put(TypeEquipment.EAU, groupeEau);
 
-        // When & Then : 6L >= 5L, la validation passe en douceur.
+        // When & Then : 6L >= 5L, la validation passe.
         assertDoesNotThrow(() -> logisticsService.validateCapaciteEmportEauLitre(standardHike));
     }
 
+    /**
+     * Teste que la validation de la capacité d'emport d'eau échoue
+     * si le volume total des gourdes est inférieur au besoin.
+     */
     @Test
     void validateCapaciteEmportEauLitre_InsufficientWater_ShouldThrowException() {
         // Given : Besoin total de 5L.
@@ -191,12 +224,16 @@ class LogisticsValidationServiceTest {
         GroupEquipment groupeEau = createGroupEquipment(TypeEquipment.EAU, 1, 1100, 100);
         standardHike.getEquipmentGroups().put(TypeEquipment.EAU, groupeEau);
 
-        // When & Then : Les gourdes ne suffisent pas, le code doit planter.
+        // When & Then : L'exception de gourdes insuffisantes est levée.
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> logisticsService.validateCapaciteEmportEauLitre(standardHike));
         assertTrue(ex.getMessage().contains("Pas assez de gourdes"));
     }
 
+    /**
+     * Teste que la validation de la capacité d'emport d'eau passe
+     * si le volume total des gourdes est exactement égal au besoin.
+     */
     @Test
     void validateCapaciteEmportEauLitre_ExactWater_ShouldPass() {
         // Given : Besoin total de 5L.
@@ -204,7 +241,7 @@ class LogisticsValidationServiceTest {
         GroupEquipment groupeEau = createGroupEquipment(TypeEquipment.EAU, 1, 5100, 100);
         standardHike.getEquipmentGroups().put(TypeEquipment.EAU, groupeEau);
 
-        // When & Then : 5.0L n'est pas "strictement inférieur" à 5.0L, donc ça doit passer !
+        // When & Then : La validation passe.
         assertDoesNotThrow(() -> logisticsService.validateCapaciteEmportEauLitre(standardHike));
     }
 

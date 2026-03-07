@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BelongEquipmentRepository extends JpaRepository<BelongEquipment, Long> {
 
@@ -15,4 +17,11 @@ public interface BelongEquipmentRepository extends JpaRepository<BelongEquipment
      */
     @Query("SELECT b.participant.id FROM BelongEquipment b WHERE b.hike.id = :hikeId AND b.equipment.id = :equipmentId")
     Long getIfExistParticipantForEquipmentAndHike(@Param("hikeId") Long hikeId, @Param("equipmentId") Long equipmentId);
+
+    /**
+     * Récupère la liste d'appartenance d'équipement pour une randonnée
+     * @param hikeId identifiant de la randonnée
+     * @return la liste d'appartenance d'équipement
+     */
+    List<BelongEquipment> findByHikeId(Long hikeId);
 }
