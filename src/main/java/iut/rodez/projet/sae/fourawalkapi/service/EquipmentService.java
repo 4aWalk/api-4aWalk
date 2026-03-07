@@ -83,7 +83,7 @@ public class EquipmentService {
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        // Seul le créateur peut modifier
+        // Vérification de sécurité : Seul le créateur peut modifier
         if (!hike.getCreator().getId().equals(userId)) {
             throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
@@ -91,10 +91,16 @@ public class EquipmentService {
         EquipmentItem item = equipmentRepository.findById(equipId)
                 .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
 
+        // Propriétaire obligatoire pour certains types ---
+        boolean needsOwner = (item.getType() == TypeEquipment.VETEMENT) ||
+                (item.getType() == TypeEquipment.REPOS && hike.getDureeJours() > 1);
+
+        if (needsOwner && participantId == null) {
+            throw new RuntimeException("Un propriétaire n'a pas été défini pour l'objet " + item.getNom());
+        }
+
         // --- Gestion de l'appartenance ---
-        if (participantId != null &&
-                ((item.getType() == TypeEquipment.REPOS && hike.getDureeJours() > 1) ||
-                        item.getType() == TypeEquipment.VETEMENT)) {
+        if (participantId != null && needsOwner) {
             Participant participant = participantRepository.findById(participantId)
                     .orElseThrow(() -> new RuntimeException("Participant introuvable"));
 

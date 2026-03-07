@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
@@ -37,6 +38,10 @@ class EquipmentServiceTest {
     void setUp() {
         equipmentRepository = mock(EquipmentItemRepository.class);
         hikeRepository = mock(HikeRepository.class);
+        participantRepository = mock(ParticipantRepository.class);
+        belongEquipmentRepository = mock(BelongEquipmentRepository.class);
+
+        // Injection des mocks dans le service
         equipmentService = new EquipmentService(equipmentRepository, hikeRepository, participantRepository, belongEquipmentRepository);
 
         // --- Utilisateur propriétaire ---
@@ -44,14 +49,14 @@ class EquipmentServiceTest {
         creatorUser.setId(10L);
 
         // --- Randonnée cible ---
-        mockHike = mock(Hike.class); // On mock la Hike pour vérifier l'appel à addEquipment (DDD)
+        mockHike = mock(Hike.class);
         when(mockHike.getId()).thenReturn(100L);
         when(mockHike.getCreator()).thenReturn(creatorUser);
 
         // --- Équipement standard ---
         mockEquipment = new EquipmentItem();
         mockEquipment.setId(500L);
-        mockEquipment.setMasseGrammes(1000); // 1kg (Poids valide)
+        mockEquipment.setMasseGrammes(1000);
     }
 
     // ==========================================
@@ -196,6 +201,36 @@ class EquipmentServiceTest {
         assertEquals("Équipement introuvable", ex.getMessage());
 
         verify(hikeRepository, never()).save(any());
+    }
+
+    /**
+     * Teste que la validation échoue au moment de l'ajout si un équipement
+     * nécessitant un propriétaire (comme un vêtement) est ajouté sans participant assigné.
+     */
+    @Test
+    void addEquipmentToHike_VetementWithoutOwner_ThrowsException() {
+        // Given : La randonnée existe et appartient à l'utilisateur 10L
+        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
+
+        // Given : On prépare un équipement de type VÊTEMENT
+        EquipmentItem vetementItem = new EquipmentItem();
+        vetementItem.setId(30L);
+        vetementItem.setNom("Veste Imperméable");
+        vetementItem.setType(TypeEquipment.VETEMENT);
+
+        when(equipmentRepository.findById(30L)).thenReturn(Optional.of(vetementItem));
+
+        // When & Then : On tente d'ajouter ce vêtement sans spécifier de participant (participantId = null)
+        // L'exception de propriétaire non défini doit sauter immédiatement
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> equipmentService.addEquipmentToHike(100L, 30L, 10L, null));
+
+        assertTrue(ex.getMessage().contains("Un propriétaire n'a pas été défini pour l'objet Veste Imperméable"));
+
+        // Sécurité : On s'assure que l'entité n'est jamais modifiée ni sauvegardée en cas d'erreur
+        verify(mockHike, never()).addEquipment(any());
+        verify(hikeRepository, never()).save(any());
+        verify(belongEquipmentRepository, never()).save(any());
     }
 
     // ==========================================

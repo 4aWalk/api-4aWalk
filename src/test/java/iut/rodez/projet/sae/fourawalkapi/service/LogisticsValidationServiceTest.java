@@ -168,32 +168,6 @@ class LogisticsValidationServiceTest {
         assertDoesNotThrow(() -> logisticsService.validateHikeEquipment(standardHike));
     }
 
-    /**
-     * Teste que la validation échoue si un équipement spécifique (comme un vêtement)
-     * n'a pas de propriétaire assigné dans la base de données.
-     */
-    @Test
-    void validateHikeEquipment_VetementWithoutOwner_ShouldThrowException() {
-        // Given : Rando de 1 jour avec l'équipement de base
-        standardHike.setDureeJours(1);
-        populateEquipment(standardHike, 2, false);
-
-        // On ajoute un vêtement sans propriétaire
-        GroupEquipment vetementGroup = createGroupEquipment(TypeEquipment.VETEMENT, 1, 500, 0);
-        EquipmentItem vetementItem = vetementGroup.getItems().getFirst();
-        vetementItem.setId(30L);
-        vetementItem.setNom("Veste Imperméable");
-        standardHike.getEquipmentGroups().put(TypeEquipment.VETEMENT, vetementGroup);
-
-        // On simule que la BDD ne trouve aucun propriétaire (renvoie null)
-        when(belongEquipmentRepositoryMock.getIfExistParticipantForEquipmentAndHike(standardHike.getId(), 30L)).thenReturn(null);
-
-        // When & Then : L'exception de propriétaire non défini doit sauter
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> logisticsService.validateHikeEquipment(standardHike));
-        assertTrue(ex.getMessage().contains("Un propriétaire n'a pas été définit pour l'objet"));
-    }
-
     // ==========================================
     // TESTS : CAPACITÉ D'EMPORT D'EAU
     // ==========================================

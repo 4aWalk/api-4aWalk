@@ -9,17 +9,12 @@ import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class LogisticsValidationService {
 
-    private final BelongEquipmentRepository belongEquipmentRepository;
-
     // L'injection par le constructeur
     public LogisticsValidationService(BelongEquipmentRepository belongEquipmentRepository) {
-        this.belongEquipmentRepository = belongEquipmentRepository;
     }
 
     /**
@@ -70,17 +65,6 @@ public class LogisticsValidationService {
 
                 if (totalItems < nbParticipants) {
                     throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
-                }
-            }
-
-            /* Vérification de la définition des apartenances d'équipement de type vêtement ou repos */
-            if(type == TypeEquipment.VETEMENT || (type == TypeEquipment.REPOS && needsRepos)) {
-                GroupEquipment group = hike.getEquipmentGroups().get(type);
-                for(EquipmentItem item : group.getItems()) {
-                    Long idparticipant = belongEquipmentRepository.getIfExistParticipantForEquipmentAndHike(hike.getId(),item.getId());
-                    if(idparticipant == null) {
-                        throw new IllegalStateException("Un propriétaire n'a pas été définit pour l'objet " + item.getNom());
-                    }
                 }
             }
         }
