@@ -18,8 +18,8 @@ public interface BackpackRepository extends JpaRepository<Backpack, Long> {
      * @return sac à dos trouvé
      */
     @Query("SELECT b FROM Backpack b " +
-            "LEFT JOIN FETCH b.groupEquipments ge " +
-            "LEFT JOIN FETCH ge.items " +
+            "LEFT JOIN FETCH b.equipmentItems " +
+            "LEFT JOIN FETCH b.foodItems " +
             "WHERE b.id = :id")
     Optional<Backpack> findByIdWithFullContent(@Param("id") Long id);
 }

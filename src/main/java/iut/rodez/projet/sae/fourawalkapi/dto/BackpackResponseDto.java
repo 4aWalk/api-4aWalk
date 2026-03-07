@@ -15,9 +15,9 @@ public class BackpackResponseDto {
     private Long id;
     private double poidsActuelKg;
     private double capaciteMaxKg;
-    private List<GroupEquipmentResponseDto> equipements;
+    // La liste contient maintenant directement les équipements
+    private List<EquipmentResponseDto> equipements;
     private List<FoodProductResponseDto> nourriture;
-
 
     /**
      * Mapper entity to dto
@@ -25,19 +25,22 @@ public class BackpackResponseDto {
      * @param equipmentOwners Map associant l'ID d'un équipement à son Propriétaire
      */
     public BackpackResponseDto(Backpack backpack, Map<Long, Participant> equipmentOwners) {
-        // Possibilité que le sac soit vide ou que le particpant n'en est pas
+        // Possibilité que le sac soit vide ou que le participant n'en ait pas
         if (backpack == null) return;
 
         this.id = backpack.getId();
         this.capaciteMaxKg = (backpack.getOwner() != null) ? backpack.getOwner().getCapaciteEmportMaxKg() : 0.0;
         this.poidsActuelKg = backpack.getTotalMassKg();
 
-        // Conversion de Map d'équipment en List
+        // Conversion des équipements "en vrac" en List de DTO
         this.equipements = new ArrayList<>();
-        if (backpack.getGroupEquipments() != null) {
-            this.equipements = backpack.getGroupEquipments().values().stream()
-                    // NOUVEAUTÉ : On passe la map au groupe
-                    .map(group -> new GroupEquipmentResponseDto(group, equipmentOwners))
+        if (backpack.getEquipmentItems() != null) { // <-- Utilisation du nouveau getter
+            this.equipements = backpack.getEquipmentItems().stream()
+                    .map(item -> {
+                        // On cherche le propriétaire dans la map
+                        Participant owner = equipmentOwners != null ? equipmentOwners.get(item.getId()) : null;
+                        return new EquipmentResponseDto(item, owner);
+                    })
                     .toList();
         }
 
@@ -49,14 +52,15 @@ public class BackpackResponseDto {
         }
     }
 
-    // --- Getters & Setters ---
+    // --- Getters ---
     public Long getId() { return id; }
 
     public double getPoidsActuelKg() { return poidsActuelKg; }
 
     public double getCapaciteMaxKg() { return capaciteMaxKg; }
 
-    public List<GroupEquipmentResponseDto> getEquipements() { return equipements; }
+    // MISE À JOUR : retourne maintenant une liste de EquipmentResponseDto
+    public List<EquipmentResponseDto> getEquipements() { return equipements; }
 
     public List<FoodProductResponseDto> getNourriture() { return nourriture; }
 }

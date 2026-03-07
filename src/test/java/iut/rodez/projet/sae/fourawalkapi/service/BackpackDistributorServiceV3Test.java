@@ -133,7 +133,9 @@ class BackpackDistributorServiceV3Test {
 
         // Then : Le sac doit avoir été vidé et l'espace revenu à 5000 grammes
         assertEquals(5000.0, backpacks.getFirst().getSpaceRemainingGrammes());
-        assertTrue(backpacks.getFirst().getGroupEquipments().isEmpty());
+
+        // CORRECTION : On vérifie que la liste des équipements est bien vide
+        assertTrue(backpacks.getFirst().getEquipmentItems().isEmpty(), "Les équipements du sac doivent être vidés");
     }
 
     // ==========================================
@@ -223,7 +225,6 @@ class BackpackDistributorServiceV3Test {
         veste.setId(99L);
         items.add(veste);
 
-        // Mock du repository : La veste (ID 99) appartient à Bob (ID 102) sur la rando 1
         when(backpackServiceMock.getPreferredOwnerBackpack(eq(veste), eq(backpacks), eq(1L)))
                 .thenReturn(bobBackpack);
 
@@ -231,8 +232,8 @@ class BackpackDistributorServiceV3Test {
         assertDoesNotThrow(() -> distributorService.distributeBatchesToBackpacks(items, backpacks, 1L));
 
         // Then : Même si Alice est la première dans la liste, l'algo doit avoir forcé le rangement chez Bob
-        assertTrue(bobBackpack.getGroupEquipments().containsKey(TypeEquipment.VETEMENT));
-        assertFalse(aliceBackpack.getGroupEquipments().containsKey(TypeEquipment.VETEMENT));
+        assertTrue(bobBackpack.getEquipmentItems().contains(veste), "La veste doit être dans le sac de Bob");
+        assertFalse(aliceBackpack.getEquipmentItems().contains(veste), "La veste ne doit pas être dans le sac d'Alice");
     }
 
     // ==========================================

@@ -36,14 +36,13 @@ public class Backpack {
             inverseJoinColumns = @JoinColumn(name = "food_id"))
     private Set<FoodProduct> foodItems = new HashSet<>();
 
-    /* Groupe d'équipement que le sac contient */
+    /* Équipements en vrac que le sac contient */
     @ManyToMany
     @JoinTable(
-            name = "backpack_group_equipment",
+            name = "backpack_equipment",
             joinColumns = @JoinColumn(name = "backpack_id"),
-            inverseJoinColumns = @JoinColumn(name = "group_equipment_id"))
-    @MapKey(name = "type")
-    private Map<TypeEquipment, GroupEquipment> groupEquipments = new EnumMap<>(TypeEquipment.class);
+            inverseJoinColumns = @JoinColumn(name = "equipment_id"))
+    private Set<EquipmentItem> equipmentItems = new HashSet<>();
 
     // --- Constructeurs ---
 
@@ -59,7 +58,7 @@ public class Backpack {
 
     public void clearContent() {
         this.foodItems.clear();
-        this.groupEquipments.clear();
+        this.equipmentItems.clear();
         this.totalMassKg = 0.0;
     }
 
@@ -74,9 +73,9 @@ public class Backpack {
     public Set<FoodProduct> getFoodItems() { return foodItems; }
     public void setFoodItems(Set<FoodProduct> foodItems) { this.foodItems = foodItems; }
 
-    public Map<TypeEquipment, GroupEquipment> getGroupEquipments() { return groupEquipments; }
-    public void setGroupEquipments(Map<TypeEquipment, GroupEquipment> groupEquipments) {
-        this.groupEquipments = groupEquipments;
+    public Set<EquipmentItem> getEquipmentItems() { return equipmentItems; }
+    public void setEquipmentItems(Set<EquipmentItem> equipmentItems) {
+        this.equipmentItems = equipmentItems;
     }
 
 
@@ -85,9 +84,9 @@ public class Backpack {
      */
     public void updateTotalMass() {
         double mass = 0.0;
-        if (groupEquipments != null) {
-            mass += groupEquipments.values().stream()
-                    .mapToDouble(GroupEquipment::getTotalMassesKg)
+        if (equipmentItems != null) {
+            mass += equipmentItems.stream()
+                    .mapToDouble(EquipmentItem::getTotalMassesKg)
                     .sum();
         }
 
@@ -139,12 +138,7 @@ public class Backpack {
             this.foodItems.add(food);
         }
         else if (item instanceof EquipmentItem equip) {
-            // Créer le groupe si il s'agit du premier équipement d'un groupe ajouté
-            this.groupEquipments.computeIfAbsent(equip.getType(), type -> {
-                GroupEquipment newGroup = new GroupEquipment();
-                newGroup.setType(type);
-                return newGroup;
-            }).addItem(equip);
+            this.equipmentItems.add(equip);
         }
     }
 
@@ -154,16 +148,10 @@ public class Backpack {
      * @param item nourriture ou équipement à retirer du sac
      */
     public void removeItem(Item item) {
-        if (item instanceof FoodProduct) {
-            this.foodItems.remove(item);
+        if (item instanceof FoodProduct food) {
+            this.foodItems.remove(food);
         } else if (item instanceof EquipmentItem equip) {
-            GroupEquipment groupEquipment = this.groupEquipments.get(equip.getType());
-            if (groupEquipment != null) {
-                groupEquipment.getItems().remove(equip);
-                if (groupEquipment.getItems().isEmpty()) {
-                    this.groupEquipments.remove(equip.getType());
-                }
-            }
+            this.equipmentItems.remove(equip); // <-- Directement à la poubelle
         }
     }
 
