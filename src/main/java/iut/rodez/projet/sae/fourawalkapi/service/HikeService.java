@@ -26,6 +26,7 @@ public class HikeService {
     private final PointOfInterestRepository poiRepository;
     private final ParticipantRepository participantRepository;
     private final CourseRepository courseRepository;
+    private final GroupEquipmentRepository groupEquipmentRepository;
 
     /**
      * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
@@ -37,6 +38,8 @@ public class HikeService {
      * @param ur Repository pour l'accès aux données utilisateurs.
      * @param poiRepo Repository pour la gestion des points d'intérêt.
      * @param pr Repository pour la gestion des participants.
+     * @param cr Repository pour la gestion des parcours
+     * @param ger Repository pour la gestion des groupes d'équipements
      */
     public HikeService(HikeRepository hr,
                        BackpackDistributorServiceV2 bds2,
@@ -45,7 +48,8 @@ public class HikeService {
                        OptimizerService os, UserRepository ur,
                        PointOfInterestRepository poiRepo,
                        ParticipantRepository pr,
-                       CourseRepository cr) {
+                       CourseRepository cr,
+                       GroupEquipmentRepository ger) {
         this.hikeRepository = hr;
         this.backpackDistributorV2 = bds2;
         //this.backpackDistributorV3 = bds3;
@@ -55,6 +59,7 @@ public class HikeService {
         this.poiRepository = poiRepo;
         this.participantRepository = pr;
         this.courseRepository = cr;
+        this.groupEquipmentRepository = ger;
     }
 
     /**
@@ -230,8 +235,13 @@ public class HikeService {
 
         hike.setOptimize(false);
 
+        // Validation des informations de la randonnée et des participants
         hikeValidatorService.validateHikeForOptimize(hike);
 
+        // Sauvegarder des groupes d'équipement en base
+        groupEquipmentRepository.saveAll(hike.getEquipmentGroups().values());
+
+        // Récupération des listes d'équipements et nourritures esscentiels
         List<EquipmentItem> optimizedEquipment = optimizerService.getOptimizeAllEquipment(hike);
         List<FoodProduct> optimizedFood = optimizerService.getOptimizeAllFood(hike);
 
@@ -239,16 +249,18 @@ public class HikeService {
         itemsToPack.addAll(optimizedEquipment);
         itemsToPack.addAll(optimizedFood);
 
+        // Initialisation des sacs
         for (Participant p : hike.getParticipants()) {
             if (p.getBackpack() == null) {
                 Backpack newBackpack = new Backpack();
-                    newBackpack.setOwner(p);
+                newBackpack.setOwner(p);
                 p.setBackpack(newBackpack);
             }
         }
 
         List<Backpack> backpacks = hike.getBackpacks();
 
+        // Répartitions des vivres
         backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
         //backpackDistributorV3.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
 
