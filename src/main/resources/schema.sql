@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS group_equipments;
 DROP TABLE IF EXISTS hike_food_products;
 DROP TABLE IF EXISTS hike_participants;
 DROP TABLE IF EXISTS backpack_equipment;
-DROP TABLE IF EXISTS backpack_food; -- NOUVEAU : Suppression de la table
+DROP TABLE IF EXISTS backpack_food;
 DROP TABLE IF EXISTS backpacks;
 DROP TABLE IF EXISTS points_of_interest;
 DROP TABLE IF EXISTS hikes;

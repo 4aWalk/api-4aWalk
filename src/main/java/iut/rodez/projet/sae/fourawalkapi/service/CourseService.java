@@ -114,14 +114,10 @@ public class CourseService {
             }
         }
 
-        if (course.getTrajetsRealises() == null || course.getTrajetsRealises().getCoordinates().isEmpty()) {
-            throw new IllegalArgumentException("Impossible de créer un parcours " +
-                    "sans au moins un point de géolocalisation initial.");
+        if (course.getTrajetsRealises() != null && !course.getTrajetsRealises().getCoordinates().isEmpty()) {
+            Point startCoord = course.getTrajetsRealises().getCoordinates().getFirst();
+            course.setDepart(createPoiFromGeo(startCoord, "Départ"));
         }
-
-        Point startCoord = course.getTrajetsRealises().getCoordinates().getFirst();
-        course.setDepart(createPoiFromGeo(startCoord, "Départ"));
-
         course.setFinished(false);
         course.setPaused(false);
 
