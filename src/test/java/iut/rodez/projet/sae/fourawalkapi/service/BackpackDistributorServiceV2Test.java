@@ -108,7 +108,7 @@ class BackpackDistributorServiceV2Test {
 
         // Then : Le sac doit avoir été vidé (clearContent) et l'espace doit être revenu à 5000 grammes (5kg)
         assertEquals(5000.0, backpacks.getFirst().getSpaceRemainingGrammes());
-        assertTrue(backpacks.getFirst().getGroupEquipments().isEmpty()); // Vérifie que la map est bien vide
+        assertTrue(backpacks.getFirst().getEquipmentItems().isEmpty()); // Vérifie que la map est bien vide
     }
 
     // ==========================================
@@ -203,8 +203,8 @@ class BackpackDistributorServiceV2Test {
         assertDoesNotThrow(() -> distributorService.distributeBatchesToBackpacks(items, backpacks, 1L));
 
         // Then : Même si Alice est la première dans la liste, l'algo doit avoir forcé le rangement chez Bob
-        assertTrue(bobBackpack.getGroupEquipments().containsKey(TypeEquipment.VETEMENT));
-        assertFalse(aliceBackpack.getGroupEquipments().containsKey(TypeEquipment.VETEMENT));
+        assertTrue(bobBackpack.getEquipmentItems().contains(veste), "La veste doit être dans le sac de Bob");
+        assertFalse(aliceBackpack.getEquipmentItems().contains(veste), "La veste ne doit pas être dans le sac d'Alice");
     }
 
     // ==========================================
