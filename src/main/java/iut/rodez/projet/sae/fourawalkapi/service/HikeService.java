@@ -233,7 +233,7 @@ public class HikeService {
     public void optimizeBackpack(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
-        //hike.setOptimize(false);
+        hike.setOptimize(false);
 
         // Validation des informations de la randonnée et des participants
         hikeValidatorService.validateHikeForOptimize(hike);
@@ -263,10 +263,10 @@ public class HikeService {
         List<Backpack> backpacks = hike.getBackpacks();
 
         // Répartitions des vivres
-        //backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
+        backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
         //backpackDistributorV3.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
 
-        //hike.setOptimize(true);
+        hike.setOptimize(true);
 
         hikeRepository.save(hike);
     }
