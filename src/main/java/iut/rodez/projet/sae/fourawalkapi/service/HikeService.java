@@ -239,6 +239,14 @@ public class HikeService {
         itemsToPack.addAll(optimizedEquipment);
         itemsToPack.addAll(optimizedFood);
 
+        for (Participant p : hike.getParticipants()) {
+            if (p.getBackpack() == null) {
+                Backpack newBackpack = new Backpack();
+                    newBackpack.setOwner(p);
+                p.setBackpack(newBackpack);
+            }
+        }
+
         List<Backpack> backpacks = hike.getBackpacks();
 
         backpackDistributorV2.distributeBatchesToBackpacks(itemsToPack, backpacks, hikeId);
