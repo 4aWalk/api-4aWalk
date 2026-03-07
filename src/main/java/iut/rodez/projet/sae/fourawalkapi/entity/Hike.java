@@ -73,6 +73,7 @@ public class Hike {
     @OneToMany(mappedBy = "hike", cascade = CascadeType.ALL, orphanRemoval = true)
     @MapKey(name = "type")
     private Map<TypeEquipment, GroupEquipment> equipmentGroups = new EnumMap<>(TypeEquipment.class);
+
     /* État de l'optimisation de la randonnée */
     @Column(name = "is_optimize")
     private boolean optimize;
@@ -98,22 +99,23 @@ public class Hike {
     public void addEquipment(EquipmentItem item) {
         if (item == null) return;
 
-        GroupEquipment group = this.equipmentGroups.computeIfAbsent(item.getType(),
-                k -> {
-                    GroupEquipment newGroup = new GroupEquipment();
-                    newGroup.setType(k);
-                    newGroup.setHike(this);
-                    return newGroup;
-                });
+        GroupEquipment group = this.equipmentGroups.get(item.getType());
+
+        if (group == null) {
+            group = new GroupEquipment();
+            group.setType(item.getType());
+            group.setHike(this); // La relation bidirectionnelle
+
+            this.equipmentGroups.put(item.getType(), group);
+        }
 
         group.addItem(item);
 
         // Tri du groupe spécifique
         if (group.getItems() != null) {
             group.getItems().sort(Comparator.comparingDouble(equip -> {
-                // Sécurité anti-division par zéro
                 double nb = equip.getNbItem() > 0 ? equip.getNbItem() : 1.0;
-                return equip.getMasseGrammes() / nb; // Utilisation de 'equip' !
+                return equip.getMasseGrammes() / nb;
             }));
         }
     }
