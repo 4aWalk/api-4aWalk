@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static iut.rodez.projet.sae.fourawalkapi.security.SecurityUtils.getUserId;
+
 /**
  * Controlleur des endpoints de gestion d'utilisateur
  */
@@ -97,13 +99,14 @@ public class UserController {
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id,
                                                       @RequestBody User user,
                                                       Authentication auth) {
-        String currentEmail = auth.getName();
-        User currentUser = userRepository.findByMail(currentEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur connecté introuvable."));
-        if (!currentUser.getId().equals(id)) {
+        Long currentUserId = getUserId(auth);
+
+        if (!currentUserId.equals(id)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé : Vous ne pouvez modifier que votre propre profil.");
         }
+
         user.setId(id);
+
         try {
             User updatedUser = userService.updateUser(user);
             return ResponseEntity.ok(new UserResponseDto(updatedUser));
