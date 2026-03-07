@@ -23,7 +23,7 @@ public class GroupEquipment {
     private TypeEquipment type;
 
     /* Liste d'équipement associé au type */
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "group_equipment_items",
             joinColumns = @JoinColumn(name = "group_id"),

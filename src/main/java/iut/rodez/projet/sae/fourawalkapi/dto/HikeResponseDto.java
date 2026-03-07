@@ -55,7 +55,6 @@ public class HikeResponseDto {
             this.equipmentGroups = hike.getEquipmentGroups().entrySet().stream()
                     .collect(Collectors.toMap(
                             Map.Entry::getKey,
-                            // NOUVEAUTÉ : On passe la map au groupe global
                             entry -> new GroupEquipmentResponseDto(entry.getValue(), equipmentOwners)
                     ));
         }

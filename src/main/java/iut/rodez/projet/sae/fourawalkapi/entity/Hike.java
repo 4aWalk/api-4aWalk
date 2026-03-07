@@ -61,7 +61,7 @@ public class Hike {
     private List<PointOfInterest> optionalPoints = new ArrayList<>();
 
     /* Liste de la nourriture ajouté à la randonnée */
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "hike_food_products",
             joinColumns = @JoinColumn(name = "hike_id"),
