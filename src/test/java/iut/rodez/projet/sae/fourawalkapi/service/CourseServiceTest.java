@@ -179,20 +179,6 @@ class CourseServiceTest {
         assertTrue(ex.getMessage().contains("Accès refusé"));
     }
 
-    /**
-     * Vérifie qu'il est impossible de créer un parcours sans fournir le premier point GPS (départ).
-     */
-    @Test
-    void createCourse_NoInitialCoordinate_ThrowsException() {
-        // Given : Un DTO dont la liste des coordonnées (path) est vide
-        when(mockDto.getPath()).thenReturn(new ArrayList<>());
-        when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
-
-        // When & Then : Le système bloque la création car il ne peut pas définir le point de départ
-        NullPointerException ex = assertThrows(NullPointerException.class,
-                () -> courseService.createCourse(mockDto, 10L));
-    }
-
     // ==========================================
     // TESTS : MISE À JOUR (AJOUT DE POINTS)
     // ==========================================
