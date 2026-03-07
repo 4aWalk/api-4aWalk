@@ -38,6 +38,7 @@ class HikeServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PointOfInterestRepository poiRepository;
     @Mock private ParticipantRepository participantRepository;
+    @Mock private GroupEquipmentRepository groupEquipmentRepository;
 
     @InjectMocks
     private HikeService hikeService;
@@ -231,12 +232,16 @@ class HikeServiceTest {
         hikeService.optimizeBackpack(100L, 1L);
 
         // THEN : Les collaborateurs (services externes) sont appelés de manière séquentielle et cohérente.
-        verify(hikeValidatorService).validateHikeForOptimize(testHike); // Vérification de l'état
-        verify(optimizerService).getOptimizeAllEquipment(testHike);   // Récupération équipement
-        verify(optimizerService).getOptimizeAllFood(testHike);        // Récupération nourriture
+        verify(hikeValidatorService).validateHikeForOptimize(testHike);
+
+        // Vérification de la sauvegarde des groupes d'équipements
+        verify(groupEquipmentRepository).saveAll(any());
+
+        verify(optimizerService).getOptimizeAllEquipment(testHike);
+        verify(optimizerService).getOptimizeAllFood(testHike);
         verify(backpackDistributor).distributeBatchesToBackpacks(
-                anyList(), eq(testHike.getBackpacks()), eq(testHike.getId())); // Répartition algorithmique
-        verify(hikeRepository).save(testHike);                          // Persistance du résultat
+                anyList(), eq(testHike.getBackpacks()), eq(testHike.getId()));
+        verify(hikeRepository).save(testHike);
     }
 
     // ==========================================
