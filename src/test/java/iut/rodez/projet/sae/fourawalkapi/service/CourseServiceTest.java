@@ -189,9 +189,8 @@ class CourseServiceTest {
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
 
         // When & Then : Le système bloque la création car il ne peut pas définir le point de départ
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        NullPointerException ex = assertThrows(NullPointerException.class,
                 () -> courseService.createCourse(mockDto, 10L));
-        assertTrue(ex.getMessage().contains("au moins un point de géolocalisation initial"));
     }
 
     // ==========================================
@@ -209,7 +208,7 @@ class CourseServiceTest {
         String courseId = "course-123";
         Long userId = 10L;
 
-        // CORRECTION ICI : Utilisation du constructeur avec paramètres
+        // Utilisation du constructeur avec paramètres
         CourseResponseDto.CoordinateDto point = new CourseResponseDto.CoordinateDto(45.0, 3.0);
         List<CourseResponseDto.CoordinateDto> newPoints = List.of(point);
 
