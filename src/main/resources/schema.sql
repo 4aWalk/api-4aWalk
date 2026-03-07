@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS group_equipments;
 DROP TABLE IF EXISTS hike_food_products;
 DROP TABLE IF EXISTS hike_participants;
 DROP TABLE IF EXISTS backpack_equipment;
+DROP TABLE IF EXISTS backpack_food;
 DROP TABLE IF EXISTS backpacks;
 DROP TABLE IF EXISTS points_of_interest;
 DROP TABLE IF EXISTS hikes;
@@ -100,6 +101,14 @@ CREATE TABLE backpack_equipment (
                                     PRIMARY KEY (backpack_id, equipment_id),
                                     FOREIGN KEY (backpack_id) REFERENCES backpacks(id) ON DELETE CASCADE,
                                     FOREIGN KEY (equipment_id) REFERENCES equipment_items(id) ON DELETE CASCADE
+);
+
+CREATE TABLE backpack_food (
+                               backpack_id BIGINT NOT NULL,
+                               food_id BIGINT NOT NULL,
+                               PRIMARY KEY (backpack_id, food_id),
+                               FOREIGN KEY (backpack_id) REFERENCES backpacks(id) ON DELETE CASCADE,
+                               FOREIGN KEY (food_id) REFERENCES food_products(id) ON DELETE CASCADE
 );
 
 CREATE TABLE hike_participants (
