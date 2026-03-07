@@ -70,11 +70,9 @@ public class Hike {
     private List<FoodProduct> foodCatalogue = new ArrayList<>();
 
     /* Liste de l'ensemble des équipements rajoutés à la randonnée */
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "hike_id", nullable = false)
+    @OneToMany(mappedBy = "hike", cascade = CascadeType.ALL, orphanRemoval = true)
     @MapKey(name = "type")
     private Map<TypeEquipment, GroupEquipment> equipmentGroups = new EnumMap<>(TypeEquipment.class);
-
     /* État de l'optimisation de la randonnée */
     @Column(name = "is_optimize")
     private boolean optimize;
@@ -104,6 +102,7 @@ public class Hike {
                 k -> {
                     GroupEquipment newGroup = new GroupEquipment();
                     newGroup.setType(k);
+                    newGroup.setHike(this);
                     return newGroup;
                 });
 

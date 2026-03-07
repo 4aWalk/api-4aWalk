@@ -45,6 +45,22 @@ public class UserController {
     }
 
     /**
+     * Récupère les informations de l'utilisateur actuellement connecté
+     * à partir de son token d'authentification.
+     * @param auth token d'identification injecté par Spring Security
+     * @return Les informations de l'utilisateur (UserResponseDto)
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> getCurrentUser(Authentication auth) {
+        Long currentUserId = getUserId(auth);
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable."));
+
+        return ResponseEntity.ok(new UserResponseDto(currentUser));
+    }
+
+    /**
      * Inscription d'un utilisateur
      * @param user utilisateur à inscrire
      * @return le token d'authentification et l'utilisateur créer
