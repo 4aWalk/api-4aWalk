@@ -222,20 +222,17 @@ public class HikeController {
      * Ajout d'un équipement à une randonnée avec affectation optionnelle d'un propriétaire.
      * @param hikeId identifiant de la randonnée
      * @param equipmentId identifiant de l'équipement
-     * @param payload Corps de la requête contenant le participantId (optionnel)
+     * @param ownerId identifiant du participant (propriétaire) passé en paramètre d'URL (optionnel)
      * @param auth token d'identification
      */
     @PostMapping("/{hikeId}/equipment/{equipmentId}")
     public ResponseEntity<Void> addEquipmentToHike(
             @PathVariable Long hikeId,
             @PathVariable Long equipmentId,
-            @RequestBody(required = false) Map<String, Long> payload,
+            @RequestParam(name = "owner", required = false) Long ownerId,
             Authentication auth) {
 
-        // Extraction sécurisée du paramètre optionnel
-        Long participantId = (payload != null) ? payload.get("participantId") : null;
-
-        equipmentService.addEquipmentToHike(hikeId, equipmentId, getUserId(auth), participantId);
+        equipmentService.addEquipmentToHike(hikeId, equipmentId, getUserId(auth), ownerId);
 
         return ResponseEntity.ok().build();
     }

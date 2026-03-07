@@ -4,6 +4,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.BelongEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
@@ -82,7 +83,7 @@ public class EquipmentService {
         Hike hike = hikeRepository.findById(hikeId)
                 .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
 
-        // Vérification de sécurité : Seul le créateur peut modifier
+        // Seul le créateur peut modifier
         if (!hike.getCreator().getId().equals(userId)) {
             throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
@@ -90,12 +91,10 @@ public class EquipmentService {
         EquipmentItem item = equipmentRepository.findById(equipId)
                 .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
 
-        // Délégation de la logique métier (ajout dans le sac de la rando)
-        hike.addEquipment(item);
-        hikeRepository.save(hike);
-
-        // --- NOUVEAUTÉ : Gestion de l'appartenance ---
-        if (participantId != null) {
+        // --- Gestion de l'appartenance ---
+        if (participantId != null &&
+                ((item.getType() == TypeEquipment.REPOS && hike.getDureeJours() > 1) ||
+                        item.getType() == TypeEquipment.VETEMENT)) {
             Participant participant = participantRepository.findById(participantId)
                     .orElseThrow(() -> new RuntimeException("Participant introuvable"));
 
@@ -111,6 +110,10 @@ public class EquipmentService {
             BelongEquipment belong = new BelongEquipment(hike, participant, item);
             belongEquipmentRepository.save(belong);
         }
+
+        // Délégation de la logique métier (ajout dans le sac de la rando)
+        hike.addEquipment(item);
+        hikeRepository.save(hike);
     }
 
     /**
