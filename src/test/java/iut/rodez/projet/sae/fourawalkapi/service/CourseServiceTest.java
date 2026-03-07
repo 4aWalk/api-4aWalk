@@ -113,8 +113,8 @@ class CourseServiceTest {
      */
     @Test
     void createCourse_Success_WhenHikeIsOptimized() {
-        // Given : La randonnée ne requiert pas d'optimisation (getOptimize == false)
-        mockHike.setOptimize(false); // Utilisation du setter classique
+        // Given : La randonnée ne requiert pas d'optimisation (getOptimize == true)
+        mockHike.setOptimize(true); // Utilisation du setter classique
 
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
         when(courseRepository.save(any(Course.class))).thenAnswer(i -> i.getArguments()[0]);
