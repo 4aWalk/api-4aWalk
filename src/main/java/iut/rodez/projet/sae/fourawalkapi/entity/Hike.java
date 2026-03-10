@@ -1,7 +1,6 @@
 package iut.rodez.projet.sae.fourawalkapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;

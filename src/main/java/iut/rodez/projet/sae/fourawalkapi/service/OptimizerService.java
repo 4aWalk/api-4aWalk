@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class OptimizerService {
      *
      * @param hike La randonnée contenant les participants et le catalogue d'équipements.
      * @return Une liste plate des équipements optimisés à emporter.
-     * @throws RuntimeException Si une catégorie obligatoire ne peut pas être satisfaite.
+     * @throws BusinessValidationException Si une catégorie obligatoire ne peut pas être satisfaite.
      */
     public List<EquipmentItem> getOptimizeAllEquipment(Hike hike) {
         List<TypeEquipment> typeList = new ArrayList<>(Arrays.asList(TypeEquipment.values()));
@@ -35,36 +36,32 @@ public class OptimizerService {
         for (TypeEquipment type : typeList) {
             GroupEquipment group = hike.getEquipmentGroups().get(type);
 
-            // Si le groupe n'existe pas pour ce type dans cette rando, on passe au suivant
-            if (group == null) {
-                continue;
-            }
+            // Traitement uniquement si le groupe existe
+            if (group != null) {
+                List<EquipmentItem> itemsDispo = new ArrayList<>(group.getItems());
 
-            List<EquipmentItem> itemsDispo = new ArrayList<>(group.getItems());
+                // Les vêtementset autre équipe ont déjà été optimisé par l'utilisateur
+                if (type == TypeEquipment.VETEMENT || type == TypeEquipment.AUTRE) {
+                    equipmentOptimized.addAll(itemsDispo);
+                }
+                // Cherche du meilleur de la meilleure combinaison
+                else {
+                    List<EquipmentItem> bestItemsForType = sortBestEquipment(
+                            itemsDispo,
+                            new ArrayList<>(),
+                            hike.getParticipants().size(),
+                            0
+                    );
 
-            // Traitement spécial pour les catégories sans optimisation combinatoire
-            if(type == TypeEquipment.VETEMENT || type == TypeEquipment.AUTRE) {
-                equipmentOptimized.addAll(itemsDispo);
-                continue;
-            }
-
-            // Appel au moteur de recherche pour les autres types (EAU, SOIN, etc.)
-            List<EquipmentItem> bestItemsForType = sortBestEquipment(
-                    itemsDispo,
-                    new ArrayList<>(),
-                    hike.getParticipants().size(),
-                    0
-            );
-
-            if (bestItemsForType != null) {
-                equipmentOptimized.addAll(bestItemsForType);
-            } else {
-                // Optionnel : ne pas throw si la catégorie n'est pas "vitale"
-                // ou si vous acceptez des randos sans certains équipements
-                throw new RuntimeException("Impossible de couvrir les besoins pour : " + type);
+                    if (bestItemsForType != null) {
+                        equipmentOptimized.addAll(bestItemsForType);
+                    } else {
+                        // On garde l'exception ici car c'est une sortie fatale, pas un simple saut
+                        throw new BusinessValidationException("Impossible de couvrir les besoins pour : " + type);
+                    }
+                }
             }
         }
-
         return equipmentOptimized;
     }
 
@@ -163,6 +160,13 @@ public class OptimizerService {
 
     /**
      * Moteur récursif (Glouton exhaustif avec élagage).
+     * @param candidats nourritures encore non explorées
+     * @param currentSelection nourritures retenues
+     * @param usedAppellations appellations "consommées"
+     * @param targetKcal consommation à couvrir
+     * @param maxPerAppel Nombre de participant
+     * @param index curseur de lecture
+     * @return Liste de la nourriture optimisée
      */
     private List<FoodProduct> sortBestFoodRecursive(
             List<FoodProduct> candidats,

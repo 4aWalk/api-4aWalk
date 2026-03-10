@@ -29,7 +29,7 @@ class LogisticsValidationServiceTest {
     void setUp() {
         // Initialisation du mock du repository pour la gestion des propriétaires
         belongEquipmentRepositoryMock = mock(BelongEquipmentRepository.class);
-        logisticsService = new LogisticsValidationService(belongEquipmentRepositoryMock);
+        logisticsService = new LogisticsValidationService();
 
         standardHike = new Hike();
         standardHike.setId(1L); // Important pour simuler les appels BDD
@@ -85,8 +85,10 @@ class LogisticsValidationServiceTest {
         standardHike.getFoodCatalogue().add(createFood("Ration Survie", 1200, 4));
 
         // When & Then : L'aliment est rejeté car sa densité est trop forte
+        var totalCalories = standardHike.getCaloriesForAllParticipants();
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
+                () -> logisticsService.validateHikeFood(standardHike, totalCalories));
+
         assertTrue(ex.getMessage().contains("Nourriture trop calorique"));
     }
 
@@ -100,9 +102,11 @@ class LogisticsValidationServiceTest {
         standardHike.getFoodCatalogue().add(createFood("Barre Céréale", 200, 4));
 
         // When & Then : L'exception de nourriture insuffisante est levée
+        var totalCalories = standardHike.getCaloriesForAllParticipants();
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> logisticsService.validateHikeFood(standardHike, standardHike.getCaloriesForAllParticipants()));
+                () -> logisticsService.validateHikeFood(standardHike, totalCalories));
         assertTrue(ex.getMessage().contains("Nourriture insuffisante"));
+
     }
 
     // ==========================================

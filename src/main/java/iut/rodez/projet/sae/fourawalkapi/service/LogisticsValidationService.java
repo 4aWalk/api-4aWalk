@@ -5,22 +5,22 @@ import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import iut.rodez.projet.sae.fourawalkapi.entity.GroupEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
-import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.springframework.stereotype.Service;
 
-
+/**
+ * Service de validation des informations de la cohérence des informations d'une randonnée
+ */
 @Service
 public class LogisticsValidationService {
-
-    // L'injection par le constructeur
-    public LogisticsValidationService(BelongEquipmentRepository belongEquipmentRepository) {
-    }
 
     /**
      * Valide le stock de nourriture :
      * 1. Pas d'item individuel excessivement calorique (Distribution).
      * 2. Le stock total couvre les besoins du groupe.
+     * @param hike Randonnée vérifiée
+     * @param besoinCalorieTotal Calorie vérifié dans la randonnée
      */
     public void validateHikeFood(Hike hike, int besoinCalorieTotal) {
         // un lot d'aliment ne doit pas représenter plus de 25% des besoins totaux
@@ -28,14 +28,14 @@ public class LogisticsValidationService {
 
         for (FoodProduct food : hike.getFoodCatalogue()) {
             if (food.getApportNutritionnelKcal() * food.getNbItem() > maxCaloriePerItem) {
-                throw new RuntimeException("Nourriture trop calorique : " + food.getNom());
+                throw new BusinessValidationException("Nourriture trop calorique : " + food.getNom());
             }
         }
 
         // Vérification de la suffisance globale
         if (hike.getCalorieRandonne() < besoinCalorieTotal) {
-            throw new RuntimeException("Nourriture insuffisante pour la randonnée (" +
-                    hike.getCalorieRandonne() + " vs " + besoinCalorieTotal + " requis).");
+            throw new BusinessValidationException("Nourriture insuffisante pour la randonnée (" +
+                    hike.getCalorieRandonne() + " pour " + besoinCalorieTotal + " requis).");
         }
     }
 
@@ -74,6 +74,7 @@ public class LogisticsValidationService {
      * Vérifie si le groupe dispose d'assez de contenants (gourdes, camelbaks)
      * pour transporter la quantité d'eau requise calculée précédemment.
      * Utilise le delta (Masse Pleine - Masse Vide) pour déduire la capacité en volume.
+     * @param hike Randonnée validée
      */
     public void validateCapaciteEmportEauLitre(Hike hike) {
         double besoinTotal = hike.getParticipants().stream()
@@ -92,7 +93,7 @@ public class LogisticsValidationService {
         }
 
         if (capaciteEmport < besoinTotal) {
-            throw new RuntimeException("Pas assez de gourdes pour couvrir les besoins en eau (Stock: " +
+            throw new BusinessValidationException("Pas assez de gourdes pour couvrir les besoins en eau (Stock: " +
                     capaciteEmport + "L, Besoin: " + besoinTotal + "L).");
         }
     }

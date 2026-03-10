@@ -4,6 +4,9 @@ import iut.rodez.projet.sae.fourawalkapi.entity.BelongEquipment;
 import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
+import iut.rodez.projet.sae.fourawalkapi.exception.UnauthorizedAccessException;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.EquipmentItemRepository;
@@ -76,40 +79,41 @@ public class EquipmentService {
      * @param hikeId L'ID de la randonnée cible.
      * @param equipId L'ID de l'équipement à ajouter.
      * @param userId L'ID de l'utilisateur demandeur (pour vérification des droits).
-     * @throws RuntimeException Si la randonnée/équipement n'existe pas ou si l'utilisateur n'est pas le créateur.
+     * @throws ResourceNotFoundException Si la randonnée/équipement n'existe pas ou si l'utilisateur n'est pas le créateur.
+     * @throws UnauthorizedAccessException si l'accès à une ressource est refusée
      */
     @Transactional
     public void addEquipmentToHike(Long hikeId, Long equipId, Long userId, Long participantId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Randonnée introuvable"));
 
         // Vérification de sécurité : Seul le créateur peut modifier
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
+            throw new UnauthorizedAccessException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
 
         EquipmentItem item = equipmentRepository.findById(equipId)
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable"));
 
         // Propriétaire obligatoire pour certains types ---
         boolean needsOwner = (item.getType() == TypeEquipment.VETEMENT) ||
                 (item.getType() == TypeEquipment.REPOS);
 
         if (needsOwner && participantId == null) {
-            throw new RuntimeException("Un propriétaire n'a pas été défini pour l'objet " + item.getNom());
+            throw new BusinessValidationException("Un propriétaire n'a pas été défini pour l'objet " + item.getNom());
         }
 
         // --- Gestion de l'appartenance ---
         if (participantId != null && needsOwner) {
             Participant participant = participantRepository.findById(participantId)
-                    .orElseThrow(() -> new RuntimeException("Participant introuvable"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Participant introuvable"));
 
             // Règle métier : le participant doit faire partie de cette randonnée
             boolean isParticipantInHike = hike.getParticipants().stream()
                     .anyMatch(p -> p.getId().equals(participantId));
 
             if (!isParticipantInHike) {
-                throw new RuntimeException("Le participant spécifié ne fait pas partie de cette randonnée.");
+                throw new UnauthorizedAccessException("Le participant spécifié ne fait pas partie de cette randonnée.");
             }
 
             // Création et sauvegarde de la relation ternaire
@@ -132,14 +136,14 @@ public class EquipmentService {
     @Transactional
     public void removeEquipmentFromHike(Long hikeId, Long equipId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Randonnée introuvable"));
 
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé");
+            throw new UnauthorizedAccessException("Accès refusé");
         }
 
         EquipmentItem item = equipmentRepository.findById(equipId)
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable"));
 
         // Appel à l'entité pour suppression propre dans la collection
         hike.removeEquipment(item);
@@ -150,13 +154,31 @@ public class EquipmentService {
     /**
      * Validateur interne des règles métier (Business Rules).
      * Centralise les contraintes techniques pour éviter d'avoir des équipements invalides en base.
-     * Règle actuelle : Un équipement doit peser entre 50g et 5kg.
+     * Règle actuelle :
+     * - Nom obligatoire
+     * - Un équipement doit peser entre 50g et 5kg
+     * - Nombre d'équipement dans le lot entre 1 et 3 compris
+     * - Masse à vide > 0 et < à masse de l'équipement
      * @param item équipement à vérifier
      */
     private void validateEquipmentRules(EquipmentItem item) {
+        if (item.getNom() == null || item.getNom().isEmpty()) {
+            throw new BusinessValidationException(
+                    "Le nom d'un équipement est obligatoire");
+        }
         if (item.getMasseGrammes() < 50 || item.getMasseGrammes() > 5000) {
-            throw new RuntimeException("Validation échouée : " +
+            throw new BusinessValidationException(
                     "La masse de l'équipement doit être comprise entre 50g et 5kg");
+        }
+
+        if (item.getNbItem() < 1 || item.getNbItem() > 3) {
+            throw new BusinessValidationException(
+                    "Un lot d'équipement peut couvrir 1 à 3 participants");
+        }
+
+        if (item.getMasseAVide() < 0 || item.getMasseAVide() > item.getMasseGrammes()) {
+            throw new BusinessValidationException(
+                    "Un équipement ne peut pas avoir une masse à vide < 0 ou > à sa masse");
         }
     }
 

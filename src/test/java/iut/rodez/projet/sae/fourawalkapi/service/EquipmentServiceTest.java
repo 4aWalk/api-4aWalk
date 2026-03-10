@@ -56,7 +56,24 @@ class EquipmentServiceTest {
         // --- Équipement standard ---
         mockEquipment = new EquipmentItem();
         mockEquipment.setId(500L);
+        mockEquipment.setNom("Tente");
         mockEquipment.setMasseGrammes(1000);
+        mockEquipment.setNbItem(1);
+        mockEquipment.setMasseAVide(0);
+    }
+
+    /**
+     * Crée un équipement valide de base pour permettre de tester
+     * l'échec d'une règle spécifique sans être bloqué par les autres.
+     * @return un objet EquipmentItem valide
+     */
+    private EquipmentItem createBaseValidEquipment() {
+        EquipmentItem item = new EquipmentItem();
+        item.setNom("Equipement Test");
+        item.setMasseGrammes(1000);
+        item.setNbItem(1);
+        item.setMasseAVide(0);
+        return item;
     }
 
     // ==========================================
@@ -68,7 +85,7 @@ class EquipmentServiceTest {
      */
     @Test
     void createEquipment_Success() {
-        // Given : Un équipement avec un poids valide (1000g)
+        // Given : Un équipement avec des valeurs valides
         when(equipmentRepository.save(any(EquipmentItem.class))).thenReturn(mockEquipment);
 
         // When : On tente de le créer
@@ -80,12 +97,29 @@ class EquipmentServiceTest {
     }
 
     /**
+     * Vérifie que le nom est obligatoire.
+     */
+    @Test
+    void createEquipment_NameMissing_ThrowsException() {
+        // Given : Un équipement sans nom
+        EquipmentItem invalidItem = createBaseValidEquipment();
+        invalidItem.setNom(null);
+
+        // When & Then : L'exception est levée
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> equipmentService.createEquipment(invalidItem));
+        assertTrue(ex.getMessage().contains("Le nom d'un équipement est obligatoire"));
+
+        verify(equipmentRepository, never()).save(any());
+    }
+
+    /**
      * Vérifie la limite basse : un équipement ne peut pas peser moins de 50g.
      */
     @Test
     void createEquipment_TooLight_ThrowsException() {
         // Given : Un équipement de 49g (sous la limite)
-        EquipmentItem lightItem = new EquipmentItem();
+        EquipmentItem lightItem = createBaseValidEquipment();
         lightItem.setMasseGrammes(49);
 
         // When & Then : La création est bloquée par la validation métier
@@ -103,13 +137,48 @@ class EquipmentServiceTest {
     @Test
     void createEquipment_TooHeavy_ThrowsException() {
         // Given : Un équipement de 5001g (au-dessus de la limite)
-        EquipmentItem heavyItem = new EquipmentItem();
+        EquipmentItem heavyItem = createBaseValidEquipment();
         heavyItem.setMasseGrammes(5001);
 
         // When & Then : L'exception est levée
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> equipmentService.createEquipment(heavyItem));
         assertTrue(ex.getMessage().contains("entre 50g et 5kg"));
+
+        verify(equipmentRepository, never()).save(any());
+    }
+
+    /**
+     * Vérifie que le nombre d'item est compris entre 1 et 3.
+     */
+    @Test
+    void createEquipment_NbItemInvalid_ThrowsException() {
+        // Given : Un équipement avec 0 item
+        EquipmentItem invalidItem = createBaseValidEquipment();
+        invalidItem.setNbItem(0);
+
+        // When & Then : L'exception est levée
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> equipmentService.createEquipment(invalidItem));
+        assertTrue(ex.getMessage().contains("peut couvrir 1 à 3 participants"));
+
+        verify(equipmentRepository, never()).save(any());
+    }
+
+    /**
+     * Vérifie que la masse à vide ne peut pas être supérieure à la masse totale.
+     */
+    @Test
+    void createEquipment_MasseAVideInvalid_ThrowsException() {
+        // Given : Un équipement où la masse à vide dépasse la masse totale
+        EquipmentItem invalidItem = createBaseValidEquipment();
+        invalidItem.setMasseGrammes(1000);
+        invalidItem.setMasseAVide(1500);
+
+        // When & Then : L'exception est levée
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> equipmentService.createEquipment(invalidItem));
+        assertTrue(ex.getMessage().contains("ne peut pas avoir une masse à vide < 0 ou > à sa masse"));
 
         verify(equipmentRepository, never()).save(any());
     }

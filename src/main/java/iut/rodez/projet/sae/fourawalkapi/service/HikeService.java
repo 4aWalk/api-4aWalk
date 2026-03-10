@@ -1,6 +1,10 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
+import iut.rodez.projet.sae.fourawalkapi.exception.IllegalBusinessActionException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
+import iut.rodez.projet.sae.fourawalkapi.exception.UnauthorizedAccessException;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
@@ -76,14 +80,15 @@ public class HikeService {
      * @param hikeId Identifiant de la randonnée recherchée.
      * @param userId Identifiant de l'utilisateur effectuant la requête.
      * @return La randonnée correspondante.
-     * @throws RuntimeException Si la randonnée n'existe pas ou si l'utilisateur n'est pas le créateur.
+     * @throws ResourceNotFoundException Si la randonnée est introuvable
+     * @throws UnauthorizedAccessException Si l'accès à la ressource est refusée
      */
     public Hike getHikeById(Long hikeId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Randonnée introuvable"));
 
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
+            throw new UnauthorizedAccessException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
         return hike;
     }
@@ -93,12 +98,12 @@ public class HikeService {
      * @param hike L'objet randonnée à persister.
      * @param creatorId Identifiant de l'utilisateur créateur.
      * @return La randonnée sauvegardée avec ses relations initialisées.
-     * @throws RuntimeException Si l'utilisateur est introuvable ou si le libellé est déjà utilisé.
+     * @throws ResourceNotFoundException Si l'utilisateur est introuvable ou si le libellé est déjà utilisé.
      */
     @Transactional
     public Hike createHike(Hike hike, Long creatorId) {
         User user = userRepository.findById(creatorId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
         validateHike(hike);
         checkLibelleUniqueness(creatorId, hike.getLibelle(), -1L);
 
@@ -137,7 +142,7 @@ public class HikeService {
      */
     private void validateHike(Hike hike) {
         if(hike.getDureeJours() < 1 || hike.getDureeJours() > 3){
-            throw new RuntimeException("Le nombre de jour doit être compris entre 1 et 3");
+            throw new BusinessValidationException("Le nombre de jour doit être compris entre 1 et 3");
         }
     }
 
@@ -195,7 +200,7 @@ public class HikeService {
      * Vérifie la disponibilité d'un libellé pour les randonnées d'un utilisateur donné.
      * @param userId Identifiant de l'utilisateur.
      * @param libelle Nom de la randonnée à tester.
-     * @throws RuntimeException Si le libellé est déjà utilisé par ce même utilisateur.
+     * @throws IllegalBusinessActionException Si le libellé est déjà utilisé par ce même utilisateur.
      */
     private void checkLibelleUniqueness(Long userId, String libelle, Long excludeHikeId) {
         if (libelle == null || libelle.trim().isEmpty()) return;
@@ -204,23 +209,23 @@ public class HikeService {
         boolean exists = hikeRepository.existsByCreatorIdAndLibelleAndIdNot(userId, libelle, excludeHikeId);
 
         if (exists) {
-            throw new RuntimeException("Vous avez déjà une randonnée nommée : " + libelle);
+            throw new IllegalBusinessActionException("Vous avez déjà une randonnée nommée : " + libelle);
         }
     }
 
     /**
      * Synchronise les points de départ et d'arrivée avec les données de la base de données.
      * @param hike La randonnée dont les points d'intérêt doivent être résolus.
-     * @throws RuntimeException Si l'un des points d'intérêt est introuvable.
+     * @throws ResourceNotFoundException Si l'un des points d'intérêt est introuvable.
      */
     private void resolvePois(Hike hike) {
         if (hike.getDepart() != null && hike.getDepart().getId() != null) {
             hike.setDepart(poiRepository.findById(hike.getDepart().getId())
-                    .orElseThrow(() -> new RuntimeException("Départ introuvable")));
+                    .orElseThrow(() -> new ResourceNotFoundException("Départ introuvable")));
         }
         if (hike.getArrivee() != null && hike.getArrivee().getId() != null) {
             hike.setArrivee(poiRepository.findById(hike.getArrivee().getId())
-                    .orElseThrow(() -> new RuntimeException("Arrivée introuvable")));
+                    .orElseThrow(() -> new ResourceNotFoundException("Arrivée introuvable")));
         }
     }
 

@@ -28,7 +28,7 @@ public class UserService implements UserDetailsService {
             "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*+@(?:[a-zA-Z0-9-]+\\.)++[a-zA-Z]{2,6}$";
     private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
-    private static final String P_REGEX = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*()]).{8,}$";
+    private static final String P_REGEX = "^(?=.*\\d)(?=.*[A-Z])(?=.*[!@#$%^&*()]).{8,}$";
     private static final Pattern P_PATTERN = Pattern.compile(P_REGEX);
 
     private final UserRepository userRepository;

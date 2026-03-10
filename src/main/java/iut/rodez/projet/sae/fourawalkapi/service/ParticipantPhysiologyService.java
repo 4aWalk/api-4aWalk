@@ -1,6 +1,8 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,9 @@ public class ParticipantPhysiologyService {
 
     /**
      * Vérifie si la distance journalière est réaliste pour le participant de référence (le plus faible).
+     * @param distanceHike Distance de la randonnée totale
+     * @param nbJour Nombre de jour de la randonnée
+     * @param referent Participant avec les statistiques les plus basses
      */
     public void validateDistanceHike(double distanceHike, int nbJour, Participant referent) {
         double distanceMoyenneJour = distanceHike / nbJour;
@@ -33,13 +38,15 @@ public class ParticipantPhysiologyService {
         distanceTheorique *= 1000;
 
         if(distanceMoyenneJour > distanceTheorique) {
-            throw new RuntimeException("La distance quotidienne de la randonnée est aberrante");
+            throw new BusinessValidationException("La distance quotidienne de la randonnée est aberrante");
         }
     }
 
     /**
      * Vérifie la cohérence du besoin calorique calculé.
      * Formule : Base métabolique (2400) + Effort (50kcal/km) + Modificateurs.
+     * @param p Participant utilisé pour le calcul
+     * @param distance Distance à vérifier
      */
     public void validateKcalParticipant(Participant p, double distance) {
 
@@ -56,6 +63,8 @@ public class ParticipantPhysiologyService {
     /**
      * Vérifie la cohérence du besoin en hydratation.
      * Formule : Base (2L) + Effort (0.1L/km) + Modificateurs.
+     * @param p Participant de référence
+     * @param distance Distance de la randonnée
      */
     public void validateEauParticipant(Participant p, double distance) {
 
@@ -72,6 +81,7 @@ public class ParticipantPhysiologyService {
     /**
      * Vérifie la capacité de portage maximale.
      * Formule : Base (15kg) + Modificateurs de force physique.
+     * @param p Participant à contrôler
      */
     public void validatePoidsParticipant(Participant p) {
         if (p.getCapaciteEmportMaxKg() != 0.0) {
@@ -95,16 +105,18 @@ public class ParticipantPhysiologyService {
     /**
      * Identifie le participant le moins apte physiquement du groupe.
      * C'est lui qui détermine les limites de la randonnée (vitesse, distance max).
+     * @param participants Liste de tous les participants de la randonnée
      */
     public Participant getParticipantWithBadStat(Set<Participant> participants) {
         return participants.stream()
                 .min(Comparator.comparingDouble(this::calculateWeaknessScore))
-                .orElseThrow(() -> new RuntimeException("Aucun participant trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException("Aucun participant trouvé"));
     }
 
     /**
      * Calcule un score de performance (plus c'est bas, plus le participant est "faible").
      * Départ à 1.0, puis application de pénalités.
+     * @param p Participant référent
      */
     private double calculateWeaknessScore(Participant p) {
         double score = 1.0;
@@ -178,14 +190,18 @@ public class ParticipantPhysiologyService {
     /**
      * Vérification statistique d'aberration.
      * S'assure que la valeur réelle ne sort pas de l'intervalle [Cible - 10%, Cible + 10%].
+     * @param actual valeur à vérifier
+     * @param target valeur cible
+     * @param errorMessage Message d'erreur renvoyé si la valeur à vérifier est trop éloignée de la valeur cible
+     * @throws BusinessValidationException Erreur lors de la vérification métier
      */
     private void checkAbberation(double actual, double target, String errorMessage) {
         double min = target * (1.0 - TOLERANCE_PERCENTAGE);
         double max = target * (1.0 + TOLERANCE_PERCENTAGE);
 
         if (actual < min || actual > max) {
-            // Le formatage %.2f permet d'afficher 2 décimales dans le message d'erreur
-            throw new RuntimeException(String.format("%s (Valeur: %.2f, Attendu: ~%.2f)", errorMessage, actual, target));
+            throw new BusinessValidationException(String.format("%s (Valeur: %.2f, Attendu: ~%.2f)",
+                    errorMessage, actual, target));
         }
     }
 }

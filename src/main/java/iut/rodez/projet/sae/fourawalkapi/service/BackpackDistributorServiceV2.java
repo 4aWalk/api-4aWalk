@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
+import iut.rodez.projet.sae.fourawalkapi.exception.CapacityExceededException;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +51,7 @@ public class BackpackDistributorServiceV2 {
         boolean success = solveStrictBinPacking(0, itemsToPack, backpacks, hikeId);
 
         if (!success) {
-            throw new RuntimeException("Répartition impossible : Capacité totale insuffisante " +
+            throw new CapacityExceededException("Répartition impossible : Capacité totale insuffisante " +
                     "ou objets trop volumineux pour les sacs disponibles.");
         }
     }

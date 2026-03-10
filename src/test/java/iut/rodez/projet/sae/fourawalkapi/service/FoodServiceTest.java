@@ -49,9 +49,28 @@ class FoodServiceTest {
         // --- Aliment standard valide ---
         validFood = new FoodProduct();
         validFood.setId(300L);
+        validFood.setNom("Lentilles préparées");
         validFood.setAppellationCourante("Lentille");
         validFood.setMasseGrammes(500); // 500g (Valide)
         validFood.setApportNutritionnelKcal(1500); // 1500 kcal (Valide)
+        validFood.setPrixEuro(5.0); // Prix valide
+        validFood.setNbItem(1); // Nombre d'items valide
+    }
+
+    /**
+     * Crée un aliment valide pour les tests de validation,
+     * permettant de modifier uniquement le champ à tester.
+     * @return un objet FoodProduct valide
+     */
+    private FoodProduct createBaseValidFood() {
+        FoodProduct food = new FoodProduct();
+        food.setNom("Repas Test");
+        food.setAppellationCourante("Repas");
+        food.setMasseGrammes(500);
+        food.setApportNutritionnelKcal(1000);
+        food.setPrixEuro(5.0);
+        food.setNbItem(1);
+        return food;
     }
 
     // ==========================================
@@ -75,14 +94,47 @@ class FoodServiceTest {
     }
 
     /**
+     * Vérifie que le nom est obligatoire.
+     */
+    @Test
+    void createFood_NameMissing_ThrowsException() {
+        // Given : Un aliment sans nom
+        FoodProduct invalidFood = createBaseValidFood();
+        invalidFood.setNom("");
+
+        // When & Then : La création échoue
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> foodService.createFood(invalidFood));
+        assertTrue(ex.getMessage().contains("Le nom d'une nourriture est obligatoire"));
+
+        verify(foodRepository, never()).save(any());
+    }
+
+    /**
+     * Vérifie que l'appellation courante est obligatoire.
+     */
+    @Test
+    void createFood_AppellationMissing_ThrowsException() {
+        // Given : Un aliment sans appellation courante
+        FoodProduct invalidFood = createBaseValidFood();
+        invalidFood.setAppellationCourante("   ");
+
+        // When & Then : La création échoue
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> foodService.createFood(invalidFood));
+        assertTrue(ex.getMessage().contains("L'appellation courante du produit est obligatoire"));
+
+        verify(foodRepository, never()).save(any());
+    }
+
+    /**
      * Vérifie la limite basse de la masse (interdit < 50g).
      */
     @Test
     void createFood_MassTooLow_ThrowsException() {
         // Given : Un aliment pesant 49g (limite absolue à 50g)
-        FoodProduct invalidFood = new FoodProduct();
+        FoodProduct invalidFood = createBaseValidFood();
         invalidFood.setMasseGrammes(49);
-        invalidFood.setApportNutritionnelKcal(1000); // Les kcal sont valides pour isoler l'erreur
 
         // When & Then : La création échoue
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -99,9 +151,8 @@ class FoodServiceTest {
     @Test
     void createFood_MassTooHigh_ThrowsException() {
         // Given : Un aliment trop lourd (5001g)
-        FoodProduct invalidFood = new FoodProduct();
+        FoodProduct invalidFood = createBaseValidFood();
         invalidFood.setMasseGrammes(5001);
-        invalidFood.setApportNutritionnelKcal(1000);
 
         // When & Then
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -114,9 +165,8 @@ class FoodServiceTest {
      */
     @Test
     void createFood_KcalTooLow_ThrowsException() {
-        // Given : Un aliment valide en poids, mais hypocalorique (49 kcal)
-        FoodProduct invalidFood = new FoodProduct();
-        invalidFood.setMasseGrammes(500);
+        // Given : Un aliment hypocalorique (49 kcal)
+        FoodProduct invalidFood = createBaseValidFood();
         invalidFood.setApportNutritionnelKcal(49); // Limite à 50 kcal
 
         // When & Then
@@ -130,15 +180,44 @@ class FoodServiceTest {
      */
     @Test
     void createFood_KcalTooHigh_ThrowsException() {
-        // Given : Un aliment valide en poids, mais hypercalorique (3001 kcal)
-        FoodProduct invalidFood = new FoodProduct();
-        invalidFood.setMasseGrammes(500);
+        // Given : Un aliment hypercalorique (3001 kcal)
+        FoodProduct invalidFood = createBaseValidFood();
         invalidFood.setApportNutritionnelKcal(3001);
 
         // When & Then
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> foodService.createFood(invalidFood));
         assertTrue(ex.getMessage().contains("entre 50 et 3000 kcal"));
+    }
+
+    /**
+     * Vérifie que le prix ne peut pas être négatif.
+     */
+    @Test
+    void createFood_PriceNegative_ThrowsException() {
+        // Given : Un aliment avec un prix négatif
+        FoodProduct invalidFood = createBaseValidFood();
+        invalidFood.setPrixEuro(-1.0);
+
+        // When & Then
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> foodService.createFood(invalidFood));
+        assertTrue(ex.getMessage().contains("ne peut pas être négatif"));
+    }
+
+    /**
+     * Vérifie que le nombre d'item est valide.
+     */
+    @Test
+    void createFood_NbItemInvalid_ThrowsException() {
+        // Given : Un aliment avec 4 items (limite à 3)
+        FoodProduct invalidFood = createBaseValidFood();
+        invalidFood.setNbItem(4);
+
+        // When & Then
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> foodService.createFood(invalidFood));
+        assertTrue(ex.getMessage().contains("peut couvrir 1 à 3 participants"));
     }
 
     // ==========================================
@@ -240,7 +319,7 @@ class FoodServiceTest {
         // Given
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(mockHike));
 
-        // When & Then : Tentative de vol de nourriture par l'utilisateur 99 !
+        // When & Then : Tentative d'accès par l'utilisateur 99
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> foodService.removeFoodFromHike(100L, 300L, 99L));
         assertEquals("Accès refusé", ex.getMessage());

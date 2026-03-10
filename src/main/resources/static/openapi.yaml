@@ -1,0 +1,780 @@
+openapi: 3.0.3
+info:
+  title: API 4A Walk
+  description: API de gestion des randonnées, optimisation de sac à dos et suivi GPS.
+  version: 1.0.0
+servers:
+  - url: 'http://98.94.8.220:8080'
+    description: Serveur de Production / Test
+tags:
+  - name: Users
+    description: Gestion des utilisateurs et de l'authentification
+  - name: Hikes
+    description: Gestion des randonnées
+  - name: Participants
+    description: Gestion des participants aux randonnées
+  - name: Foods
+    description: Catalogue global de nourriture
+  - name: Equipments
+    description: Catalogue global d'équipement
+  - name: Courses
+    description: Suivi GPS et réalisation de parcours
+
+paths:
+  # ==========================================
+  # USERS
+  # ==========================================
+  /users/register:
+    post:
+      tags: [Users]
+      summary: Inscription d'un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterRequest'
+      responses:
+        '200':
+          description: Utilisateur créé avec succès
+        '400':
+          description: Erreur de validation (ex. mot de passe faible, âge invalide)
+        '409':
+          description: Conflit (email déjà utilisé)
+
+  /users/login:
+    post:
+      tags: [Users]
+      summary: Connexion utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Connexion réussie, retourne le Token JWT
+        '401':
+          description: Identifiants invalides
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Récupère les informations de l'utilisateur connecté
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Détails de l'utilisateur
+        '404':
+          description: Utilisateur introuvable
+
+  /users/{id}:
+    put:
+      tags: [Users]
+      summary: Mise à jour du profil utilisateur
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Utilisateur mis à jour
+        '400':
+          description: Erreur de validation
+        '403':
+          description: Accès refusé (modification d'un autre profil)
+
+  # ==========================================
+  # HIKES
+  # ==========================================
+  /hikes/my:
+    get:
+      tags: [Hikes]
+      summary: Récupère toutes les randonnées de l'utilisateur
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des randonnées
+
+  /hikes:
+    post:
+      tags: [Hikes]
+      summary: Créer une nouvelle randonnée (1 à 3 jours)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HikeRequest'
+      responses:
+        '200':
+          description: Randonnée créée
+        '400':
+          description: Erreur de validation
+        '409':
+          description: Conflit de nom de randonnée
+
+  /hikes/{id}:
+    get:
+      tags: [Hikes]
+      summary: Détails d'une randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Détails de la randonnée
+        '404':
+          description: Randonnée introuvable
+    put:
+      tags: [Hikes]
+      summary: Met à jour les informations de base de la randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HikeRequest'
+      responses:
+        '200':
+          description: Randonnée mise à jour
+    delete:
+      tags: [Hikes]
+      summary: Supprime une randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Suppression réussie
+
+  /hikes/{id}/pois:
+    put:
+      tags: [Hikes]
+      summary: Définit la liste des points d'intérêt (étapes)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/POI'
+      responses:
+        '200':
+          description: Points d'intérêt mis à jour
+
+  /hikes/{id}/participants:
+    post:
+      tags: [Hikes]
+      summary: Ajouter un participant à la randonnée (Max 3)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequest'
+      responses:
+        '200':
+          description: Participant ajouté
+        '422':
+          description: Capacité maximale de la randonnée atteinte
+
+  /hikes/{id}/participants/{idPart}:
+    put:
+      tags: [Hikes]
+      summary: Mise à jour des infos d'un participant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: idPart
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequest'
+      responses:
+        '200':
+          description: Participant mis à jour
+    delete:
+      tags: [Hikes]
+      summary: Retire et supprime un participant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: idPart
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Participant supprimé
+
+  /hikes/{id}/food/{idFood}:
+    post:
+      tags: [Hikes]
+      summary: Lier une nourriture du catalogue à la randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: idFood
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Nourriture liée
+    delete:
+      tags: [Hikes]
+      summary: Retire la nourriture de la randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: idFood
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Nourriture retirée
+
+  /hikes/{id}/equipment/{idEquipment}:
+    post:
+      tags: [Hikes]
+      summary: Lier un équipement à la randonnée (avec affectation optionnelle)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: idEquipment
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: owner
+          in: query
+          description: L'identifiant du participant à qui appartient l'équipement (Force l'algorithme à le placer dans son sac).
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Équipement lié
+    delete:
+      tags: [Hikes]
+      summary: Retire l'équipement de la randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: idEquipment
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Équipement retiré
+
+  /hikes/{hikeId}/optimize:
+    post:
+      tags: [Hikes]
+      summary: Optimise la répartition dans les sacs à dos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hikeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Optimisation réussie
+        '422':
+          description: Répartition impossible (Capacité totale insuffisante)
+
+  # ==========================================
+  # PARTICIPANTS
+  # ==========================================
+  /participants/my:
+    get:
+      tags: [Participants]
+      summary: Récupère tous les participants créés par l'utilisateur
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des participants
+
+  # ==========================================
+  # FOODS (CATALOGUE)
+  # ==========================================
+  /foods:
+    get:
+      tags: [Foods]
+      summary: Récupère tout le catalogue de nourriture
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste de nourriture
+    post:
+      tags: [Foods]
+      summary: Ajouter une nourriture au catalogue global
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoodRequest'
+      responses:
+        '200':
+          description: Nourriture ajoutée
+
+  /foods/{idFood}:
+    delete:
+      tags: [Foods]
+      summary: Supprime une nourriture du catalogue global
+      description: Ne fonctionne pas si la nourriture est rattachée à une randonnée.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idFood
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Nourriture supprimée
+        '422':
+          description: Impossible de supprimer, élément utilisé
+
+  # ==========================================
+  # EQUIPMENTS (CATALOGUE)
+  # ==========================================
+  /equipments:
+    get:
+      tags: [Equipments]
+      summary: Récupère tout le catalogue d'équipements
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des équipements
+    post:
+      tags: [Equipments]
+      summary: Ajouter un équipement au catalogue global
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipmentRequest'
+      responses:
+        '200':
+          description: Équipement ajouté
+
+  /equipments/{idEquip}:
+    delete:
+      tags: [Equipments]
+      summary: Supprime un équipement du catalogue global
+      description: Ne fonctionne pas si l'équipement est rattaché à une randonnée.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idEquip
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Équipement supprimé
+        '422':
+          description: Impossible de supprimer, élément utilisé
+
+  # ==========================================
+  # COURSES (GPS)
+  # ==========================================
+  /courses/my:
+    get:
+      tags: [Courses]
+      summary: Récupère tous les parcours (courses) de l'utilisateur
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des parcours
+
+  /courses:
+    post:
+      tags: [Courses]
+      summary: Démarrer un nouveau parcours
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreateRequest'
+      responses:
+        '200':
+          description: Parcours démarré
+        '403':
+          description: La randonnée ciblée ne vous appartient pas ou non optimisée
+
+  /courses/{idCourse}:
+    get:
+      tags: [Courses]
+      summary: Détails d'un parcours (MongoDB ID)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idCourse
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails du parcours
+        '404':
+          description: Parcours introuvable
+    put:
+      tags: [Courses]
+      summary: Ajouter des points GPS au parcours
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idCourse
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Coordinate'
+      responses:
+        '200':
+          description: Points ajoutés avec succès
+
+  /courses/{idCourse}/state:
+    put:
+      tags: [Courses]
+      summary: Mettre en pause ou reprendre un parcours
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idCourse
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: État du parcours mis à jour
+
+  /courses/{idCourse}/finish:
+    put:
+      tags: [Courses]
+      summary: Mettre fin définitivement à la randonnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idCourse
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Parcours terminé avec succès
+        '422':
+          description: Parcours déjà terminé
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- AUTH & USERS ---
+    LoginRequest:
+      type: object
+      required: [mail, password]
+      properties:
+        mail:
+          type: string
+          example: admin2@4awalk.fr
+        password:
+          type: string
+          example: MotDePasseFort99!
+
+    UserRegisterRequest:
+      type: object
+      required: [mail, password, nom, prenom, adresse, age, niveau, morphologie]
+      properties:
+        mail:
+          type: string
+          example: voyageur@4awalk.fr
+        password:
+          type: string
+          example: MotDePasseFort99!
+        nom:
+          type: string
+        prenom:
+          type: string
+        adresse:
+          type: string
+        age:
+          type: integer
+          minimum: 10
+          maximum: 99
+        niveau:
+          type: string
+          enum: [DEBUTANT, ENTRAINE, SPORTIF]
+        morphologie:
+          type: string
+          enum: [LEGERE, MOYENNE, FORTE]
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        nom:
+          type: string
+        prenom:
+          type: string
+        adresse:
+          type: string
+        age:
+          type: integer
+        niveau:
+          type: string
+          enum: [DEBUTANT, ENTRAINE, SPORTIF]
+        morphologie:
+          type: string
+          enum: [LEGERE, MOYENNE, FORTE]
+
+    # --- HIKES & POIS ---
+    HikeRequest:
+      type: object
+      required: [libelle, dureeJours]
+      properties:
+        libelle:
+          type: string
+        dureeJours:
+          type: integer
+          minimum: 1
+          maximum: 3
+        depart:
+          $ref: '#/components/schemas/POI'
+        arrivee:
+          $ref: '#/components/schemas/POI'
+
+    POI:
+      type: object
+      properties:
+        id:
+          type: integer
+        nom:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+
+    # --- PARTICIPANTS ---
+    ParticipantRequest:
+      type: object
+      required: [prenom, nom, age, niveau, morphologie, besoinKcal, besoinEauLitre, capaciteEmportMaxKg]
+      properties:
+        prenom:
+          type: string
+        nom:
+          type: string
+        age:
+          type: integer
+        niveau:
+          type: string
+          enum: [DEBUTANT, ENTRAINE, SPORTIF]
+        morphologie:
+          type: string
+          enum: [LEGERE, MOYENNE, FORTE]
+        besoinKcal:
+          type: integer
+          description: Entre 1700 et 10000
+        besoinEauLitre:
+          type: number
+          description: Entre 1 et 8
+        capaciteEmportMaxKg:
+          type: number
+          description: Capacité max du sac
+
+    # --- CATALOGUES ---
+    FoodRequest:
+      type: object
+      required: [nom, masseGrammes, appellationCourante, apportNutritionnelKcal, prixEuro, nbItem]
+      properties:
+        nom:
+          type: string
+        description:
+          type: string
+        masseGrammes:
+          type: number
+        appellationCourante:
+          type: string
+        conditionnement:
+          type: string
+        apportNutritionnelKcal:
+          type: number
+        prixEuro:
+          type: number
+        nbItem:
+          type: integer
+          minimum: 1
+          maximum: 3
+
+    EquipmentRequest:
+      type: object
+      required: [nom, masseGrammes, nbItem, type]
+      properties:
+        nom:
+          type: string
+        description:
+          type: string
+        masseGrammes:
+          type: number
+        nbItem:
+          type: integer
+        type:
+          type: string
+          enum: [REPOS, AUTRE, EAU, PROGRESSION, VETEMENT, SOIN]
+        masseAVide:
+          type: number
+          default: 0.0
+
+    # --- COURSES ---
+    CourseCreateRequest:
+      type: object
+      required: [hikeId, path]
+      properties:
+        hikeId:
+          type: integer
+        path:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coordinate'
+
+    Coordinate:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double

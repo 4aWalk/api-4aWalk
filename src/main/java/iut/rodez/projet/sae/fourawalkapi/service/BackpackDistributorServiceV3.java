@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Backpack;
+import iut.rodez.projet.sae.fourawalkapi.exception.CapacityExceededException;
 import iut.rodez.projet.sae.fourawalkapi.model.Item;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +40,7 @@ public class BackpackDistributorServiceV3 {
 
         // Si le poids total dépasse la capacité max combinée, on stoppe net
         if (totalItemsWeight > totalBackpacksCapacity) {
-            throw new RuntimeException("Répartition impossible : Le poids total dépasse la capacité max des sacs.");
+            throw new CapacityExceededException("Répartition impossible : Le poids total dépasse la capacité max des sacs.");
         }
 
         // Tri décroissant des objets (Heuristique First-Fit Decreasing)
@@ -54,7 +55,7 @@ public class BackpackDistributorServiceV3 {
         boolean success = solveBranchAndBound(0, itemsToPack, backpacks, totalItemsWeight, hikeId);
 
         if (!success) {
-            throw new RuntimeException("Répartition impossible : Objets trop volumineux pour l'espace des sacs disponibles.");
+            throw new CapacityExceededException("Répartition impossible : Objets trop volumineux pour l'espace des sacs disponibles.");
         }
     }
 

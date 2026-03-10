@@ -225,7 +225,7 @@ class BackpackDistributorServiceV3Test {
         veste.setId(99L);
         items.add(veste);
 
-        when(backpackServiceMock.getPreferredOwnerBackpack(eq(veste), eq(backpacks), eq(1L)))
+        when(backpackServiceMock.getPreferredOwnerBackpack(veste, backpacks, 1L))
                 .thenReturn(bobBackpack);
 
         // When

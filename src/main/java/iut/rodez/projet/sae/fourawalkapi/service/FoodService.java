@@ -2,6 +2,9 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.FoodProduct;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
+import iut.rodez.projet.sae.fourawalkapi.exception.UnauthorizedAccessException;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.FoodProductRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import org.springframework.stereotype.Service;
@@ -43,7 +46,7 @@ public class FoodService {
      *
      * @param food L'objet FoodProduct à persister.
      * @return L'objet sauvegardé avec son ID généré.
-     * @throws RuntimeException Si les règles de validation (poids/calories) ne sont pas respectées.
+     * @throws BusinessValidationException Si les règles de validation (poids/calories) ne sont pas respectées.
      */
     public FoodProduct createFood(FoodProduct food) {
         // Validation des règles métiers (bornes min/max) avant insertion en base
@@ -66,20 +69,21 @@ public class FoodService {
      * @param hikeId L'ID de la randonnée cible.
      * @param foodId L'ID de l'aliment à ajouter au sac commun.
      * @param userId L'ID de l'utilisateur effectuant l'action (pour vérification des droits).
-     * @throws RuntimeException Si la randonnée/aliment n'existe pas ou si l'utilisateur n'est pas le créateur.
+     * @throws ResourceNotFoundException Si la randonnée/aliment n'existe pas ou si l'utilisateur n'est pas le créateur.
+     * @throws UnauthorizedAccessException Si la ressource n'est pas autorisée à être consultée
      */
     @Transactional
     public void addFoodToHike(Long hikeId, Long foodId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Randonnée introuvable"));
 
         // Vérification de sécurité : Seul le créateur gère le stock de nourriture
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
+            throw new UnauthorizedAccessException("Accès refusé : Vous n'êtes pas le propriétaire de cette randonnée");
         }
 
         FoodProduct fp = foodRepository.findById(foodId)
-                .orElseThrow(() -> new RuntimeException("Aliment introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Aliment introuvable"));
 
         // Délégation à l'entité Hike pour la gestion de la collection
         hike.addFood(fp);
@@ -94,19 +98,20 @@ public class FoodService {
      * @param hikeId L'ID de la randonnée.
      * @param foodId L'ID de l'aliment à retirer.
      * @param userId L'ID de l'utilisateur (sécurité).
-     * @throws RuntimeException Si l'accès est refusé ou les ressources introuvables.
+     * @throws ResourceNotFoundException Si les ressources sont introuvables.
+     * @throws UnauthorizedAccessException Si l'accès à la ressource est refusée
      */
     @Transactional
     public void removeFoodFromHike(Long hikeId, Long foodId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException("Randonnée introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Randonnée introuvable"));
 
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé");
+            throw new UnauthorizedAccessException("Accès refusé");
         }
 
         FoodProduct food = foodRepository.findById(foodId)
-                .orElseThrow(() -> new RuntimeException("Aliment introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Aliment introuvable"));
 
         // Suppression via la méthode helper de l'entité
         hike.removeFood(food);
@@ -119,23 +124,39 @@ public class FoodService {
      * Vérifie la cohérence des données physiques (masse) et énergétiques (calories).
      *
      * @param f L'objet FoodProduct à valider.
-     * @throws RuntimeException Si le poids ou les calories sont hors des bornes autorisées.
+     * @throws BusinessValidationException Si le poids ou les calories sont hors des bornes autorisées.
      */
     private void validateFoodRules(FoodProduct f) {
+        // Nom obligatoire
+        if (f.getNom() == null || f.getNom().isEmpty()) {
+            throw new BusinessValidationException("Le nom d'une nourriture est obligatoire");
+        }
+
         // Poids réaliste pour un item de randonnée (50g - 5kg)
         if (f.getMasseGrammes() < 50 || f.getMasseGrammes() > 5000) {
-            throw new RuntimeException("La masse de la nourriture doit être comprise entre 50g et 5kg");
+            throw new BusinessValidationException("La masse de la nourriture doit être comprise entre 50g et 5kg");
         }
 
         // Apport calorique cohérent (50 kcal - 3000 kcal)
         if (f.getApportNutritionnelKcal() < 50 || f.getApportNutritionnelKcal() > 3000) {
-            throw new RuntimeException("L'apport calorique doit être compris entre 50 et 3000 kcal");
+            throw new BusinessValidationException("L'apport calorique doit être compris entre 50 et 3000 kcal");
         }
 
         // Vérification appellation courrante
         if(f.getAppellationCourante() == null || f.getAppellationCourante().isEmpty() ||
             f.getAppellationCourante().isBlank()) {
-            throw new RuntimeException("L'appellation courante du produit est obligatoire");
+            throw new BusinessValidationException("L'appellation courante du produit est obligatoire");
+        }
+
+        // Vérification du prix > 0
+        if(f.getPrixEuro() < 0) {
+            throw new BusinessValidationException("Un prix de nourriture ne peut pas être négatif");
+        }
+
+        // Vérification lot nourriture >= 1 et <= 3
+        if (f.getNbItem() < 1 || f.getNbItem() > 3) {
+            throw new BusinessValidationException(
+                    "Un lot de nourriture peut couvrir 1 à 3 participants");
         }
     }
 }

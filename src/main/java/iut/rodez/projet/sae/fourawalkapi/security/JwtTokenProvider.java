@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ public class JwtTokenProvider {
 
         // Récupération de l'entité complète pour accéder à l'ID
         User user = userRepository.findByMail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable lors de la génération du token"));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable lors de la génération du token"));
 
         return generateToken(user);
     }
@@ -115,15 +116,15 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (MalformedJwtException e) {
-            logger.error("Token JWT invalide : " + e.getMessage());
+            logger.error("Token JWT invalide : {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            logger.error("Token JWT expiré : " + e.getMessage());
+            logger.error("Token JWT expiré : {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            logger.error("Token JWT non supporté : " + e.getMessage());
+            logger.error("Token JWT non supporté : {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            logger.error("La chaîne claims JWT est vide : " + e.getMessage());
+            logger.error("La chaîne claims JWT est vide : {}", e.getMessage());
         } catch (io.jsonwebtoken.security.SignatureException e) {
-            logger.error("Signature JWT invalide : " + e.getMessage());
+            logger.error("Signature JWT invalide : {}", e.getMessage());
         }
         return false;
     }

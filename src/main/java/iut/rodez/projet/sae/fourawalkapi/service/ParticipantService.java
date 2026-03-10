@@ -3,6 +3,10 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.entity.User;
+import iut.rodez.projet.sae.fourawalkapi.exception.IllegalBusinessActionException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceAlreadyExistsException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
+import iut.rodez.projet.sae.fourawalkapi.exception.UnauthorizedAccessException;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.ParticipantRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.UserRepository;
@@ -48,17 +52,18 @@ public class ParticipantService {
      * @param p Objet participant à ajouter.
      * @param userId Identifiant de l'utilisateur effectuant la requête.
      * @return Le participant sauvegardé.
-     * @throws RuntimeException Si la randonnée n'appartient pas à l'utilisateur ou si elle est pleine.
+     * @throws UnauthorizedAccessException Si la randonnée n'appartient pas à l'utilisateur
+     * @throws IllegalBusinessActionException Si la randonnée est pleine
      */
     @Transactional
     public Participant addParticipant(Long hikeId, Participant p, Long userId) {
         validateParticipantRules(p);
 
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
+                .orElseThrow(() -> new UnauthorizedAccessException(MSG_ERROR_NOT_FOUND_HIKE));
 
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException(REFUSED_ACCES);
-        if (hike.getParticipants().size() >= 3) throw new RuntimeException("Hike complète (Max 3)");
+        if (!hike.getCreator().getId().equals(userId)) throw new UnauthorizedAccessException(REFUSED_ACCES);
+        if (hike.getParticipants().size() >= 3) throw new IllegalBusinessActionException("Hike complète (Max 3)");
 
         p.setCreator(false);
         p.setCreatorId(userId);
@@ -86,14 +91,14 @@ public class ParticipantService {
         validateParticipantRules(details);
 
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException(REFUSED_ACCES);
+                .orElseThrow(() -> new UnauthorizedAccessException(MSG_ERROR_NOT_FOUND_HIKE));
+        if (!hike.getCreator().getId().equals(userId)) throw new UnauthorizedAccessException(REFUSED_ACCES);
 
         Participant p = participantRepository.findById(participantId)
-                .orElseThrow(() -> new RuntimeException("Participant introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Participant introuvable"));
 
         if (!hike.getParticipants().contains(p)) {
-            throw new RuntimeException("Ce participant n'appartient pas à la randonnée spécifiée !");
+            throw new UnauthorizedAccessException("Ce participant n'appartient pas à la randonnée spécifiée !");
         }
         p.setNom(details.getNom());
         p.setPrenom(details.getPrenom());
@@ -110,7 +115,7 @@ public class ParticipantService {
 
         if (p.getCreator()) {
             User userToUpdate = userRepository.findById(hike.getCreator().getId())
-                    .orElseThrow(() -> new RuntimeException("Utilisateur créateur introuvable en base"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Utilisateur créateur introuvable en base"));
 
             userToUpdate.setAge(details.getAge());
             userToUpdate.setNiveau(details.getNiveau());
@@ -133,13 +138,13 @@ public class ParticipantService {
     @Transactional
     public void deleteParticipant(Long hikeId, Long participantId, Long userId) {
         Hike hike = hikeRepository.findById(hikeId)
-                .orElseThrow(() -> new RuntimeException(MSG_ERROR_NOT_FOUND_HIKE));
-        if (!hike.getCreator().getId().equals(userId)) throw new RuntimeException(REFUSED_ACCES);
+                .orElseThrow(() -> new ResourceAlreadyExistsException(MSG_ERROR_NOT_FOUND_HIKE));
+        if (!hike.getCreator().getId().equals(userId)) throw new UnauthorizedAccessException(REFUSED_ACCES);
 
         Participant p = participantRepository.findById(participantId)
-                .orElseThrow(() -> new RuntimeException("Participant introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Participant introuvable"));
 
-        if (p.getCreator()) throw new RuntimeException("Impossible de supprimer le créateur");
+        if (p.getCreator()) throw new IllegalBusinessActionException("Impossible de supprimer le créateur");
 
         hike.getParticipants().remove(p);
         hikeRepository.save(hike);

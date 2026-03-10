@@ -4,6 +4,9 @@ import iut.rodez.projet.sae.fourawalkapi.dto.CourseResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.document.Course;
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.PointOfInterest;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
+import iut.rodez.projet.sae.fourawalkapi.exception.ResourceNotFoundException;
+import iut.rodez.projet.sae.fourawalkapi.exception.UnauthorizedAccessException;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.HikeRepository;
 import org.springframework.data.geo.Point;
@@ -87,7 +90,7 @@ public class CourseService {
         }
 
         Hike hike = hikeRepository.findById(dto.getHikeId())
-                .orElseThrow(() -> new RuntimeException("Erreur intégrité : Randonnée introuvable avec l'ID " +
+                .orElseThrow(() -> new ResourceNotFoundException("Erreur intégrité : Randonnée introuvable avec l'ID " +
                         dto.getHikeId()));
 
         if (!hike.getCreator().getId().equals(userId)) {
@@ -137,13 +140,13 @@ public class CourseService {
     public CourseResponseDto addPointsToCourse(String courseId, List<CourseResponseDto.CoordinateDto> newPointsDto,
                                                Long userId) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Parcours introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Parcours introuvable"));
 
         Hike hike = hikeRepository.findById(course.getHikeId())
-                .orElseThrow(() -> new RuntimeException("Randonnée associée introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Randonnée associée introuvable"));
 
         if (!hike.getCreator().getId().equals(userId)) {
-            throw new RuntimeException("Accès refusé : Ce parcours ne vous appartient pas.");
+            throw new UnauthorizedAccessException("Accès refusé : Ce parcours ne vous appartient pas.");
         }
 
         if(hike.getOptimize()){
@@ -170,11 +173,11 @@ public class CourseService {
      */
     public Course finishCourse(String courseId) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException("Course non trouvée"));
 
         // Règle métier : Idempotence et sécurité d'état
         if (course.isFinished()) {
-            throw new RuntimeException("Action illégale : Cette course est déjà terminée.");
+            throw new BusinessValidationException("Action illégale : Cette course est déjà terminée.");
         }
 
         // Gestion du point d'arrivée
@@ -198,11 +201,11 @@ public class CourseService {
      */
     public Course setPauseState(String courseId) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException("Course non trouvée"));
 
         // Sécurité : Impossible de modifier l'état d'une archive
         if (course.isFinished()) {
-            throw new RuntimeException("Action illégale : Impossible de modifier une course terminée.");
+            throw new BusinessValidationException("Action illégale : Impossible de modifier une course terminée.");
         }
 
         course.togglePause();

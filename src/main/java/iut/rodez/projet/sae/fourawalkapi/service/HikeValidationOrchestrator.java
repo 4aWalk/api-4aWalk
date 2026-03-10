@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,14 +31,15 @@ public class HikeValidationOrchestrator {
      * couverture en eau et équipements. Bloque le processus si une incohérence critique est détectée.
      *
      * @param hike La randonnée configurée à valider.
-     * @throws RuntimeException Si une contrainte métier n'est pas respectée.
+     * @throws BusinessValidationException Si une contrainte métier n'est pas respectée.
      */
     public void validateHikeForOptimize(Hike hike) {
         // Calcul de la distance totale via les points de passage
         double distanceRando = HikeService.getAllDistance(hike);
 
         // Validation de la faisabilité de la distance basée sur le participant le plus faible ("Maillon faible")
-        physiologyService.validateDistanceHike(distanceRando, hike.getDureeJours(), physiologyService.getParticipantWithBadStat(hike.getParticipants()));
+        physiologyService.validateDistanceHike(distanceRando, hike.getDureeJours(),
+                physiologyService.getParticipantWithBadStat(hike.getParticipants()));
 
         int besoinCalorieTotalParticipant = 0;
 
