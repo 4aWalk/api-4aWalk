@@ -2,6 +2,7 @@ package iut.rodez.projet.sae.fourawalkapi.security;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SecurityUtils {
 
     private SecurityUtils(){}
+
     /**
      * Extraction sécurisée de l'identifiant (ID) de l'utilisateur courant depuis le contexte de sécurité.
      * Cette méthode fait le lien entre l'objet générique Authentication de Spring et le besoin métier (ID Long).
@@ -35,5 +37,15 @@ public class SecurityUtils {
             // Sécurité défensive : Si la configuration du filtre change (ex: stockage d'un UserDetails au lieu d'un Long)
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur serveur : Impossible de récupérer l'identité utilisateur");
         }
+    }
+
+    /**
+     * Récupère directement l'ID de l'utilisateur connecté via le contexte global.
+     * Utile pour les services ou les méthodes où l'objet Authentication n'est pas passé en paramètre.
+     * * @return L'ID (Long) de l'utilisateur authentifié.
+     */
+    public static Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return getUserId(auth);
     }
 }
