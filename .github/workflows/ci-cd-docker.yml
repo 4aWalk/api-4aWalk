@@ -1,5 +1,6 @@
 name: CI/CD Docker API & Quality
 
+# Déclenché sur chaque push vers main (production) ou integration (recette)
 on:
   push:
     branches:
@@ -9,14 +10,17 @@ on:
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
-
     steps:
+
+      # Clone le dépôt complet. fetch-depth: 0 est nécessaire pour que SonarQube
+      # puisse analyser tout l'historique Git et calculer les métriques différentielles.
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Important pour SonarQube afin d'analyser tout l'historique Git
 
-      # 1. Configuration Java JDK 21
+      # Installe le JDK Temurin 21, requis pour compiler le projet Maven et lancer SonarQube.
+      # L'option cache: maven évite de re-télécharger les dépendances à chaque build.
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -24,7 +28,7 @@ jobs:
           java-version: '21' 
           cache: 'maven'
 
-      # 2. Cache pour SonarQube (accélère les analyses futures)
+      # Met en cache les plugins et règles SonarQube pour accélérer les analyses futures.
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
@@ -32,21 +36,22 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # 3. Compilation, Tests et Métriques Qualité (SonarQube/SonarCloud)
+      # Compile le projet, exécute les tests unitaires et envoie les résultats à SonarCloud.
+      # GITHUB_TOKEN permet à Sonar de commenter les PRs, SONAR_TOKEN authentifie l'envoi.
       - name: Build, Test and Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=4aWalk_api-4aWalk -Dsonar.organization=4awalk -Dsonar.host.url=https://sonarcloud.io
 
-      # 4. Connexion à Docker Hub
+      # Authentifie le runner sur Docker Hub pour pouvoir publier l'image.
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
-      # 5. Build et Push de l'image
+
+      # Construit l'image Docker depuis la racine du projet et la pousse sur Docker Hub avec le tag latest.
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -54,7 +59,7 @@ jobs:
           push: true
           tags: alexandrebrouzes/sae-5-01-iut-api:latest
 
-      # 6. Déploiement sur AWS
+      # Se connecte au serveur AWS via SSH et redéploie le container avec la nouvelle image.
       - name: Deploy to AWS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
