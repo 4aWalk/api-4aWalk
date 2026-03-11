@@ -1,0 +1,802 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class Application {
+  + Application(): 
+  + main(String[]): void
+}
+class Backpack {
+  + Backpack(Participant): 
+  + Backpack(): 
+  - owner: Participant
+  - foodItems: Set<FoodProduct>
+  - totalMassKg: double
+  - equipmentItems: Set<EquipmentItem>
+  - id: Long
+  + removeItem(Item): void
+  + addItem(Item): void
+  + canAddWeightGrammes(double): boolean
+  + updateTotalMass(): void
+  + clearContent(): void
+   owner: Participant
+   spaceRemainingGrammes: double
+   equipmentItems: Set<EquipmentItem>
+   capacityMaxKg: double
+   id: Long
+   totalMassKg: double
+   foodItems: Set<FoodProduct>
+}
+class BackpackDistributorServiceV2 {
+  + BackpackDistributorServiceV2(BackpackService): 
+  - solveStrictBinPacking(int, List<Item>, List<Backpack>, Long): boolean
+  + distributeBatchesToBackpacks(List<Item>, List<Backpack>, Long): void
+}
+class BackpackDistributorServiceV3 {
+  + BackpackDistributorServiceV3(BackpackService): 
+  - solveBranchAndBound(int, List<Item>, List<Backpack>, double, Long): boolean
+  + distributeBatchesToBackpacks(List<Item>, List<Backpack>, Long): void
+}
+interface BackpackRepository << interface >> {
+  + findByIdWithFullContent(Long): Optional<Backpack>
+}
+class BackpackResponseDto {
+  + BackpackResponseDto(Backpack, Map<Long, Participant>): 
+  - poidsActuelKg: double
+  - id: Long
+  - capaciteMaxKg: double
+  - equipements: List<EquipmentResponseDto>
+  - nourriture: List<FoodProductResponseDto>
+   id: Long
+   equipements: List<EquipmentResponseDto>
+   poidsActuelKg: double
+   nourriture: List<FoodProductResponseDto>
+   capaciteMaxKg: double
+}
+class BackpackService {
+  + BackpackService(BelongEquipmentRepository): 
+  + getPreferredOwnerBackpack(Item, List<Backpack>, Long): Backpack
+}
+class BelongEquipment {
+  + BelongEquipment(Hike, Participant, EquipmentItem): 
+  + BelongEquipment(): 
+  - participant: Participant
+  - equipment: EquipmentItem
+  - id: Long
+  - hike: Hike
+   id: Long
+   hike: Hike
+   equipment: EquipmentItem
+   participant: Participant
+}
+interface BelongEquipmentRepository << interface >> {
+  + getIfExistParticipantForEquipmentAndHike(Long, Long): Long
+  + findByHikeId(Long): List<BelongEquipment>
+}
+class BusinessValidationException {
+  + BusinessValidationException(String): 
+}
+class CapacityExceededException {
+  + CapacityExceededException(String): 
+}
+class CoordinateDto {
+  + CoordinateDto(): 
+  + CoordinateDto(double, double): 
+  - latitude: double
+  - longitude: double
+   latitude: double
+   longitude: double
+}
+class Course {
+  + Course(Long, PointOfInterest): 
+  + Course(): 
+  - trajetsRealises: GeoJsonLineString
+  - hikeId: Long
+  - depart: PointOfInterest
+  - arrivee: PointOfInterest
+  - isFinished: boolean
+  - dateRealisation: LocalDateTime
+  - id: String
+  - isPaused: boolean
+  + addCoordinate(double, double): void
+  + togglePause(): void
+   isFinished: boolean
+   arrivee: PointOfInterest
+   depart: PointOfInterest
+   hikeId: Long
+   isPaused: boolean
+   dateRealisation: LocalDateTime
+   id: String
+   trajetsRealises: GeoJsonLineString
+}
+class CourseController {
+  + CourseController(CourseService): 
+  + getMyCourses(Authentication): ResponseEntity<List<CourseResponseDto>>
+  + addPointsToCourse(String, List<CoordinateDto>, Authentication): ResponseEntity<CourseResponseDto>
+  + createCourse(CourseResponseDto, Authentication): ResponseEntity<CourseResponseDto>
+  + getCourseById(String): ResponseEntity<CourseResponseDto>
+  + setCourseState(String): ResponseEntity<Course>
+  + finishCourse(String): ResponseEntity<Course>
+}
+interface CourseRepository << interface >> {
+  + findByHikeId(Long): List<Course>
+  + deleteByHikeId(Long): void
+}
+class CourseResponseDto {
+  + CourseResponseDto(Course): 
+  + CourseResponseDto(): 
+  - depart: PointOfInterestResponseDto
+  - path: List<CoordinateDto>
+  - hikeId: Long
+  - id: String
+  - arrivee: PointOfInterestResponseDto
+  - dateRealisation: LocalDateTime
+   depart: PointOfInterestResponseDto
+   isFinished: boolean
+   path: List<CoordinateDto>
+   arrivee: PointOfInterestResponseDto
+   hikeId: Long
+   isPaused: boolean
+   dateRealisation: LocalDateTime
+   id: String
+}
+class CourseService {
+  + CourseService(CourseRepository, HikeRepository): 
+  - mapToDto(Course): CourseResponseDto
+  + getCourseById(String): CourseResponseDto
+  + createCourse(CourseResponseDto, Long): CourseResponseDto
+  + setPauseState(String): Course
+  + addPointsToCourse(String, List<CoordinateDto>, Long): CourseResponseDto
+  + getCoursesByUser(Long): List<CourseResponseDto>
+  - createPoiFromGeo(Point, String): PointOfInterest
+  + finishCourse(String): Course
+}
+class EquipmentItem {
+  + EquipmentItem(): 
+  + EquipmentItem(String, String, double, int, TypeEquipment, double): 
+  - id: Long
+  - masseGrammes: Double
+  - type: TypeEquipment
+  - masseAVide: double
+  - nbItem: int
+  - nom: String
+  - description: String
+   description: String
+   masseAVide: double
+   masseGrammes: double
+   totalMassesKg: double
+   id: Long
+   nbItem: int
+   totalMasses: double
+   type: TypeEquipment
+   nom: String
+}
+class EquipmentItemController {
+  + EquipmentItemController(EquipmentService): 
+  + deleteEquipment(Long): ResponseEntity<Void>
+  + createEquipment(EquipmentItem): EquipmentResponseDto
+   allEquipment: List<EquipmentResponseDto>
+}
+interface EquipmentItemRepository << interface >>
+class EquipmentResponseDto {
+  + EquipmentResponseDto(EquipmentItem, Participant): 
+  + EquipmentResponseDto(EquipmentItem): 
+  - type: TypeEquipment
+  - ownerName: String
+  - nbItem: int
+  - ownerId: Long
+  - description: String
+  - id: Long
+  - masseGrammes: double
+  - masseAVide: double
+  - nom: String
+   description: String
+   masseAVide: double
+   masseGrammes: double
+   id: Long
+   nbItem: int
+   type: TypeEquipment
+   nom: String
+   ownerName: String
+   ownerId: Long
+}
+class EquipmentService {
+  + EquipmentService(EquipmentItemRepository, HikeRepository, ParticipantRepository, BelongEquipmentRepository): 
+  + createEquipment(EquipmentItem): EquipmentItem
+  - validateEquipmentRules(EquipmentItem): void
+  + addEquipmentToHike(Long, Long, Long, Long): void
+  + deleteEquipment(Long): void
+  + getEquipmentOwners(Long): Map<Long, Participant>
+  + removeEquipmentFromHike(Long, Long, Long): void
+   allEquipment: List<EquipmentItem>
+}
+class ErrorResponse {
+  + ErrorResponse(int, String): 
+  - status: int
+  - message: String
+   message: String
+   status: int
+}
+class FoodProduct {
+  + FoodProduct(): 
+  + FoodProduct(String, double, String, String, double, double, int): 
+  - id: Long
+  - conditionnement: String
+  - masseGrammes: Double
+  - appellationCourante: String
+  - nbItem: int
+  - apportNutritionnelKcal: Double
+  - prixEuro: Double
+  - nom: String
+   totalMasses: int
+   masseGrammes: double
+   prixEuro: double
+   conditionnement: String
+   totalMassesKg: double
+   id: Long
+   totalKcals: int
+   appellationCourante: String
+   nbItem: int
+   nom: String
+   apportNutritionnelKcal: double
+}
+class FoodProductController {
+  + FoodProductController(FoodService): 
+  + createFood(FoodProduct): FoodProductResponseDto
+  + deleteFood(Long): ResponseEntity<Void>
+   allFoods: List<FoodProductResponseDto>
+}
+interface FoodProductRepository << interface >>
+class FoodProductResponseDto {
+  + FoodProductResponseDto(FoodProduct): 
+  - nbItem: int
+  - apportNutritionnelKcal: double
+  - appelationCourante: String
+  - conditionnement: String
+  - id: Long
+  - nom: String
+  - masseGrammes: double
+  - prixEuro: double
+   masseGrammes: double
+   prixEuro: double
+   appelationCourante: String
+   conditionnement: String
+   id: Long
+   nbItem: int
+   nom: String
+   apportNutritionnelKcal: double
+}
+class FoodService {
+  + FoodService(FoodProductRepository, HikeRepository): 
+  - validateFoodRules(FoodProduct): void
+  + removeFoodFromHike(Long, Long, Long): void
+  + createFood(FoodProduct): FoodProduct
+  + addFoodToHike(Long, Long, Long): void
+  + deleteFood(Long): void
+   allFoods: List<FoodProduct>
+}
+class GlobalExceptionHandler {
+  + GlobalExceptionHandler(): 
+  + handleValidationExceptions(MethodArgumentNotValidException): Map<String, String>
+  + handleUnauthorizedAccess(UnauthorizedAccessException): ErrorResponse
+  + handleIllegalArgument(IllegalArgumentException): ErrorResponse
+  + handleBusinessValidation(BusinessValidationException): ErrorResponse
+  + handleCapacityExceeded(CapacityExceededException): ErrorResponse
+  + handleGenericException(Exception): ErrorResponse
+  + handleResourceAlreadyExists(ResourceAlreadyExistsException): ErrorResponse
+  + handleResourceNotFound(ResourceNotFoundException): ErrorResponse
+  + handleIllegalAction(IllegalBusinessActionException): ErrorResponse
+}
+class GroupEquipment {
+  + GroupEquipment(TypeEquipment): 
+  + GroupEquipment(): 
+  - hike: Hike
+  - type: TypeEquipment
+  - items: List<EquipmentItem>
+  - id: Long
+  + removeItem(EquipmentItem): void
+  + addItem(EquipmentItem): void
+   type: TypeEquipment
+   totalMassesKg: double
+   id: Long
+   hike: Hike
+   items: List<EquipmentItem>
+}
+interface GroupEquipmentRepository << interface >> {
+  + findById(Long): Optional<GroupEquipment>
+  + findByIdWithItems(Long): Optional<GroupEquipment>
+}
+class GroupEquipmentResponseDto {
+  + GroupEquipmentResponseDto(GroupEquipment, Map<Long, Participant>): 
+  - id: Long
+  - items: List<EquipmentResponseDto>
+  - type: String
+   id: Long
+   items: List<EquipmentResponseDto>
+   type: String
+}
+class Hike {
+  + Hike(String, PointOfInterest, PointOfInterest, int, User, boolean): 
+  + Hike(): 
+  - libelle: String
+  - dureeJours: int
+  - id: Long
+  - arrivee: PointOfInterest
+  - optionalPoints: List<PointOfInterest>
+  - creator: User
+  - depart: PointOfInterest
+  - optimize: boolean
+  - participants: Set<Participant>
+  - foodCatalogue: List<FoodProduct>
+  - equipmentGroups: Map<TypeEquipment, GroupEquipment>
+  + removeFood(FoodProduct): void
+  + addEquipment(EquipmentItem): void
+  + addFood(FoodProduct): void
+  + removeEquipment(EquipmentItem): void
+   equipmentGroups: Map<TypeEquipment, GroupEquipment>
+   foodCatalogue: List<FoodProduct>
+   participants: Set<Participant>
+   calorieRandonne: double
+   id: Long
+   depart: PointOfInterest
+   optimize: boolean
+   libelle: String
+   backpacks: List<Backpack>
+   dureeJours: int
+   optionalPoints: List<PointOfInterest>
+   arrivee: PointOfInterest
+   creator: User
+   caloriesForAllParticipants: int
+}
+class HikeController {
+  + HikeController(HikeService, ParticipantService, PointOfInterestService, FoodService, EquipmentService): 
+  + getHike(Long, Authentication): ResponseEntity<HikeResponseDto>
+  + deleteParticipant(Long, Long, Authentication): ResponseEntity<Void>
+  + updateParticipant(Long, Long, Participant, Authentication): ParticipantResponseDto
+  + createHike(Hike, Authentication): ResponseEntity<HikeResponseDto>
+  + updatePois(Long, List<PointOfInterest>, Authentication): List<PointOfInterestResponseDto>
+  + removeFoodFromHike(Long, Long, Authentication): ResponseEntity<Void>
+  + addParticipant(Long, Participant, Authentication): ParticipantResponseDto
+  + getMyHikes(Authentication): List<HikeResponseDto>
+  + updateHike(Long, Hike, Authentication): ResponseEntity<HikeResponseDto>
+  + removeEquipmentFromHike(Long, Long, Authentication): ResponseEntity<Void>
+  + addEquipmentToHike(Long, Long, Long, Authentication): ResponseEntity<Void>
+  + optimizeBackpacks(Long, Authentication): ResponseEntity<HikeResponseDto>
+  + deleteHike(Long, Authentication): ResponseEntity<Void>
+  + addFoodToHike(Long, Long, Authentication): ResponseEntity<Void>
+}
+interface HikeRepository << interface >> {
+  + findByCreatorId(Long): List<Hike>
+  + existsByCreatorIdAndLibelleAndIdNot(Long, String, Long): boolean
+}
+class HikeResponseDto {
+  + HikeResponseDto(Hike, Map<Long, Participant>): 
+  - arrivee: PointOfInterestResponseDto
+  - optimize: boolean
+  - dureeJours: int
+  - points: Set<PointOfInterestResponseDto>
+  - id: Long
+  - depart: PointOfInterestResponseDto
+  - foodCatalogue: Set<FoodProductResponseDto>
+  - libelle: String
+  - creator: UserResponseDto
+  - participants: Set<ParticipantResponseDto>
+  - equipmentGroups: Map<TypeEquipment, GroupEquipmentResponseDto>
+   equipmentGroups: Map<TypeEquipment, GroupEquipmentResponseDto>
+   participants: Set<ParticipantResponseDto>
+   depart: PointOfInterestResponseDto
+   creator: UserResponseDto
+   id: Long
+   arrivee: PointOfInterestResponseDto
+   optimize: boolean
+   foodCatalogue: Set<FoodProductResponseDto>
+   libelle: String
+   dureeJours: int
+   points: Set<PointOfInterestResponseDto>
+}
+class HikeService {
+  + HikeService(HikeRepository, BackpackDistributorServiceV2, HikeValidationOrchestrator, OptimizerService, UserRepository, PointOfInterestRepository, ParticipantRepository, CourseRepository, GroupEquipmentRepository): 
+  - validateHike(Hike): void
+  - checkLibelleUniqueness(Long, String, Long): void
+  - resolvePois(Hike): void
+  + deleteHike(Long, Long): void
+  + getAllDistance(Hike): double
+  + getHikeById(Long, Long): Hike
+  + createHike(Hike, Long): Hike
+  + updateHike(Long, Hike, Long): Hike
+  + getHikesByCreator(Long): List<Hike>
+  + optimizeBackpack(Long, Long): void
+}
+class HikeValidationOrchestrator {
+  + HikeValidationOrchestrator(ParticipantPhysiologyService, LogisticsValidationService): 
+  + validateHikeForOptimize(Hike): void
+}
+class IllegalBusinessActionException {
+  + IllegalBusinessActionException(String): 
+}
+interface Item << interface >> {
+   nom: String
+   masseGrammes: double
+   id: Long
+   nbItem: int
+}
+class JwtAuthenticationFilter {
+  + JwtAuthenticationFilter(JwtTokenProvider): 
+  - getJwtFromRequest(HttpServletRequest): String?
+  # doFilterInternal(HttpServletRequest, HttpServletResponse, FilterChain): void
+}
+class JwtTokenProvider {
+  + JwtTokenProvider(UserRepository): 
+  + validateToken(String): boolean
+  - key(): Key
+  + generateToken(User): String
+  + generateToken(Authentication): String
+  + getUserId(String): Long
+}
+enum Level << enumeration >> {
+  + Level(): 
+  + values(): Level[]
+  + valueOf(String): Level
+}
+class LogisticsValidationService {
+  + LogisticsValidationService(): 
+  + validateHikeEquipment(Hike): void
+  + validateCapaciteEmportEauLitre(Hike): void
+  + validateHikeFood(Hike, int): void
+}
+class MongoDataInitializer {
+  + MongoDataInitializer(CourseRepository): 
+  + run(String[]): void
+  - createPoi(String, String, double, double): PointOfInterest
+}
+enum Morphology << enumeration >> {
+  + Morphology(): 
+  + valueOf(String): Morphology
+  + values(): Morphology[]
+}
+class OptimizerService {
+  + OptimizerService(): 
+  + getOptimizeAllFood(Hike): List<FoodProduct>
+  + getOptimizeAllEquipment(Hike): List<EquipmentItem>
+  + sortBestEquipment(List<EquipmentItem>, List<EquipmentItem>, int, int): List<EquipmentItem>
+  - sortBestFoodRecursive(List<FoodProduct>, List<FoodProduct>, Map<String, Integer>, int, int, int): List<FoodProduct>?
+}
+class Participant {
+  + Participant(): 
+  + Participant(String, String, int, Level, Morphology, boolean, Long, int, double, double): 
+  - nom: String
+  - besoinKcal: Integer
+  - prenom: String
+  - niveau: Level
+  - creatorId: Long
+  - besoinEauLitre: Double
+  - capaciteEmportMaxKg: Double
+  - creator: boolean
+  - age: Integer
+  - morphologie: Morphology
+  - id: Long
+  - backpack: Backpack
+   capaciteEmportMaxKg: double
+   niveau: Level
+   morphologie: Morphology
+   id: Long
+   creator: boolean
+   prenom: String
+   nom: String
+   age: int
+   besoinKcal: int
+   backpack: Backpack
+   besoinEauLitre: double
+   creatorId: Long
+}
+class ParticipantController {
+  + ParticipantController(ParticipantService): 
+  + getMyParticipants(Authentication): ResponseEntity<List<Participant>>
+}
+class ParticipantPhysiologyService {
+  + ParticipantPhysiologyService(): 
+  + getParticipantWithBadStat(Set<Participant>): Participant
+  + validateKcalParticipant(Participant, double): void
+  + validateEauParticipant(Participant, double): void
+  - calculateWeaknessScore(Participant): double
+  + validatePoidsParticipant(Participant): void
+  + validateDistanceHike(double, int, Participant): void
+  - calculateProfileModifier(Participant, double, double, double, double, double, double, double, double): double
+  - checkAbberation(double, double, String): void
+}
+interface ParticipantRepository << interface >> {
+  + findByCreatorIdAndCreatorTrue(Long): List<Participant>
+  + findByCreatorIdAndCreatorFalse(Long): List<Participant>
+}
+class ParticipantResponseDto {
+  + ParticipantResponseDto(Participant, Map<Long, Participant>): 
+  - creatorId: Long
+  - backpack: BackpackResponseDto
+  - age: int
+  - niveau: Level
+  - id: Long
+  - besoinEauLitre: double
+  - prenom: String
+  - nom: String
+  - besoinKcal: int
+  - capaciteEmportMaxKg: double
+  - morphologie: Morphology
+   isCreator: boolean
+   capaciteEmportMaxKg: double
+   niveau: Level
+   morphologie: Morphology
+   id: Long
+   prenom: String
+   nom: String
+   age: int
+   backpack: BackpackResponseDto
+   besoinKcal: int
+   besoinEauLitre: double
+   creatorId: Long
+}
+class ParticipantService {
+  + ParticipantService(HikeRepository, ParticipantRepository, UserRepository): 
+  + updateParticipant(Long, Long, Participant, Long): Participant
+  + getMyParticipants(Long): List<Participant>
+  + deleteParticipant(Long, Long, Long): void
+  + addParticipant(Long, Participant, Long): Participant
+  - validateParticipantRules(Participant): void
+}
+interface Person << interface >> {
+   nom: String
+   niveau: Level
+   age: int
+   morphologie: Morphology
+   id: Long
+   prenom: String
+}
+class PointOfInterest {
+  + PointOfInterest(String, double, double, String, int): 
+  + PointOfInterest(): 
+  - longitude: Double
+  - description: String
+  - sequence: int
+  - id: Long
+  - latitude: Double
+  - nom: String
+  + distanceTo(double, double): double
+   description: String
+   nom: String
+   latitude: double
+   sequence: int
+   id: Long
+   longitude: double
+}
+interface PointOfInterestRepository << interface >>
+class PointOfInterestResponseDto {
+  + PointOfInterestResponseDto(PointOfInterest): 
+  - description: String
+  - latitude: double
+  - id: Long
+  - longitude: double
+  - sequence: int
+  - nom: String
+   description: String
+   nom: String
+   latitude: double
+   sequence: int
+   id: Long
+   longitude: double
+}
+class PointOfInterestService {
+  + PointOfInterestService(HikeRepository, PointOfInterestRepository): 
+  + validatePointOfInterest(PointOfInterest): void
+  + updateAllPois(Long, List<PointOfInterest>, Long): List<PointOfInterest>
+}
+class ResourceAlreadyExistsException {
+  + ResourceAlreadyExistsException(String): 
+}
+class ResourceNotFoundException {
+  + ResourceNotFoundException(String): 
+}
+class SecurityConfig {
+  + SecurityConfig(JwtAuthenticationFilter): 
+  + authenticationManager(AuthenticationConfiguration): AuthenticationManager
+  + passwordEncoder(): PasswordEncoder
+  + securityFilterChain(HttpSecurity): SecurityFilterChain
+}
+class SecurityUtils {
+  - SecurityUtils(): 
+  + getUserId(Authentication): Long
+   currentUserId: Long
+}
+enum TypeEquipment << enumeration >> {
+  + TypeEquipment(): 
+  + valueOf(String): TypeEquipment
+  + values(): TypeEquipment[]
+}
+class UnauthorizedAccessException {
+  + UnauthorizedAccessException(String): 
+}
+class User {
+  + User(): 
+  + User(String, String, String, String, String, int, Level, Morphology): 
+  - adresse: String
+  - mail: String
+  - niveau: Level
+  - morphologie: Morphology
+  - id: Long
+  - prenom: String
+  - age: int
+  - password: String
+  - nom: String
+   password: String
+   niveau: Level
+   morphologie: Morphology
+   id: Long
+   prenom: String
+   nom: String
+   age: int
+   adresse: String
+   mail: String
+}
+class UserController {
+  + UserController(UserService, UserRepository, AuthenticationManager, JwtTokenProvider): 
+  + register(User): ResponseEntity<Map<String, Object>>
+  + login(Map<String, String>): ResponseEntity<Map<String, Object>>
+  + getCurrentUser(Authentication): ResponseEntity<UserResponseDto>
+  + updateUser(Long, User, Authentication): ResponseEntity<UserResponseDto>
+}
+interface UserRepository << interface >> {
+  + findByMail(String): Optional<User>
+}
+class UserResponseDto {
+  + UserResponseDto(User): 
+  - morphologie: Morphology
+  - age: int
+  - prenom: String
+  - niveau: Level
+  - adresse: String
+  - nom: String
+  - mail: String
+  - id: Long
+   niveau: Level
+   morphologie: Morphology
+   id: Long
+   prenom: String
+   nom: String
+   age: int
+   adresse: String
+   mail: String
+}
+class UserService {
+  + UserService(UserRepository, PasswordEncoder, ParticipantRepository): 
+  + registerNewUser(User): User
+  + updateUser(User): User
+  - validateUserData(User): void
+  + loadUserByUsername(String): UserDetails
+}
+
+Backpack                       "1" *-[#595959,plain]-> "owner\n1" Participant                    
+BackpackDistributorServiceV2   "1" *-[#595959,plain]-> "backpackService\n1" BackpackService                
+BackpackDistributorServiceV2    -[#595959,dashed]->  CapacityExceededException      : "«create»"
+BackpackDistributorServiceV3   "1" *-[#595959,plain]-> "backpackService\n1" BackpackService                
+BackpackDistributorServiceV3    -[#595959,dashed]->  CapacityExceededException      : "«create»"
+BackpackResponseDto             -[#595959,dashed]->  EquipmentResponseDto           : "«create»"
+BackpackService                "1" *-[#595959,plain]-> "belongEquipmentRepository\n1" BelongEquipmentRepository      
+BelongEquipment                "1" *-[#595959,plain]-> "equipment\n1" EquipmentItem                  
+BelongEquipment                "1" *-[#595959,plain]-> "hike\n1" Hike                           
+BelongEquipment                "1" *-[#595959,plain]-> "participant\n1" Participant                    
+CoordinateDto                   +-[#820000,plain]-  CourseResponseDto              
+Course                         "1" *-[#595959,plain]-> "depart\n1" PointOfInterest                
+CourseController               "1" *-[#595959,plain]-> "courseService\n1" CourseService                  
+CourseResponseDto               -[#595959,dashed]->  CoordinateDto                  : "«create»"
+CourseResponseDto              "1" *-[#595959,plain]-> "depart\n1" PointOfInterestResponseDto     
+CourseResponseDto               -[#595959,dashed]->  PointOfInterestResponseDto     : "«create»"
+CourseService                   -[#595959,dashed]->  BusinessValidationException    : "«create»"
+CourseService                   -[#595959,dashed]->  Course                         : "«create»"
+CourseService                  "1" *-[#595959,plain]-> "courseRepository\n1" CourseRepository               
+CourseService                   -[#595959,dashed]->  CourseResponseDto              : "«create»"
+CourseService                  "1" *-[#595959,plain]-> "hikeRepository\n1" HikeRepository                 
+CourseService                   -[#595959,dashed]->  PointOfInterest                : "«create»"
+CourseService                   -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+CourseService                   -[#595959,dashed]->  UnauthorizedAccessException    : "«create»"
+EquipmentItem                   -[#008200,dashed]-^  Item                           
+EquipmentItem                  "1" *-[#595959,plain]-> "type\n1" TypeEquipment                  
+EquipmentItemController         -[#595959,dashed]->  EquipmentResponseDto           : "«create»"
+EquipmentItemController        "1" *-[#595959,plain]-> "equipmentService\n1" EquipmentService               
+EquipmentResponseDto           "1" *-[#595959,plain]-> "type\n1" TypeEquipment                  
+EquipmentService                -[#595959,dashed]->  BelongEquipment                : "«create»"
+EquipmentService               "1" *-[#595959,plain]-> "belongEquipmentRepository\n1" BelongEquipmentRepository      
+EquipmentService                -[#595959,dashed]->  BusinessValidationException    : "«create»"
+EquipmentService               "1" *-[#595959,plain]-> "equipmentRepository\n1" EquipmentItemRepository        
+EquipmentService               "1" *-[#595959,plain]-> "hikeRepository\n1" HikeRepository                 
+EquipmentService               "1" *-[#595959,plain]-> "participantRepository\n1" ParticipantRepository          
+EquipmentService                -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+EquipmentService                -[#595959,dashed]->  UnauthorizedAccessException    : "«create»"
+FoodProduct                     -[#008200,dashed]-^  Item                           
+FoodProductController           -[#595959,dashed]->  FoodProductResponseDto         : "«create»"
+FoodProductController          "1" *-[#595959,plain]-> "foodService\n1" FoodService                    
+FoodService                     -[#595959,dashed]->  BusinessValidationException    : "«create»"
+FoodService                    "1" *-[#595959,plain]-> "foodRepository\n1" FoodProductRepository          
+FoodService                    "1" *-[#595959,plain]-> "hikeRepository\n1" HikeRepository                 
+FoodService                     -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+FoodService                     -[#595959,dashed]->  UnauthorizedAccessException    : "«create»"
+GlobalExceptionHandler          -[#595959,dashed]->  ErrorResponse                  : "«create»"
+GroupEquipment                 "1" *-[#595959,plain]-> "hike\n1" Hike                           
+GroupEquipment                 "1" *-[#595959,plain]-> "type\n1" TypeEquipment                  
+GroupEquipmentResponseDto       -[#595959,dashed]->  EquipmentResponseDto           : "«create»"
+Hike                            -[#595959,dashed]->  GroupEquipment                 : "«create»"
+Hike                           "1" *-[#595959,plain]-> "depart\n1" PointOfInterest                
+Hike                           "1" *-[#595959,plain]-> "creator\n1" User                           
+HikeController                 "1" *-[#595959,plain]-> "equipmentService\n1" EquipmentService               
+HikeController                 "1" *-[#595959,plain]-> "foodService\n1" FoodService                    
+HikeController                  -[#595959,dashed]->  HikeResponseDto                : "«create»"
+HikeController                 "1" *-[#595959,plain]-> "hikeService\n1" HikeService                    
+HikeController                  -[#595959,dashed]->  ParticipantResponseDto         : "«create»"
+HikeController                 "1" *-[#595959,plain]-> "participantService\n1" ParticipantService             
+HikeController                 "1" *-[#595959,plain]-> "poiService\n1" PointOfInterestService         
+HikeResponseDto                 -[#595959,dashed]->  GroupEquipmentResponseDto      : "«create»"
+HikeResponseDto                 -[#595959,dashed]->  ParticipantResponseDto         : "«create»"
+HikeResponseDto                "1" *-[#595959,plain]-> "depart\n1" PointOfInterestResponseDto     
+HikeResponseDto                 -[#595959,dashed]->  PointOfInterestResponseDto     : "«create»"
+HikeResponseDto                "1" *-[#595959,plain]-> "creator\n1" UserResponseDto                
+HikeResponseDto                 -[#595959,dashed]->  UserResponseDto                : "«create»"
+HikeService                     -[#595959,dashed]->  Backpack                       : "«create»"
+HikeService                    "1" *-[#595959,plain]-> "backpackDistributorV2\n1" BackpackDistributorServiceV2   
+HikeService                     -[#595959,dashed]->  BusinessValidationException    : "«create»"
+HikeService                    "1" *-[#595959,plain]-> "courseRepository\n1" CourseRepository               
+HikeService                    "1" *-[#595959,plain]-> "groupEquipmentRepository\n1" GroupEquipmentRepository       
+HikeService                    "1" *-[#595959,plain]-> "hikeRepository\n1" HikeRepository                 
+HikeService                    "1" *-[#595959,plain]-> "hikeValidatorService\n1" HikeValidationOrchestrator     
+HikeService                     -[#595959,dashed]->  IllegalBusinessActionException : "«create»"
+HikeService                    "1" *-[#595959,plain]-> "optimizerService\n1" OptimizerService               
+HikeService                     -[#595959,dashed]->  Participant                    : "«create»"
+HikeService                    "1" *-[#595959,plain]-> "participantRepository\n1" ParticipantRepository          
+HikeService                    "1" *-[#595959,plain]-> "poiRepository\n1" PointOfInterestRepository      
+HikeService                     -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+HikeService                     -[#595959,dashed]->  UnauthorizedAccessException    : "«create»"
+HikeService                    "1" *-[#595959,plain]-> "userRepository\n1" UserRepository                 
+HikeValidationOrchestrator     "1" *-[#595959,plain]-> "logisticsService\n1" LogisticsValidationService     
+HikeValidationOrchestrator     "1" *-[#595959,plain]-> "physiologyService\n1" ParticipantPhysiologyService   
+JwtAuthenticationFilter        "1" *-[#595959,plain]-> "tokenProvider\n1" JwtTokenProvider               
+JwtTokenProvider                -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+JwtTokenProvider               "1" *-[#595959,plain]-> "userRepository\n1" UserRepository                 
+LogisticsValidationService      -[#595959,dashed]->  BusinessValidationException    : "«create»"
+MongoDataInitializer            -[#595959,dashed]->  Course                         : "«create»"
+MongoDataInitializer           "1" *-[#595959,plain]-> "courseRepository\n1" CourseRepository               
+MongoDataInitializer            -[#595959,dashed]->  PointOfInterest                : "«create»"
+OptimizerService                -[#595959,dashed]->  BusinessValidationException    : "«create»"
+Participant                    "1" *-[#595959,plain]-> "backpack\n1" Backpack                       
+Participant                    "1" *-[#595959,plain]-> "niveau\n1" Level                          
+Participant                    "1" *-[#595959,plain]-> "morphologie\n1" Morphology                     
+Participant                     -[#008200,dashed]-^  Person                         
+ParticipantController          "1" *-[#595959,plain]-> "participantService\n1" ParticipantService             
+ParticipantPhysiologyService    -[#595959,dashed]->  BusinessValidationException    : "«create»"
+ParticipantPhysiologyService    -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+ParticipantResponseDto         "1" *-[#595959,plain]-> "backpack\n1" BackpackResponseDto            
+ParticipantResponseDto          -[#595959,dashed]->  BackpackResponseDto            : "«create»"
+ParticipantResponseDto         "1" *-[#595959,plain]-> "niveau\n1" Level                          
+ParticipantResponseDto         "1" *-[#595959,plain]-> "morphologie\n1" Morphology                     
+ParticipantService             "1" *-[#595959,plain]-> "hikeRepository\n1" HikeRepository                 
+ParticipantService              -[#595959,dashed]->  IllegalBusinessActionException : "«create»"
+ParticipantService             "1" *-[#595959,plain]-> "participantRepository\n1" ParticipantRepository          
+ParticipantService              -[#595959,dashed]->  ResourceAlreadyExistsException : "«create»"
+ParticipantService              -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+ParticipantService              -[#595959,dashed]->  UnauthorizedAccessException    : "«create»"
+ParticipantService             "1" *-[#595959,plain]-> "userRepository\n1" UserRepository                 
+PointOfInterestService          -[#595959,dashed]->  BusinessValidationException    : "«create»"
+PointOfInterestService         "1" *-[#595959,plain]-> "hikeRepository\n1" HikeRepository                 
+PointOfInterestService         "1" *-[#595959,plain]-> "poiRepository\n1" PointOfInterestRepository      
+PointOfInterestService          -[#595959,dashed]->  ResourceNotFoundException      : "«create»"
+PointOfInterestService          -[#595959,dashed]->  UnauthorizedAccessException    : "«create»"
+SecurityConfig                 "1" *-[#595959,plain]-> "authenticationFilter\n1" JwtAuthenticationFilter        
+User                           "1" *-[#595959,plain]-> "niveau\n1" Level                          
+User                           "1" *-[#595959,plain]-> "morphologie\n1" Morphology                     
+User                            -[#008200,dashed]-^  Person                         
+UserController                 "1" *-[#595959,plain]-> "tokenProvider\n1" JwtTokenProvider               
+UserController                 "1" *-[#595959,plain]-> "userRepository\n1" UserRepository                 
+UserController                  -[#595959,dashed]->  UserResponseDto                : "«create»"
+UserController                 "1" *-[#595959,plain]-> "userService\n1" UserService                    
+UserResponseDto                "1" *-[#595959,plain]-> "niveau\n1" Level                          
+UserResponseDto                "1" *-[#595959,plain]-> "morphologie\n1" Morphology                     
+UserService                    "1" *-[#595959,plain]-> "participantRepository\n1" ParticipantRepository          
+UserService                    "1" *-[#595959,plain]-> "userRepository\n1" UserRepository                 
+@enduml
