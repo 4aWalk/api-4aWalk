@@ -1,6 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. Nettoyage
+-- Nettoyage
 DROP TABLE IF EXISTS belong_equipment;
 DROP TABLE IF EXISTS group_equipment_items;
 DROP TABLE IF EXISTS group_equipments;
@@ -16,7 +16,7 @@ DROP TABLE IF EXISTS food_products;
 DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS users;
 
--- 2. Création des tables
+-- Création des tables
 CREATE TABLE users (
                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                        nom VARCHAR(255) NOT NULL,
