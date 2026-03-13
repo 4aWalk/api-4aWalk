@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   api-service:
-    build: .
+    build: ../../../Downloads
     container_name: fourawalk-api
     ports:
       - "8080:8080"

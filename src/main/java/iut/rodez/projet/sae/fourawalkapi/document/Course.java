@@ -47,7 +47,6 @@ public class Course {
     private GeoJsonLineString trajetsRealises;
 
     // --- Constructeurs ---
-
     public Course() {
         // trajetsRealises n'est pas initialisé ici, il reste null jusqu'au premier relevé GPS
         this.dateRealisation = LocalDateTime.now();

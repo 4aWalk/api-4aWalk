@@ -673,8 +673,6 @@ components:
     POI:
       type: object
       properties:
-        id:
-          type: integer
         nom:
           type: string
         description:
@@ -763,10 +761,6 @@ components:
       properties:
         hikeId:
           type: integer
-        path:
-          type: array
-          items:
-            $ref: '#/components/schemas/Coordinate'
 
     Coordinate:
       type: object

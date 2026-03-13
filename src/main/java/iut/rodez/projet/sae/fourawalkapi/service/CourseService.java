@@ -149,7 +149,7 @@ public class CourseService {
             throw new UnauthorizedAccessException("Accès refusé : Ce parcours ne vous appartient pas.");
         }
 
-        if(hike.getOptimize()){
+        if(!hike.getOptimize()){
             throw new SecurityException("Vous devez d'abord vérifier et optimiser les sacs " +
                     "avant de reprendre la randonnée");
         }

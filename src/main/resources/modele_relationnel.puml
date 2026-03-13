@@ -1,0 +1,189 @@
+@startuml
+!theme plain
+hide circle
+
+' === PARAMÈTRES DE MISE EN PAGE ===
+
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam shadowing false
+
+' === DÉCLARATION DES ENTITÉS (AVEC TOUS LES ATTRIBUTS) ===
+
+entity "users" {
+  * id : BIGINT <<PK>>
+  --
+  nom : VARCHAR(255)
+  prenom : VARCHAR(255)
+  mail : VARCHAR(255) <<UQ>>
+  password : VARCHAR(255)
+  adresse : VARCHAR(255)
+  age : INTEGER
+  niveau : VARCHAR(50)
+  morphologie : VARCHAR(50)
+}
+
+entity "participants" {
+  * id : BIGINT <<PK>>
+  --
+  nom : VARCHAR(255)
+  prenom : VARCHAR(255)
+  age : INT
+  niveau : VARCHAR(50)
+  morphologie : VARCHAR(50)
+  creator : BOOLEAN
+  creator_id : BIGINT
+  besoin_kcal : INTEGER
+  besoin_eau_litre : DOUBLE
+  capacite_emport_max_kg : DOUBLE
+}
+
+entity "points_of_interest" {
+  * id : BIGINT <<PK>>
+  --
+  nom : VARCHAR(255)
+  description : VARCHAR(500)
+  latitude : DOUBLE
+  longitude : DOUBLE
+  hike_id : BIGINT
+  sequence : INT
+}
+
+entity "hikes" {
+  * id : BIGINT <<PK>>
+  --
+  libelle : VARCHAR(255)
+  duree_jours : INT
+  creator_id : BIGINT <<FK>>
+  depart_id : BIGINT <<FK>>
+  arrivee_id : BIGINT <<FK>>
+  is_optimize : BOOLEAN
+}
+
+entity "food_products" {
+  * id : BIGINT <<PK>>
+  --
+  nom : VARCHAR(255)
+  description : VARCHAR(255)
+  masse_grammes : DOUBLE
+  appellation_courante : VARCHAR(255)
+  conditionnement : VARCHAR(255)
+  apport_nutritionnel_kcal : DOUBLE
+  prix_euro : DOUBLE
+  nb_item : INT
+}
+
+entity "equipment_items" {
+  * id : BIGINT <<PK>>
+  --
+  nom : VARCHAR(255)
+  description : VARCHAR(255)
+  masse_grammes : DOUBLE
+  nb_item : INT
+  type : varchar(50)
+  masse_a_vide : DOUBLE
+}
+
+entity "backpacks" {
+  * id : BIGINT <<PK>>
+  --
+  total_mass_kg : DOUBLE
+  participant_id : BIGINT <<FK>> <<UQ>>
+}
+
+entity "backpack_equipment" {
+  * backpack_id : BIGINT <<PK, FK>>
+  * equipment_id : BIGINT <<PK, FK>>
+}
+
+entity "backpack_food" {
+  * backpack_id : BIGINT <<PK, FK>>
+  * food_id : BIGINT <<PK, FK>>
+}
+
+entity "hike_participants" {
+  * hike_id : BIGINT <<PK, FK>>
+  * participant_id : BIGINT <<PK, FK>>
+}
+
+entity "hike_food_products" {
+  * hike_id : BIGINT <<PK, FK>>
+  * food_product_id : BIGINT <<PK, FK>>
+}
+
+entity "group_equipments" {
+  * id : BIGINT <<PK>>
+  --
+  type : VARCHAR(50)
+  hike_id : BIGINT <<FK>>
+}
+
+entity "group_equipment_items" {
+  * group_id : BIGINT <<PK, FK>>
+  * item_order : INT <<PK>>
+  --
+  equipment_id : BIGINT <<FK>>
+}
+
+entity "belong_equipment" {
+  * id : BIGINT <<PK>>
+  --
+  hike_id : BIGINT <<FK>>
+  participant_id : BIGINT <<FK>>
+  equipment_id : BIGINT <<FK>>
+}
+
+' ==========================================
+' === STRUCTURE INVISIBLE (LES COLONNES) ===
+' ==========================================
+' Ces lignes ne s'affichent pas mais forcent l'alignement vertical
+
+' Colonne 1
+users -[hidden]down- points_of_interest
+
+' Colonne 2
+hikes -[hidden]down- participants
+
+' Colonne 3 (Les tables de liaison au centre)
+hike_participants -[hidden]down- backpacks
+backpacks -[hidden]down- belong_equipment
+belong_equipment -[hidden]down- group_equipments
+
+' Colonne 4
+equipment_items -[hidden]down- food_products
+
+
+' ==========================================
+' === RELATIONS AVEC CARDINALITÉS ===
+' ==========================================
+
+' De la Col 1 vers la Col 2
+users "1..1" ||--o{ "0..N" hikes : "creator_id"
+points_of_interest "1..1" ||--o{ "0..N" hikes : "depart / arrivee"
+hikes "1..1" ||--o{ "0..N" points_of_interest : "hike_id"
+
+' Autour de la Col 2 (Hikes & Participants)
+hikes "1..1" ||-down-o{ "0..N" hike_participants : "hike_id"
+participants "1..1" ||-up-o{ "0..N" hike_participants : "participant_id"
+participants "1..1" ||--o| "0..1" backpacks : "participant_id"
+
+' Liaisons vers les ressources (Col 4)
+backpacks "1..1" ||--o{ "0..N" backpack_equipment : "backpack_id"
+equipment_items "1..1" ||-left-o{ "0..N" backpack_equipment : "equipment_id"
+
+backpacks "1..1" ||--o{ "0..N" backpack_food : "backpack_id"
+food_products "1..1" ||-left-o{ "0..N" backpack_food : "food_id"
+
+hikes "1..1" ||--o{ "0..N" hike_food_products : "hike_id"
+food_products "1..1" ||-left-o{ "0..N" hike_food_products : "food_product_id"
+
+hikes "1..1" ||--o{ "0..N" group_equipments : "hike_id"
+group_equipments "1..1" ||--o{ "1..N" group_equipment_items : "group_id"
+equipment_items "1..1" ||-left-o{ "0..N" group_equipment_items : "equipment_id"
+
+hikes "1..1" ||--o{ "0..N" belong_equipment : "hike_id"
+participants "1..1" ||--o{ "0..N" belong_equipment : "participant_id"
+equipment_items "1..1" ||-left-o{ "0..N" belong_equipment : "equipment_id"
+
+@enduml
