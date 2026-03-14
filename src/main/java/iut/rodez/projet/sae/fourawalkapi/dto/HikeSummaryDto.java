@@ -2,25 +2,24 @@ package iut.rodez.projet.sae.fourawalkapi.dto;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 
-/**
- * DTO ultra-léger pour l'affichage de la liste des randonnées (sans le N+1 SELECT).
- */
 public record HikeSummaryDto(
         Long id,
         String libelle,
         int dureeJours,
-        boolean isOptimize
-        // Tu pourras ajouter le nom du départ/arrivée plus tard si besoin !
+        boolean isOptimize,
+        int nbParticipants
 ) {
     /**
-     * Constructeur pratique pour convertir directement une Entité en DTO
+     * Version allégé utilisé dans le endpoint hikes/my
+     * @param hike hike allégé
      */
     public HikeSummaryDto(Hike hike) {
         this(
                 hike.getId(),
                 hike.getLibelle(),
                 hike.getDureeJours(),
-                hike.getOptimize()
+                hike.getOptimize(),
+                hike.getParticipants() != null ? hike.getParticipants().size() : 0
         );
     }
 }
