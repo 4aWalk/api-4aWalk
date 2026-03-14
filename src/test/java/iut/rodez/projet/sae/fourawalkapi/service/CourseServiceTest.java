@@ -203,7 +203,7 @@ class CourseServiceTest {
         when(mockCourse.getHikeId()).thenReturn(100L);
 
         // La randonnée ne requiert pas d'optimisation
-        mockHike.setOptimize(false);
+        mockHike.setOptimize(true);
 
         // Simulation des retours de la base de données
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(mockCourse));
@@ -237,8 +237,8 @@ class CourseServiceTest {
         Course mockCourse = mock(Course.class);
         when(mockCourse.getHikeId()).thenReturn(100L);
 
-        // La randonnée n'est PAS optimisée (getOptimize == false)
-        mockHike.setOptimize(false);
+        // La randonnée n'est PAS optimisée (getOptimize == true)
+        mockHike.setOptimize(true);
 
         // Simulation des retours de la base de données
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(mockCourse));
