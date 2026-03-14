@@ -57,7 +57,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: sae/4awalk-api:latest
+          tags: alexandrebrouzes/sae-5-01-iut-api:latest
 
       # Se connecte au serveur AWS via SSH et redéploie le container avec la nouvelle image.
       - name: Deploy to AWS via SSH
