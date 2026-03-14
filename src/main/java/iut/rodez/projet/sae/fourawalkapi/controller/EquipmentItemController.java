@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controlleur gérant tous les endpoints d'équipements
@@ -53,8 +54,8 @@ public class EquipmentItemController {
      * @return Code retour de la suppression
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteEquipment(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteEquipment(@PathVariable Long id) {
         equipmentService.deleteEquipment(id);
-        return ResponseEntity.ok("Équipement supprimé du catalogue avec succès.");
+        return ResponseEntity.ok(Map.of("message", "Équipement supprimé du catalogue avec succès."));
     }
 }

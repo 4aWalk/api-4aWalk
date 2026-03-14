@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controlleur de tous les endpoints permettant de gérer la nourriture
@@ -53,8 +54,8 @@ public class FoodProductController {
      * @return Code retour de la suppression
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteFood(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteFood(@PathVariable Long id) {
         foodService.deleteFood(id);
-        return ResponseEntity.ok("Nourriture supprimée du catalogue avec succès.");
+        return ResponseEntity.ok(Map.of("message", "Nourriture supprimée du catalogue avec succès."));
     }
 }

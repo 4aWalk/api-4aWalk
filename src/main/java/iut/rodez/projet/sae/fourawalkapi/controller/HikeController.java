@@ -111,9 +111,9 @@ public class HikeController {
      * @return Code retour de la supression
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteHike(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<Map<String, String>> deleteHike(@PathVariable Long id, Authentication auth) {
         hikeService.deleteHike(id, getUserId(auth));
-        return ResponseEntity.ok("Randonnée supprimée avec succès.");
+        return ResponseEntity.ok(Map.of("message", "Randonnée supprimée avec succès."));
     }
 
     // --- SCOPE PARTICIPANT ---
@@ -157,10 +157,10 @@ public class HikeController {
      * @return Code retour du retirement du particpant de la randonnée
      */
     @DeleteMapping("/{hikeId}/participants/{pId}")
-    public ResponseEntity<String> deleteParticipant(@PathVariable Long hikeId, @PathVariable Long pId,
-                                                    Authentication auth) {
+    public ResponseEntity<Map<String, String>> deleteParticipant(@PathVariable Long hikeId, @PathVariable Long pId,
+                                                                 Authentication auth) {
         participantService.deleteParticipant(hikeId, pId, getUserId(auth));
-        return ResponseEntity.ok("Participant retiré de la randonnée avec succès.");
+        return ResponseEntity.ok(Map.of("message", "Participant retiré de la randonnée avec succès."));
     }
 
     // --- SCOPE POI ---
@@ -210,10 +210,10 @@ public class HikeController {
      * @return Code retour du retirement de la nourriture de la randonnée
      */
     @DeleteMapping("/{hikeId}/food/{foodId}")
-    public ResponseEntity<String> removeFoodFromHike(@PathVariable Long hikeId, @PathVariable Long foodId,
-                                                     Authentication auth) {
+    public ResponseEntity<Map<String, String>> removeFoodFromHike(@PathVariable Long hikeId, @PathVariable Long foodId,
+                                                                  Authentication auth) {
         foodService.removeFoodFromHike(hikeId, foodId, getUserId(auth));
-        return ResponseEntity.ok("Nourriture retirée de la randonnée avec succès.");
+        return ResponseEntity.ok(Map.of("message", "Nourriture retirée de la randonnée avec succès."));
     }
 
     // --- SCOPE EQUIPMENT ---
@@ -245,9 +245,9 @@ public class HikeController {
      * @return Code retour de l'enlèvement de l'équipement de la randonnée
      */
     @DeleteMapping("/{hikeId}/equipment/{equipId}")
-    public ResponseEntity<String> removeEquipmentFromHike(@PathVariable Long hikeId, @PathVariable Long equipId, Authentication auth) {
+    public ResponseEntity<Map<String, String>> removeEquipmentFromHike(@PathVariable Long hikeId, @PathVariable Long equipId, Authentication auth) {
         equipmentService.removeEquipmentFromHike(hikeId, equipId, getUserId(auth));
-        return ResponseEntity.ok("Équipement retiré de la randonnée avec succès.");
+        return ResponseEntity.ok(Map.of("message", "Équipement retiré de la randonnée avec succès."));
     }
 
     // --- SCOPE OPTIMISATION ---
