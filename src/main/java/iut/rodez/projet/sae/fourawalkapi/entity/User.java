@@ -121,6 +121,4 @@ public class User implements Person {
 
     public String getAdresse() { return adresse; }
     public void setAdresse(String adresse) { this.adresse = adresse; }
-
-
 }

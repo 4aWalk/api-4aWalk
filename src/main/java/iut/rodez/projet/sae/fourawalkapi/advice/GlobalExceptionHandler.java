@@ -4,6 +4,7 @@ import iut.rodez.projet.sae.fourawalkapi.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -122,7 +123,7 @@ public class GlobalExceptionHandler {
     /**
      * Fallback pour les arguments illégaux génériques.
      */
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({IllegalArgumentException.class, AuthenticationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
         logger.error("Argument illégal intercepté : {}", ex.getMessage());

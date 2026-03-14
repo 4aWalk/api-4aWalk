@@ -13,7 +13,7 @@ public interface Person {
     void setNom(String nom);
     int getAge();
     void setAge(int age);
-    Level getNiveau(); // Sportif, Entrainé, Débutant
+    Level getNiveau();
     void setNiveau(Level niveau);
     Morphology getMorphologie();
     void setMorphologie(Morphology morphologie);

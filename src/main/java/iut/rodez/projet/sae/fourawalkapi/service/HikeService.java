@@ -164,8 +164,8 @@ public class HikeService {
         }
 
         hike.setDureeJours(details.getDureeJours());
-        if (details.getDepart() != null) hike.setDepart(details.getDepart());
-        if (details.getArrivee() != null) hike.setArrivee(details.getArrivee());
+        hike.setDepart(details.getDepart());
+        hike.setArrivee(details.getArrivee());
 
         resolvePois(hike);
 
@@ -220,12 +220,17 @@ public class HikeService {
      */
     private void resolvePois(Hike hike) {
         if (hike.getDepart() != null && hike.getDepart().getId() != null) {
-            hike.setDepart(poiRepository.findById(hike.getDepart().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Départ introuvable")));
+            PointOfInterest poi = poiRepository.findById(hike.getDepart().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Départ introuvable"));
+            poi.setSequence(-1);
+            hike.setDepart(poi);
+
         }
         if (hike.getArrivee() != null && hike.getArrivee().getId() != null) {
-            hike.setArrivee(poiRepository.findById(hike.getArrivee().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Arrivée introuvable")));
+            PointOfInterest poi = poiRepository.findById(hike.getArrivee().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Arrivée introuvable"));
+            poi.setSequence(-1);
+            hike.setArrivee(poi);
         }
     }
 
