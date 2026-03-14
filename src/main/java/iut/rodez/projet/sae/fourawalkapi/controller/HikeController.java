@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.controller;
 
 import iut.rodez.projet.sae.fourawalkapi.dto.HikeResponseDto;
+import iut.rodez.projet.sae.fourawalkapi.dto.HikeSummaryDto;
 import iut.rodez.projet.sae.fourawalkapi.dto.ParticipantResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.dto.PointOfInterestResponseDto;
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
@@ -52,14 +53,13 @@ public class HikeController {
      * @return Liste de toutes les randonnées où l'utilisateur est le créateur
      */
     @GetMapping("/my")
-    public List<HikeResponseDto> getMyHikes(Authentication auth) {
+    public List<HikeSummaryDto> getMyHikes(Authentication auth) {
+        // 1. On récupère les randos (version allégée grâce à ton HikeRepository)
         List<Hike> hikes = hikeService.getHikesByCreator(getUserId(auth));
 
+        // 2. On les transforme instantanément en résumé léger pour le client Android
         return hikes.stream()
-                .map(hike -> {
-                    Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hike.getId());
-                    return new HikeResponseDto(hike, owners);
-                })
+                .map(HikeSummaryDto::new)
                 .toList();
     }
 
