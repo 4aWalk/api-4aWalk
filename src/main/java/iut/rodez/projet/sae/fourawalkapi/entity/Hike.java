@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.*;
 
@@ -57,6 +59,7 @@ public class Hike {
     /* Liste de tous les points d'intêrets à visiter pendant la randonnée */
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name="hike_id")
+    @Fetch(FetchMode.SUBSELECT)
     private List<PointOfInterest> optionalPoints = new ArrayList<>();
 
     /* Liste de la nourriture ajouté à la randonnée */
@@ -66,11 +69,13 @@ public class Hike {
             joinColumns = @JoinColumn(name = "hike_id"),
             inverseJoinColumns = @JoinColumn(name = "food_product_id")
     )
+    @Fetch(FetchMode.SUBSELECT)
     private List<FoodProduct> foodCatalogue = new ArrayList<>();
 
     /* Liste de l'ensemble des équipements rajoutés à la randonnée */
     @OneToMany(mappedBy = "hike", cascade = CascadeType.ALL, orphanRemoval = true)
     @MapKey(name = "type")
+    @Fetch(FetchMode.SUBSELECT)
     private Map<TypeEquipment, GroupEquipment> equipmentGroups = new EnumMap<>(TypeEquipment.class);
 
     /* État de l'optimisation de la randonnée */
