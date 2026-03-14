@@ -53,8 +53,8 @@ public class FoodProductController {
      * @return Code retour de la suppression
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFood(@PathVariable Long id) {
+    public ResponseEntity<String> deleteFood(@PathVariable Long id) {
         foodService.deleteFood(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Nourriture supprimée du catalogue avec succès.");
     }
 }

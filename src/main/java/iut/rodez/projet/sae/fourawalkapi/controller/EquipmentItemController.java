@@ -53,8 +53,8 @@ public class EquipmentItemController {
      * @return Code retour de la suppression
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEquipment(@PathVariable Long id) {
+    public ResponseEntity<String> deleteEquipment(@PathVariable Long id) {
         equipmentService.deleteEquipment(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Équipement supprimé du catalogue avec succès.");
     }
 }
