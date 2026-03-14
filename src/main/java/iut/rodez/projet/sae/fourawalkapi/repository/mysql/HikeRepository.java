@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.repository.mysql;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +18,14 @@ public interface HikeRepository extends JpaRepository<Hike, Long> {
      * @param creatorId identifiant de l'utilisateur créateur de randonnée recherché
      * @return La liste des randonnées.
      */
+    @EntityGraph(attributePaths = {
+            "depart",
+            "arrivee",
+            "optionalPoints",
+            "participants",
+            "foodCatalogue",
+            "equipmentGroups"
+    })
     List<Hike> findByCreatorId(Long creatorId);
 
     /**
