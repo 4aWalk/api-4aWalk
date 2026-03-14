@@ -21,10 +21,7 @@ public interface HikeRepository extends JpaRepository<Hike, Long> {
     @EntityGraph(attributePaths = {
             "depart",
             "arrivee",
-            "optionalPoints",
-            "participants",
-            "foodCatalogue",
-            "equipmentGroups"
+            "participants"
     })
     List<Hike> findByCreatorId(Long creatorId);
 
