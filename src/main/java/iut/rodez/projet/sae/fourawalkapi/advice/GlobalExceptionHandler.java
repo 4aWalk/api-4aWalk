@@ -120,14 +120,20 @@ public class GlobalExceptionHandler {
     // 5. ERREURS TECHNIQUES ET FALLBACK
     // =========================================================================
 
-    /**
-     * Fallback pour les arguments illégaux génériques.
-     */
-    @ExceptionHandler({IllegalArgumentException.class, AuthenticationException.class})
+    // Gère spécifiquement IllegalArgumentException
+    @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
-        logger.error("Argument illégal intercepté : {}", ex.getMessage());
+        logger.error("Argument illégal : {}", ex.getMessage());
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    }
+
+    // Gère spécifiquement AuthenticationException
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED) // 401 est plus approprié pour l'auth
+    public ErrorResponse handleAuthenticationException(AuthenticationException ex) {
+        logger.error("Erreur d'authentification : {}", ex.getMessage());
+        return new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Authentification invalide ou expirée");
     }
 
     /**
