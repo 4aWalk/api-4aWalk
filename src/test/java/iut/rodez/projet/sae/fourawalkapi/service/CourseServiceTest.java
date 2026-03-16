@@ -54,14 +54,13 @@ class CourseServiceTest {
         mockCourse.setFinished(false);
         mockCourse.setPaused(false);
 
-        mockCourse.addCoordinate(44.35, 2.57); // Point initial (Départ)
+        mockDto = new CourseResponseDto();
+        mockDto.setHikeId(100L);
 
-        // DTO entrant simulé
-        mockDto = mock(CourseResponseDto.class);
-        when(mockDto.getHikeId()).thenReturn(100L);
-        CourseResponseDto.CoordinateDto pointDto = mock(CourseResponseDto.CoordinateDto.class);
-        when(mockDto.getPath()).thenReturn(List.of(pointDto));
-        mockDto.setPath(List.of(new CourseResponseDto.CoordinateDto(44.0, 2.0)));
+        mockDto.setPath(List.of(
+                new CourseResponseDto.CoordinateDto(44.0, 2.0),
+                new CourseResponseDto.CoordinateDto(44.0, 2.1)
+        ));
     }
 
     // ==========================================
@@ -157,8 +156,8 @@ class CourseServiceTest {
      */
     @Test
     void createCourse_NullHikeId_ThrowsException() {
-        // Given : Un DTO incomplet (sans référence à la randonnée SQL)
-        when(mockDto.getHikeId()).thenReturn(null);
+        // Given : Un parcours avec un id incorrect
+        mockDto.setHikeId(null);
 
         // When & Then : Une IllegalArgumentException doit être levée
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
@@ -267,7 +266,9 @@ class CourseServiceTest {
      */
     @Test
     void finishCourse_Success() {
-        // Given : Un parcours en cours
+        // Given : Un parcours en cours avec au moins un point GPS pour calculer l'arrivée
+        mockCourse.addCoordinate(45.0, 3.0);
+
         when(courseRepository.findById("mongo-id-123")).thenReturn(Optional.of(mockCourse));
         when(courseRepository.save(any(Course.class))).thenAnswer(i -> i.getArguments()[0]);
 
