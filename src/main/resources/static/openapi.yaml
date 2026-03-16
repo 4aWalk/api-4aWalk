@@ -768,7 +768,7 @@ components:
         path:
           type: array
           description: Liste des coordonnées du parcours. Le premier élément devient le point de départ.
-          minItems: 1
+          minItems: 2
           items:
             $ref: '#/components/schemas/CoordinateDto'
 
