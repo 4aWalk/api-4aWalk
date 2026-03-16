@@ -550,7 +550,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/Coordinate'
+                $ref: '#/components/schemas/CoordinateDto'
       responses:
         '200':
           description: Points ajoutés avec succès
@@ -757,14 +757,26 @@ components:
     # --- COURSES ---
     CourseCreateRequest:
       type: object
-      required: [hikeId, path]
+      required:
+        - hikeId
+        - path
       properties:
         hikeId:
           type: integer
+          format: int64
+          description: Identifiant de la randonnée associée
+        path:
+          type: array
+          description: Liste des coordonnées du parcours. Le premier élément devient le point de départ.
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CoordinateDto'
 
-    Coordinate:
+    CoordinateDto:
       type: object
-      required: [latitude, longitude]
+      required:
+        - latitude
+        - longitude
       properties:
         latitude:
           type: number

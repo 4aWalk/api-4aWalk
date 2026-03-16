@@ -103,8 +103,8 @@ public class CourseService {
                     "avant de commencer une randonnée");
         }
 
-        if(dto.getPath().getFirst() != null) {
-            throw new SecurityException("Un parcours ne peut pas être créer sans au moins un point");
+        if (dto.getPath() == null || dto.getPath().isEmpty()) {
+            throw new SecurityException("Un parcours ne peut pas être créé sans au moins un point de départ");
         }
 
         PointOfInterest pointDepart = new PointOfInterest(
@@ -126,7 +126,7 @@ public class CourseService {
                 course.addCoordinate(p.getLatitude(), p.getLongitude());
             }
         }
-        
+
         course.setFinished(false);
         course.setPaused(false);
 

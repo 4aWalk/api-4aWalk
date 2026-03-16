@@ -61,6 +61,7 @@ class CourseServiceTest {
         when(mockDto.getHikeId()).thenReturn(100L);
         CourseResponseDto.CoordinateDto pointDto = mock(CourseResponseDto.CoordinateDto.class);
         when(mockDto.getPath()).thenReturn(List.of(pointDto));
+        mockDto.setPath(List.of(new CourseResponseDto.CoordinateDto(44.0, 2.0)));
     }
 
     // ==========================================
