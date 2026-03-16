@@ -103,8 +103,18 @@ public class CourseService {
                     "avant de commencer une randonnée");
         }
 
-        Course course = new Course();
-        course.setHikeId(hike.getId());
+        if(dto.getPath().getFirst() != null) {
+            throw new SecurityException("Un parcours ne peut pas être créer sans au moins un point");
+        }
+
+        PointOfInterest pointDepart = new PointOfInterest(
+                null,
+                dto.getPath().getFirst().getLatitude(),
+                dto.getPath().getFirst().getLongitude(),
+                null,
+                -1);
+
+        Course course = new Course(hike.getId(), pointDepart);
 
         if (dto.getDateRealisation() != null) {
             course.setDateRealisation(dto.getDateRealisation());
@@ -116,11 +126,7 @@ public class CourseService {
                 course.addCoordinate(p.getLatitude(), p.getLongitude());
             }
         }
-
-        if (course.getTrajetsRealises() != null && !course.getTrajetsRealises().getCoordinates().isEmpty()) {
-            Point startCoord = course.getTrajetsRealises().getCoordinates().getFirst();
-            course.setDepart(createPoiFromGeo(startCoord, "Départ"));
-        }
+        
         course.setFinished(false);
         course.setPaused(false);
 
