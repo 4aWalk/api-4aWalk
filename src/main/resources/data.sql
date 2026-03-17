@@ -13,7 +13,7 @@ INSERT INTO users (id, nom, prenom, mail, password, adresse, age, niveau, morpho
 -- ==========================================
 -- 2. FOOD PRODUCTS
 -- ==========================================
-INSERT INTO food_products (nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro, nb_item) VALUES
+INSERT INTO food_products (id, nom, description, masse_grammes, appellation_courante, conditionnement, apport_nutritionnel_kcal, prix_euro, nb_item) VALUES
 
 -- =====================
 -- PLATS LYOPHILISÉS
@@ -225,7 +225,7 @@ INSERT INTO food_products (nom, description, masse_grammes, appellation_courante
 -- 3. EQUIPMENT ITEMS
 -- ==========================================
 
-INSERT INTO equipment_items (nom, description, masse_grammes, nb_item, type, masse_a_vide) VALUES
+INSERT INTO equipment_items (id, nom, description, masse_grammes, nb_item, type, masse_a_vide) VALUES
 
 -- =====================
 -- REPOS
