@@ -559,7 +559,7 @@ INSERT INTO group_equipments (id, type, hike_id) VALUES
                                                      (29, 'SOIN', 9), (30, 'EAU', 9), (31, 'PROGRESSION', 9),
                                                      (32, 'SOIN', 10), (33, 'EAU', 10), (34, 'PROGRESSION', 10), (35, 'REPOS', 10);
 
-INSERT INSERT INTO group_equipment_items (group_id, equipment_id) VALUES
+INSERT INTO group_equipment_items (group_id, equipment_id) VALUES
     (1, 11), (2, 21), (3, 31),
     (36, 51),
     (4, 12), (5, 23), (5, 24), (5, 30), (6, 32), (7, 2),
