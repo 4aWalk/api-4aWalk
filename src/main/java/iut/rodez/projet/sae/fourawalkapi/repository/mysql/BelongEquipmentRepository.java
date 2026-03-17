@@ -24,4 +24,10 @@ public interface BelongEquipmentRepository extends JpaRepository<BelongEquipment
      * @return la liste d'appartenance d'équipement
      */
     List<BelongEquipment> findByHikeId(Long hikeId);
+
+    /**
+     * Supression par rapport à la liaison avec une randonnée
+     * @param hikeId identifiant randonnée
+     */
+    void deleteByHikeId(Long hikeId);
 }

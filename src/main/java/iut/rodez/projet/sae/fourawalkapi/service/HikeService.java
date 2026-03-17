@@ -31,6 +31,7 @@ public class HikeService {
     private final ParticipantRepository participantRepository;
     private final CourseRepository courseRepository;
     private final GroupEquipmentRepository groupEquipmentRepository;
+    private final BelongEquipmentRepository belongEquipmentRepository;
 
     /**
      * Initialise le service avec les dépendances nécessaires à la gestion des randonnées.
@@ -53,7 +54,8 @@ public class HikeService {
                        PointOfInterestRepository poiRepo,
                        ParticipantRepository pr,
                        CourseRepository cr,
-                       GroupEquipmentRepository ger) {
+                       GroupEquipmentRepository ger,
+                       BelongEquipmentRepository be) {
         this.hikeRepository = hr;
         this.backpackDistributorV2 = bds2;
         //this.backpackDistributorV3 = bds3;
@@ -64,6 +66,7 @@ public class HikeService {
         this.participantRepository = pr;
         this.courseRepository = cr;
         this.groupEquipmentRepository = ger;
+        this.belongEquipmentRepository = be;
     }
 
     /**
@@ -183,7 +186,10 @@ public class HikeService {
     public void deleteHike(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
-        // 1. Nettoyage des relations MySQL pour éviter les erreurs de contraintes
+        // 1. Suppression des BelongEquipment qui référencent cette hike
+        belongEquipmentRepository.deleteByHikeId(hikeId);
+
+        // 2. Nettoyage des relations MySQL pour éviter les erreurs de contraintes
         hike.getFoodCatalogue().clear();
         hike.getEquipmentGroups().clear();
         hike.getOptionalPoints().clear();
@@ -192,7 +198,7 @@ public class HikeService {
         hikeRepository.save(hike);
         hikeRepository.delete(hike);
 
-        // 2. Suppression en "cascade" des traces GPS dans MongoDB
+        // 3. Suppression en "cascade" des traces GPS dans MongoDB
         courseRepository.deleteByHikeId(hikeId);
     }
 
