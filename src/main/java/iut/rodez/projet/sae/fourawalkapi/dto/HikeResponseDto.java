@@ -4,13 +4,11 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Hike;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Data transfert object utilisé dans les communications d'objet randonnée avec le client
- */
 public class HikeResponseDto {
     private Long id;
     private String libelle;
@@ -24,13 +22,7 @@ public class HikeResponseDto {
     private Map<TypeEquipment, GroupEquipmentResponseDto> equipmentGroups;
     private boolean optimize;
 
-
-    /**
-     * Mapper entity to dto
-     * @param hike randonnée à mapper
-     * @param equipmentOwners Map associant l'ID d'un équipement à son Propriétaire
-     */
-    public HikeResponseDto(Hike hike, Map<Long, Participant> equipmentOwners) {
+    public HikeResponseDto(Hike hike, Map<Long, List<Participant>> equipmentOwners) {
         this.id = hike.getId();
         this.libelle = hike.getLibelle();
         this.dureeJours = hike.getDureeJours();
@@ -62,7 +54,6 @@ public class HikeResponseDto {
         this.optimize = hike.getOptimize();
     }
 
-    // Getters
     public Long getId() { return id; }
     public String getLibelle() { return libelle; }
     public int getDureeJours() { return dureeJours; }
@@ -72,8 +63,6 @@ public class HikeResponseDto {
     public Set<PointOfInterestResponseDto> getPoints() { return points; }
     public Set<ParticipantResponseDto> getParticipants() { return participants; }
     public Set<FoodProductResponseDto> getFoodCatalogue() { return foodCatalogue; }
-    public Map<TypeEquipment, GroupEquipmentResponseDto> getEquipmentGroups() {
-        return equipmentGroups;
-    }
+    public Map<TypeEquipment, GroupEquipmentResponseDto> getEquipmentGroups() { return equipmentGroups; }
     public boolean isOptimize() { return optimize; }
 }

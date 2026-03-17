@@ -185,13 +185,13 @@ public class EquipmentService {
     /**
      * Récupère une Map associant l'ID de chaque équipement à son propriétaire pour une randonnée.
      */
-    public Map<Long, Participant> getEquipmentOwners(Long hikeId) {
+    public Map<Long, List<Participant>> getEquipmentOwners(Long hikeId) {
         List<BelongEquipment> belongs = belongEquipmentRepository.findByHikeId(hikeId);
 
         return belongs.stream()
-                .collect(Collectors.toMap(
+                .collect(Collectors.groupingBy(
                         belong -> belong.getEquipment().getId(),
-                        BelongEquipment::getParticipant
+                        Collectors.mapping(BelongEquipment::getParticipant, Collectors.toList())
                 ));
     }
 }

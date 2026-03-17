@@ -72,7 +72,7 @@ public class HikeController {
     @GetMapping("/{id}")
     public ResponseEntity<HikeResponseDto> getHike(@PathVariable Long id, Authentication auth) {
         Hike hike = hikeService.getHikeById(id, getUserId(auth));
-        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(id);
+        Map<Long, List<Participant>> owners = equipmentService.getEquipmentOwners(id);
         return ResponseEntity.ok(new HikeResponseDto(hike, owners));
     }
 
@@ -100,7 +100,7 @@ public class HikeController {
     public ResponseEntity<HikeResponseDto> updateHike(@PathVariable Long id, @RequestBody Hike hike,
                                                       Authentication auth) {
         Hike updatedHike = hikeService.updateHike(id, hike, getUserId(auth));
-        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(id);
+        Map<Long, List<Participant>> owners = equipmentService.getEquipmentOwners(id);
         return ResponseEntity.ok(new HikeResponseDto(updatedHike, owners));
     }
 
@@ -129,7 +129,7 @@ public class HikeController {
     public ParticipantResponseDto addParticipant(@PathVariable Long hikeId, @RequestBody Participant p,
                                                  Authentication auth) {
         Participant savedParticipant = participantService.addParticipant(hikeId, p, getUserId(auth));
-        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hikeId);
+        Map<Long, List<Participant>> owners = equipmentService.getEquipmentOwners(hikeId);
         return new ParticipantResponseDto(savedParticipant, owners);
     }
 
@@ -145,7 +145,7 @@ public class HikeController {
     public ParticipantResponseDto updateParticipant(@PathVariable Long hikeId, @PathVariable Long pId,
                                                     @RequestBody Participant p, Authentication auth) {
         Participant updatedParticipant = participantService.updateParticipant(hikeId, pId, p, getUserId(auth));
-        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hikeId);
+        Map<Long, List<Participant>> owners = equipmentService.getEquipmentOwners(hikeId);
         return new ParticipantResponseDto(updatedParticipant, owners);
     }
 
@@ -245,7 +245,9 @@ public class HikeController {
      * @return Code retour de l'enlèvement de l'équipement de la randonnée
      */
     @DeleteMapping("/{hikeId}/equipment/{equipId}")
-    public ResponseEntity<Map<String, String>> removeEquipmentFromHike(@PathVariable Long hikeId, @PathVariable Long equipId, Authentication auth) {
+    public ResponseEntity<Map<String, String>> removeEquipmentFromHike(@PathVariable Long hikeId,
+                                                                       @PathVariable Long equipId,
+                                                                       Authentication auth) {
         equipmentService.removeEquipmentFromHike(hikeId, equipId, getUserId(auth));
         return ResponseEntity.ok(Map.of("message", "Équipement retiré de la randonnée avec succès."));
     }
@@ -262,7 +264,7 @@ public class HikeController {
     public ResponseEntity<HikeResponseDto> optimizeBackpacks(@PathVariable Long hikeId, Authentication auth) {
         hikeService.optimizeBackpack(hikeId, getUserId(auth));
         Hike optimizedHike = hikeService.getHikeById(hikeId, getUserId(auth));
-        Map<Long, Participant> owners = equipmentService.getEquipmentOwners(hikeId);
+        Map<Long, List<Participant>> owners = equipmentService.getEquipmentOwners(hikeId);
         return ResponseEntity.ok(new HikeResponseDto(optimizedHike, owners));
     }
 }

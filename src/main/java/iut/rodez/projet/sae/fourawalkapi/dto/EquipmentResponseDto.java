@@ -4,6 +4,9 @@ import iut.rodez.projet.sae.fourawalkapi.entity.EquipmentItem;
 import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Data transfert object utilisé dans les communications d'objet equipement avec le client
  */
@@ -15,8 +18,8 @@ public class EquipmentResponseDto {
     private int nbItem;
     private TypeEquipment type;
     private double masseAVide;
-    private Long ownerId;
-    private String ownerName;
+    private List<Long> ownerIds;
+    private List<String> ownerNames;
 
     /**
      * Mapper entity to dto (Utilisé pour le Catalogue global, sans propriétaire)
@@ -30,22 +33,26 @@ public class EquipmentResponseDto {
         this.nbItem = item.getNbItem();
         this.type = item.getType();
         this.masseAVide = item.getMasseAVide();
-        this.ownerId = null;
-        this.ownerName = null;
+        this.ownerIds = new ArrayList<>();
+        this.ownerNames = new ArrayList<>();
     }
 
     /**
-     * Mapper entity to dto avec Propriétaire (Utilisé pour l'affichage d'une Randonnée)
+     * Mapper entity to dto avec Propriétaires (Utilisé pour l'affichage d'une Randonnée)
      * @param item équipement à mapper
-     * @param owner participant à qui appartient l'équipement
+     * @param owners liste des participants à qui appartient l'équipement
      */
-    public EquipmentResponseDto(EquipmentItem item, Participant owner) {
+    public EquipmentResponseDto(EquipmentItem item, List<Participant> owners) {
         this(item);
 
-        if (owner != null) {
-            this.ownerId = owner.getId();
+        if (owners != null && !owners.isEmpty()) {
+            this.ownerIds = owners.stream()
+                    .map(Participant::getId)
+                    .toList();
             // On concatène le prénom et le nom pour faciliter la lecture au front
-            this.ownerName = owner.getPrenom() + " " + owner.getNom();
+            this.ownerNames = owners.stream()
+                    .map(o -> o.getPrenom() + " " + o.getNom())
+                    .toList();
         }
     }
 
@@ -57,6 +64,6 @@ public class EquipmentResponseDto {
     public int getNbItem() { return nbItem; }
     public TypeEquipment getType() { return type; }
     public double getMasseAVide() { return masseAVide; }
-    public Long getOwnerId() { return ownerId; }
-    public String getOwnerName() { return ownerName; }
+    public List<Long> getOwnerIds() { return ownerIds; }
+    public List<String> getOwnerNames() { return ownerNames; }
 }

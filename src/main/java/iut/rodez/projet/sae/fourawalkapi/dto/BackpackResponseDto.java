@@ -24,22 +24,22 @@ public class BackpackResponseDto {
      * @param backpack backpack à mapper en dto
      * @param equipmentOwners Map associant l'ID d'un équipement à son Propriétaire
      */
-    public BackpackResponseDto(Backpack backpack, Map<Long, Participant> equipmentOwners) {
-        // Possibilité que le sac soit vide ou que le participant n'en ait pas
+    public BackpackResponseDto(Backpack backpack, Map<Long, List<Participant>> equipmentOwners) {
         if (backpack == null) return;
 
         this.id = backpack.getId();
         this.capaciteMaxKg = (backpack.getOwner() != null) ? backpack.getOwner().getCapaciteEmportMaxKg() : 0.0;
         this.poidsActuelKg = backpack.getTotalMassKg();
 
-        // Conversion des équipements "en vrac" en List de DTO
         this.equipements = new ArrayList<>();
-        if (backpack.getEquipmentItems() != null) { // <-- Utilisation du nouveau getter
+        if (backpack.getEquipmentItems() != null) {
             this.equipements = backpack.getEquipmentItems().stream()
                     .map(item -> {
-                        // On cherche le propriétaire dans la map
-                        Participant owner = equipmentOwners != null ? equipmentOwners.get(item.getId()) : null;
-                        return new EquipmentResponseDto(item, owner);
+                        // On récupère la liste des propriétaires, ou liste vide si aucun
+                        List<Participant> owners = (equipmentOwners != null)
+                                ? equipmentOwners.getOrDefault(item.getId(), List.of())
+                                : List.of();
+                        return new EquipmentResponseDto(item, owners);
                     })
                     .toList();
         }
@@ -59,7 +59,6 @@ public class BackpackResponseDto {
 
     public double getCapaciteMaxKg() { return capaciteMaxKg; }
 
-    // MISE À JOUR : retourne maintenant une liste de EquipmentResponseDto
     public List<EquipmentResponseDto> getEquipements() { return equipements; }
 
     public List<FoodProductResponseDto> getNourriture() { return nourriture; }

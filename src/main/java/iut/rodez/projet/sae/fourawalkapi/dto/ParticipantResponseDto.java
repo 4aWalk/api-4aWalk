@@ -4,6 +4,7 @@ import iut.rodez.projet.sae.fourawalkapi.entity.Participant;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Level;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.Morphology;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,7 +28,7 @@ public class ParticipantResponseDto {
      * Mapper entity to dto
      * @param participant participant à mapper
      */
-    public ParticipantResponseDto(Participant participant, Map<Long, Participant> equipmentOwners) {
+    public ParticipantResponseDto(Participant participant, Map<Long, List<Participant>> equipmentOwners) {
         this.id = participant.getId();
         this.prenom = participant.getPrenom();
         this.nom = participant.getNom();
