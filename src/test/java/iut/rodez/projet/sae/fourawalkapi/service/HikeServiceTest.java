@@ -39,6 +39,7 @@ class HikeServiceTest {
     @Mock private PointOfInterestRepository poiRepository;
     @Mock private ParticipantRepository participantRepository;
     @Mock private GroupEquipmentRepository groupEquipmentRepository;
+    @Mock private BelongEquipmentRepository belongEquipmentRepository;
 
     @InjectMocks
     private HikeService hikeService;
@@ -392,24 +393,24 @@ class HikeServiceTest {
      */
     @Test
     void deleteHike_ShouldClearCollectionsAndDestroy() {
-        // GIVEN : Une randonnée qui possède des données liées (participants, nourriture).
+        // GIVEN
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
+        // Mock du repository BelongEquipment pour éviter le NullPointer
+        doNothing().when(belongEquipmentRepository).deleteByHikeId(100L);
 
         testHike.setParticipants(new HashSet<>(List.of(new Participant())));
         testHike.setFoodCatalogue(new ArrayList<>(List.of(new FoodProduct())));
 
-        // WHEN : On demande la suppression définitive de la randonnée.
+        // WHEN
         hikeService.deleteHike(100L, 1L);
 
-        // THEN : Les relations Hibernate (MySQL) sont vidées pour libérer les Foreign Keys.
+        // THEN
         assertTrue(testHike.getParticipants().isEmpty(), "Les participants doivent être retirés de la liste avant suppression");
         assertTrue(testHike.getFoodCatalogue().isEmpty(), "Le catalogue de nourriture doit être vidé avant suppression");
 
-        // 2. L'entité MySQL est mise à jour (vidée) puis détruite.
+        verify(belongEquipmentRepository).deleteByHikeId(100L);
         verify(hikeRepository).save(testHike);
         verify(hikeRepository).delete(testHike);
-
-        // 3. Le dépôt MongoDB est averti pour supprimer le suivi GPS orphelin.
         verify(courseRepository).deleteByHikeId(100L);
     }
 }
