@@ -121,9 +121,8 @@ entity "group_equipments" {
 
 entity "group_equipment_items" {
   * group_id : BIGINT <<PK, FK>>
-  * item_order : INT <<PK>>
   --
-  equipment_id : BIGINT <<FK>>
+  equipment_id : BIGINT <<PK,FK>>
 }
 
 entity "belong_equipment" {
