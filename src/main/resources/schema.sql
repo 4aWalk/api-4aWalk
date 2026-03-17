@@ -137,8 +137,7 @@ CREATE TABLE group_equipments (
 CREATE TABLE group_equipment_items (
                                        group_id BIGINT NOT NULL,
                                        equipment_id BIGINT NOT NULL,
-                                       item_order INT NOT NULL,
-                                       PRIMARY KEY (group_id, item_order),
+                                       PRIMARY KEY (group_id, equipment_id),
                                        CONSTRAINT fk_gei_group FOREIGN KEY (group_id) REFERENCES group_equipments(id) ON DELETE CASCADE,
                                        CONSTRAINT fk_gei_item FOREIGN KEY (equipment_id) REFERENCES equipment_items(id)
 );

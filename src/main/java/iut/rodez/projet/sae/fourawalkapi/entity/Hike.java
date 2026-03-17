@@ -105,20 +105,11 @@ public class Hike {
         if (group == null) {
             group = new GroupEquipment();
             group.setType(item.getType());
-            group.setHike(this); // La relation bidirectionnelle
-
+            group.setHike(this);
             this.equipmentGroups.put(item.getType(), group);
         }
 
         group.addItem(item);
-
-        // Tri du groupe spécifique
-        if (group.getItems() != null) {
-            group.getItems().sort(Comparator.comparingDouble(equip -> {
-                double nb = equip.getNbItem() > 0 ? equip.getNbItem() : 1.0;
-                return equip.getMasseGrammes() / nb;
-            }));
-        }
     }
 
     /**

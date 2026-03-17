@@ -29,7 +29,7 @@ public class GroupEquipment {
             joinColumns = @JoinColumn(name = "group_id"),
             inverseJoinColumns = @JoinColumn(name = "equipment_id")
     )
-    @OrderColumn(name = "item_order")
+    @OrderBy("masseGrammes / nbItem ASC")
     private List<EquipmentItem> items = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
