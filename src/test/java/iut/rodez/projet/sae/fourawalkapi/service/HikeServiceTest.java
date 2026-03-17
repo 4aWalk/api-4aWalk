@@ -3,6 +3,7 @@ package iut.rodez.projet.sae.fourawalkapi.service;
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
 import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class HikeServiceTest {
 
+    @Mock private EntityManager entityManager;
     @Mock private HikeRepository hikeRepository;
     @Mock private CourseRepository courseRepository; // Mock pour les opérations MongoDB en cascade
     @Mock private BackpackDistributorServiceV2 backpackDistributor;
