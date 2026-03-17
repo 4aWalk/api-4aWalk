@@ -397,8 +397,9 @@ class HikeServiceTest {
     void deleteHike_ShouldClearCollectionsAndDestroy() {
         // GIVEN
         when(hikeRepository.findById(100L)).thenReturn(Optional.of(testHike));
-        // Mock du repository BelongEquipment pour éviter le NullPointer
         doNothing().when(belongEquipmentRepository).deleteByHikeId(100L);
+        doNothing().when(entityManager).flush();
+        doNothing().when(entityManager).clear();
 
         testHike.setParticipants(new HashSet<>(List.of(new Participant())));
         testHike.setFoodCatalogue(new ArrayList<>(List.of(new FoodProduct())));
@@ -413,6 +414,8 @@ class HikeServiceTest {
         verify(belongEquipmentRepository).deleteByHikeId(100L);
         verify(hikeRepository).save(testHike);
         verify(hikeRepository).delete(testHike);
+        verify(entityManager).flush();
+        verify(entityManager).clear();
         verify(courseRepository).deleteByHikeId(100L);
     }
 }
