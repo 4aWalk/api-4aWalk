@@ -29,4 +29,10 @@ public interface GroupEquipmentRepository extends JpaRepository<GroupEquipment, 
      */
     @Query("SELECT g FROM GroupEquipment g LEFT JOIN FETCH g.items WHERE g.id = :id")
     Optional<GroupEquipment> findByIdWithItems(@Param("id") Long id);
+
+    /**
+     * Supression des groupes d'équipement pour un identifiant de randonnée
+     * @param hikeId id de la randonnée en cours de suppression
+     */
+    void deleteByHikeId(Long hikeId);
 }

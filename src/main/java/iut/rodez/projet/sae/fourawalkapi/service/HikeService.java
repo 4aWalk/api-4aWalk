@@ -191,23 +191,27 @@ public class HikeService {
     public void deleteHike(Long hikeId, Long userId) {
         Hike hike = getHikeById(hikeId, userId);
 
-        // 1. Suppression des BelongEquipment qui référencent cette hike
+        // 1. Suppression des BelongEquipment
         belongEquipmentRepository.deleteByHikeId(hikeId);
 
-        // 2. Nettoyage des relations MySQL pour éviter les erreurs de contraintes
+        // 2. Suppression explicite des GroupEquipment pour éviter les références fantômes
+        groupEquipmentRepository.deleteByHikeId(hikeId);
+
+        // 3. Nettoyage des relations MySQL
         hike.getFoodCatalogue().clear();
         hike.getEquipmentGroups().clear();
         hike.getOptionalPoints().clear();
         hike.getParticipants().clear();
 
         hikeRepository.save(hike);
-        hikeRepository.delete(hike);
 
-        // 3. Vide le cache Hibernate pour éviter les références fantômes vers la hike supprimée
+        // 4. Vide le cache Hibernate AVANT le delete
         entityManager.flush();
         entityManager.clear();
 
-        // 4. Suppression en "cascade" des traces GPS dans MongoDB
+        hikeRepository.delete(hike);
+
+        // 5. Suppression MongoDB
         courseRepository.deleteByHikeId(hikeId);
     }
 
