@@ -11,6 +11,8 @@ import iut.rodez.projet.sae.fourawalkapi.repository.mongo.CourseRepository;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.*;
 
@@ -20,6 +22,9 @@ import java.util.*;
  */
 @Service
 public class HikeService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final HikeRepository hikeRepository;
     private final BackpackDistributorServiceV2 backpackDistributorV2;
@@ -198,7 +203,11 @@ public class HikeService {
         hikeRepository.save(hike);
         hikeRepository.delete(hike);
 
-        // 3. Suppression en "cascade" des traces GPS dans MongoDB
+        // 3. Vide le cache Hibernate pour éviter les références fantômes vers la hike supprimée
+        entityManager.flush();
+        entityManager.clear();
+
+        // 4. Suppression en "cascade" des traces GPS dans MongoDB
         courseRepository.deleteByHikeId(hikeId);
     }
 
