@@ -1,3 +1,5 @@
+package iut.rodez.projet.sae.fourawalkapi.benchmark;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -217,7 +219,7 @@ public class BenchmarkOptimizerEquipment {
         System.out.println("      /  \\    / \\         ...   ...");
         System.out.println("  [i1,i2,i3] ... ...   8 feuilles max par catégorie");
 
-        exportCsv(allResults, "benchmark_optimizer_equipment_results.csv");
+        exportCsv(allResults, "benchmark_results/benchmark_optimizer_equipment_results.csv");
         System.out.println("\n  Résultats bruts exportés → benchmark_optimizer_equipment_results.csv");
     }
 

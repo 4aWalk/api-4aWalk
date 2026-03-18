@@ -1,3 +1,5 @@
+package iut.rodez.projet.sae.fourawalkapi.benchmark;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -211,12 +213,12 @@ public class BenchmarkV3 {
             double pruneRate = (avgNodes + avgPruned) > 0
                 ? 100.0 * avgPruned / (avgNodes + avgPruned) : 0;
 
-            System.out.printf("n=%-3d k=%-3d     %-8d  %-14s %-12s %-12s %-10s %.1f%%%s%n",
-                n, k, RUNS,
-                fmtNs(median), fmtBytes(avgHeap),
-                avgNodes, avgPruned,
-                String.format("%.1f%%", pruneRate),
-                allOk ? "" : " ⚠ échec");
+            System.out.printf("n=%-3d k=%-3d     %-8d  %-14s %-12s %-12s %-10s %s%s%n",
+                    n, k, RUNS,
+                    fmtNs(median), fmtBytes(avgHeap),
+                    avgNodes, avgPruned,
+                    String.format("%.1f%%", pruneRate),
+                    allOk ? "" : " ⚠ échec");
         }
 
         System.out.println();
@@ -242,7 +244,7 @@ public class BenchmarkV3 {
             System.out.printf("  %-16s %-16s %-16s %-8s%n", row[0], row[1], row[2], row[3]);
         System.out.println("═".repeat(90));
 
-        exportCsv(allResults, "benchmark_v3_results.csv");
+        exportCsv(allResults, "benchmark_results/benchmark_v3_results.csv");
         System.out.println("\n  Résultats bruts exportés → benchmark_v3_results.csv");
     }
 

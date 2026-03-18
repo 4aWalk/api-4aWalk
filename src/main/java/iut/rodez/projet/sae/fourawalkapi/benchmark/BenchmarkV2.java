@@ -1,3 +1,5 @@
+package iut.rodez.projet.sae.fourawalkapi.benchmark;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -188,7 +190,7 @@ public class BenchmarkV2 {
         System.out.println("  Dégradation exponentielle notable au-delà de n=20, k=5.");
         System.out.println("═".repeat(80));
 
-        exportCsv(allResults, "benchmark_v2_results.csv");
+        exportCsv(allResults, "benchmark_results/benchmark_v2_results.csv");
         System.out.println("\n  Résultats bruts exportés → benchmark_v2_results.csv");
     }
 

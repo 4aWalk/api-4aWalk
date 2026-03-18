@@ -64,7 +64,7 @@ public class LogisticsValidationService {
                 int totalItems = (group != null) ? group.getItems().stream().mapToInt(EquipmentItem::getNbItem).sum() : 0;
 
                 if (totalItems < nbParticipants) {
-                    throw new IllegalStateException("Couverture insuffisante pour le type : " + type);
+                    throw new BusinessValidationException("Couverture insuffisante pour le type : " + type);
                 }
             }
         }
@@ -92,9 +92,9 @@ public class LogisticsValidationService {
                     .sum();
         }
 
-        if (capaciteEmport < besoinTotal) {
-            throw new BusinessValidationException("Pas assez de gourdes pour couvrir les besoins en eau (Stock: " +
-                    capaciteEmport + "L, Besoin: " + besoinTotal + "L).");
-        }
+        throw new BusinessValidationException(String.format(
+                "Pas assez de gourdes pour couvrir les besoins en eau (Stock: %.2fL, Besoin: %.2fL).",
+                capaciteEmport, besoinTotal
+        ));
     }
 }

@@ -1,3 +1,5 @@
+package iut.rodez.projet.sae.fourawalkapi.benchmark;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -211,12 +213,12 @@ public class BenchmarkOptimizerFood {
             double pruneRate = avgCalls > 0 ? 100.0 * avgPruned / avgCalls : 0;
 
             System.out.printf(
-                "f=%-3d p=%-3d kcal=%-5d %-8d  %-14s %-12s %-12s %-12s %.1f%%%s%n",
-                f, p, target, RUNS,
-                fmtNs(median), fmtBytes(avgHeap),
-                avgCalls, avgPruned,
-                String.format("%.1f%%", pruneRate),
-                allOk ? "" : " ⚠ échec");
+                    "f=%-3d p=%-3d kcal=%-5d %-8d  %-14s %-12s %-12s %-12s %s%s%n",
+                    f, p, target, RUNS,
+                    fmtNs(median), fmtBytes(avgHeap),
+                    avgCalls, avgPruned,
+                    String.format("%.1f%%", pruneRate),
+                    allOk ? "" : " ⚠ échec");
         }
 
         System.out.println();
@@ -240,7 +242,7 @@ public class BenchmarkOptimizerFood {
         System.out.println("  Taux d'élagage observé : ~20-40% des branches inclusion bloquées.");
         System.out.println("═".repeat(92));
 
-        exportCsv(allResults, "benchmark_optimizer_food_results.csv");
+        exportCsv(allResults, "benchmark_results/benchmark_optimizer_food_results.csv");
         System.out.println("\n  Résultats bruts exportés → benchmark_optimizer_food_results.csv");
     }
 

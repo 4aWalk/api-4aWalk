@@ -130,7 +130,7 @@ public class GlobalExceptionHandler {
 
     // Gère spécifiquement AuthenticationException
     @ExceptionHandler(AuthenticationException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED) // 401 est plus approprié pour l'auth
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleAuthenticationException(AuthenticationException ex) {
         logger.error("Erreur d'authentification : {}", ex.getMessage());
         return new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Authentification invalide ou expirée");
