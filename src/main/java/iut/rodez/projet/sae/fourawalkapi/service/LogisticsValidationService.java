@@ -91,10 +91,11 @@ public class LogisticsValidationService {
                             item.getNbItem())
                     .sum();
         }
-
-        throw new BusinessValidationException(String.format(
-                "Pas assez de gourdes pour couvrir les besoins en eau (Stock: %.2fL, Besoin: %.2fL).",
-                capaciteEmport, besoinTotal
-        ));
+        if (capaciteEmport < besoinTotal) {
+            throw new BusinessValidationException(String.format(
+                    "Pas assez de gourdes pour couvrir les besoins en eau (Stock: %.2fL, Besoin: %.2fL).",
+                    capaciteEmport, besoinTotal
+            ));
+        }
     }
 }
