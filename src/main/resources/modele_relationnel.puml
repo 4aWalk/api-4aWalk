@@ -33,7 +33,7 @@ entity "participants" {
   niveau : VARCHAR(50)
   morphologie : VARCHAR(50)
   creator : BOOLEAN
-  creator_id : BIGINT
+  creator_id : BIGINT <<FK>>
   besoin_kcal : INTEGER
   besoin_eau_litre : DOUBLE
   capacite_emport_max_kg : DOUBLE
@@ -46,7 +46,7 @@ entity "points_of_interest" {
   description : VARCHAR(500)
   latitude : DOUBLE
   longitude : DOUBLE
-  hike_id : BIGINT
+  hike_id : BIGINT <<FK>>
   sequence : INT
 }
 
@@ -81,7 +81,7 @@ entity "equipment_items" {
   description : VARCHAR(255)
   masse_grammes : DOUBLE
   nb_item : INT
-  type : varchar(50)
+  type : VARCHAR(50)
   masse_a_vide : DOUBLE
 }
 
@@ -121,8 +121,9 @@ entity "group_equipments" {
 
 entity "group_equipment_items" {
   * group_id : BIGINT <<PK, FK>>
+  * item_order : INT <<PK>>
   --
-  equipment_id : BIGINT <<PK,FK>>
+  equipment_id : BIGINT <<FK>>
 }
 
 entity "belong_equipment" {
@@ -166,6 +167,9 @@ hikes "1..1" ||--o{ "0..N" points_of_interest : "hike_id"
 hikes "1..1" ||-down-o{ "0..N" hike_participants : "hike_id"
 participants "1..1" ||-up-o{ "0..N" hike_participants : "participant_id"
 participants "1..1" ||--o| "0..1" backpacks : "participant_id"
+
+' Liaison participants -> users (creator)
+users "1..1" ||--o{ "0..N" participants : "creator_id"
 
 ' Liaisons vers les ressources (Col 4)
 backpacks "1..1" ||--o{ "0..N" backpack_equipment : "backpack_id"

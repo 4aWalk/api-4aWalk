@@ -1,6 +1,7 @@
 package iut.rodez.projet.sae.fourawalkapi.service;
 
 import iut.rodez.projet.sae.fourawalkapi.entity.*;
+import iut.rodez.projet.sae.fourawalkapi.exception.BusinessValidationException;
 import iut.rodez.projet.sae.fourawalkapi.model.enums.TypeEquipment;
 import iut.rodez.projet.sae.fourawalkapi.repository.mysql.BelongEquipmentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,7 +124,7 @@ class LogisticsValidationServiceTest {
         standardHike.setDureeJours(1);
 
         // When & Then : L'exception de couverture insuffisante est levée
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        BusinessValidationException ex = assertThrows(BusinessValidationException.class,
                 () -> logisticsService.validateHikeEquipment(standardHike));
         assertTrue(ex.getMessage().contains("Couverture insuffisante pour le type"));
     }
@@ -139,7 +140,7 @@ class LogisticsValidationServiceTest {
         populateEquipment(standardHike, 2, false); // false = omettre le REPOS
 
         // When & Then : À partir de 2 jours, le REPOS est requis
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        BusinessValidationException ex = assertThrows(BusinessValidationException.class,
                 () -> logisticsService.validateHikeEquipment(standardHike));
         assertTrue(ex.getMessage().contains("Couverture insuffisante pour le type : REPOS"));
     }
