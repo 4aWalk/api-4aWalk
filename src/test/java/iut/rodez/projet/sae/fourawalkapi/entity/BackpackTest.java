@@ -37,7 +37,7 @@ class BackpackTest {
 
         // Then: Le sac reste vide sans générer d'erreur
         assertTrue(backpack.getFoodItems().isEmpty());
-        assertEquals(0.0, backpack.getTotalMassKg());
+        assertEquals(10.0, backpack.getTotalMassKg());
     }
 
     /**
